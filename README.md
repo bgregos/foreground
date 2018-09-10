@@ -1,4 +1,4 @@
 # foreground
-simple personal task manager with taskwarrior integration
+simple android personal task manager with taskwarrior integration
 
-More to come soon!
+More info to come soon!
