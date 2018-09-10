@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:id="@+id/action_sync"
+        android:title="Sync"
+        android:icon="@drawable/ic_sync_black_24dp"
+        android:onClick="onSyncClick"
+        app:showAsAction="always"/>
+    <item android:id="@+id/action_settings"
+        android:title="@string/settings"
+        android:icon="@drawable/ic_settings_black_24dp"
+        android:onClick="onSettingsClick"
+        app:showAsAction="always"/>
+
+</menu>

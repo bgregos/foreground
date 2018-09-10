@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/settings_parent"
+    android:theme="@style/AppTheme"
+    tools:context=".SettingsActivity">
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto"
+android:layout_width="match_parent"
+android:layout_height="match_parent" >
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical" >
+
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="8dp"
+        app:cardCornerRadius="4dp"
+        app:cardElevation="4dp"
+        app:contentPadding="6dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal" >
+
+            <Switch
+                android:id="@+id/settings_sync"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:switchPadding="4dp"
+                android:layout_gravity="left"
+                android:text="Sync"
+
+                tools:checked="true" />
+
+            <ProgressBar
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:padding="2dp"
+                android:layout_weight="1"
+                android:layout_gravity="right"
+                android:gravity="right"
+                android:id="@+id/settings_syncprogress" />
+
+        </LinearLayout>
+
+    </android.support.v7.widget.CardView>
+
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:text="Get this info from your Taskwarrior Server (inthe.am, freecinc, taskd)" />
+
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="8dp"
+        app:cardCornerRadius="4dp"
+        app:cardElevation="4dp"
+        app:contentPadding="6dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight=".3" >
+
+                <android.support.design.widget.TextInputEditText
+                    android:id="@+id/settings_address"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:hint="Server Address"
+                    android:inputType="textUri"
+                    android:selectAllOnFocus="false"
+                    android:singleLine="true"
+                    tools:layout_editor_absoluteX="116dp"
+                    tools:layout_editor_absoluteY="51dp" />
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight=".7" >
+
+                <android.support.design.widget.TextInputEditText
+                    android:id="@+id/settings_port"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:hint="Port"
+                    android:inputType="number"
+                    android:singleLine="true" />
+            </android.support.design.widget.TextInputLayout>
+
+        </LinearLayout>
+    </android.support.v7.widget.CardView>
+
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="8dp"
+        app:cardCornerRadius="4dp"
+        app:cardElevation="4dp"
+        app:contentPadding="6dp">
+
+        <android.support.design.widget.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" >
+
+            <android.support.design.widget.TextInputEditText
+                android:id="@+id/settings_credentials"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="User Credentials organization/user/key"
+                android:inputType="text"
+                android:selectAllOnFocus="true"
+                android:singleLine="true"  />
+        </android.support.design.widget.TextInputLayout>
+
+    </android.support.v7.widget.CardView>
+
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:cardCornerRadius="4dp"
+        app:cardElevation="4dp"
+        app:contentPadding="6dp"
+        android:layout_margin="8dp" >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <android.support.design.widget.TextInputEditText
+                    android:id="@+id/settings_cert_path"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Path to Cert folder"
+                    android:inputType="textUri" />
+
+            </android.support.design.widget.TextInputLayout>
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <android.support.design.widget.TextInputEditText
+                    android:id="@+id/settings_cert_ca"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="CA Cert file path"
+                    android:inputType="textUri" />
+
+            </android.support.design.widget.TextInputLayout>
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <android.support.design.widget.TextInputEditText
+                    android:id="@+id/settings_private_key"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Private Key file path"
+                    android:inputType="textUri" />
+
+            </android.support.design.widget.TextInputLayout>
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <android.support.design.widget.TextInputEditText
+                    android:id="@+id/settings_cert_private"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Private cert file path"
+                    android:inputType="textUri" />
+
+            </android.support.design.widget.TextInputLayout>
+
+        </LinearLayout>
+    </android.support.v7.widget.CardView>
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:text="Credits" />
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:text="The Foreground logo is a modified version of an icon created by monkik from flaticon.\nThanks to aaschmid for their taskwarrior-java-client, which is licensed under the Apache License 2.0." />
+
+    <TextView
+        android:id="@+id/textView4"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:text="Legal" />
+
+    <TextView
+        android:id="@+id/textView5"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:text="This app is licensed under the Apache License 2.0. Full terms of the license are available at https://www.apache.org/licenses/LICENSE-2.0.html" />
+
+
+</LinearLayout>
+</ScrollView>
+
+</android.support.design.widget.CoordinatorLayout>
+
+
+

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <android.support.design.widget.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp">
+
+        <android.support.design.widget.TextInputEditText
+            android:id="@+id/detail_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Name" />
+
+    </android.support.design.widget.TextInputLayout>
+
+    <include layout="@layout/date_layout" android:id="@+id/detail_dueDate"> </include>
+
+    <android.support.design.widget.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <android.support.design.widget.TextInputEditText
+            android:id="@+id/detail_project"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Project"/>
+
+    </android.support.design.widget.TextInputLayout>
+
+    <android.support.design.widget.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <android.support.design.widget.TextInputEditText
+            android:id="@+id/detail_tags"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Tags"/>
+
+    </android.support.design.widget.TextInputLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Priority"
+        style="@style/InputLabel" />
+
+    <Spinner
+        android:id="@+id/detail_priority"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        style="@style/Base.Widget.AppCompat.Spinner.Underlined" />
+
+</LinearLayout>
+

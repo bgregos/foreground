@@ -1,0 +1,52 @@
+apply plugin: 'com.android.application'
+
+apply plugin: 'kotlin-android'
+
+apply plugin: 'kotlin-android-extensions'
+
+android {
+    compileSdkVersion 28
+    defaultConfig {
+        applicationId "me.bgregos.brighttask"
+        minSdkVersion 21
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    //implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:0.25.3"
+    implementation 'com.android.support:appcompat-v7:28.0.0-beta01'
+    implementation 'com.android.support:support-v4:28.0.0-beta01'
+    implementation 'com.android.support:recyclerview-v7:28.0.0-beta01'
+    implementation 'com.android.support:design:28.0.0-beta01'
+    implementation 'com.google.code.gson:gson:2.8.0'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.2'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    implementation files('libs/taskwarrior-java-client-1.0-SNAPSHOT.jar')
+
+    // https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on
+    implementation group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.60'
+
+    // https://mvnrepository.com/artifact/org.bouncycastle/bcpkix-jdk15on
+    implementation group: 'org.bouncycastle', name: 'bcpkix-jdk15on', version: '1.60'
+
+    //java 8 time backport
+    implementation 'com.jakewharton.threetenabp:threetenabp:1.1.0'
+}
