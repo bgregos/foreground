@@ -157,9 +157,10 @@ class SettingsActivity : AppCompatActivity() {
         properties.load(inputFile)
         properties["taskwarrior.server.host"]=settings_address.text.toString()
         properties["taskwarrior.server.port"]=port.toString()
-        properties["taskwarrior.ssl.cert.ca.file"]="/storage/emulated/0/Download/ca.cert.pem"
-        properties["taskwarrior.ssl.private.key.file"]="/storage/emulated/0/Download/private.key.pem"
-        properties["taskwarrior.ssl.cert.key.file"]=File(filesDir, "cert_key").absolutePath ?: ""
+        properties["taskwarrior.ssl.cert.ca.file"]=File(filesDir, "cert_ca").absolutePath ?: ""
+        //TODO: This leads to a parsing error in the lib. Try external storage?
+        properties["taskwarrior.ssl.private.key.file"]=File(filesDir, "cert_key").absolutePath ?: ""
+        properties["taskwarrior.ssl.cert.key.file"]=File(filesDir, "cert_private").absolutePath ?: ""
         if(creds.size == 3){
             properties["taskwarrior.auth.organisation"]=creds[0]
             properties["taskwarrior.auth.user"]=creds[1]
@@ -220,15 +221,15 @@ class SettingsActivity : AppCompatActivity() {
                 Log.e(this.javaClass.toString(), CertType.values().filter{ x -> x.value==requestCode}.first().toString())
                 when(CertType.values().filter{ x -> x.value==requestCode}.first()) {
                     CertType.CERT_CA -> {
-                        settings_cert_ca.setText(uri.lastPathSegment.toString())
+                        settings_cert_ca.setText(uri.lastPathSegment.toString().split("/").last())
                         writeCertFile(uri, "cert_ca")
                     }
                     CertType.CERT_KEY-> {
-                        settings_private_key.setText(uri.lastPathSegment.toString())
+                        settings_private_key.setText(uri.lastPathSegment.toString().split("/").last())
                         writeCertFile(uri, "cert_key")
                     }
                     CertType.CERT_PRIVATE -> {
-                        settings_cert_private.setText(uri.lastPathSegment.toString())
+                        settings_cert_private.setText(uri.lastPathSegment.toString().split("/").last())
                         writeCertFile(uri, "cert_private")
                     }
                 }
