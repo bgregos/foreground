@@ -89,10 +89,11 @@ class TaskListActivity : AppCompatActivity() {
     }
 
     fun onSyncClick(item: MenuItem) {
-        //SyncTask().execute()
-        val bar = Snackbar.make(task_list_parent, "Sync is coming soon!", Snackbar.LENGTH_SHORT)
+        val bar = Snackbar.make(task_list_parent, "Syncing...", Snackbar.LENGTH_SHORT)
         bar.view.setBackgroundColor(Color.parseColor("#34309f"))
         bar.show()
+        SyncTask().execute()
+
     }
 
     fun onSettingsClick(item: MenuItem) {
@@ -221,7 +222,7 @@ class TaskListActivity : AppCompatActivity() {
                 val jsonObjStrArr : ArrayList<String> = rcvdmessage.payload.toString().replaceFirst("Optional[", "").split("\n") as ArrayList<String>
                 jsonObjStrArr.removeAt(jsonObjStrArr.lastIndex)
                 for (str in jsonObjStrArr){
-                    Log.d(this.javaClass.toString(), str)
+                    //Log.d(this.javaClass.toString(), str)
                 }
                 val jArray : ArrayList<JSONObject> = ArrayList()
                 try{
@@ -230,9 +231,9 @@ class TaskListActivity : AppCompatActivity() {
                     syncKey = UUID.fromString(jsonObjStrArr.removeAt(0))
                 } catch (e:IllegalArgumentException) {
                     try {
-                        UUID.fromString(jsonObjStrArr.get(jsonObjStrArr.lastIndex))
+                        UUID.fromString(jsonObjStrArr.get(jsonObjStrArr.lastIndex-1))
                         //sync key is at bottom
-                        syncKey = UUID.fromString(jsonObjStrArr.removeAt(jsonObjStrArr.lastIndex))
+                        syncKey = UUID.fromString(jsonObjStrArr.removeAt(jsonObjStrArr.lastIndex-1))
                     } catch (e:IllegalArgumentException) {
                         //no sync key!
                         Log.e(this.javaClass.toString(), "Error parsing sync data, no sync key.", e)
@@ -243,7 +244,13 @@ class TaskListActivity : AppCompatActivity() {
                     }
                 }
                 for (str : String in jsonObjStrArr) {
-                    jArray.add(JSONObject(str))
+                    Log.d(this.javaClass.toString(), str)
+                    try {
+                        jArray.add(JSONObject(str))
+                    } catch (e:JSONException){
+                        Log.d(this.javaClass.toString(), "Error parsing to json: "+str)
+                    }
+
                 }
                 for (i in 0..jArray.size)
                 {
@@ -259,9 +266,9 @@ class TaskListActivity : AppCompatActivity() {
                             task = Task("")
                         }
                         task.name = jArray.get(i).getString("description")
-                        task.project = jArray.get(i).getString("project")
+                        task.project = jArray.get(i).optString("project")
                         task.status = jArray.get(i).getString("status")
-                        task.priority = when (jArray.get(i).getString("priority")) {
+                        task.priority = when (jArray.get(i).optString("priority")) {
                             "H" -> Task.Priority.H
                             "M" -> Task.Priority.M
                             "L" -> Task.Priority.L

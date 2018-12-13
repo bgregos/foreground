@@ -1,9 +1,12 @@
 package me.bgregos.foreground
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.net.Uri
 import android.opengl.Visibility
 import android.os.AsyncTask
 import android.os.Bundle
@@ -26,8 +29,11 @@ import me.bgregos.foreground.task.RemoteTaskManager
 import org.bouncycastle.asn1.ASN1Encoding
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo
 import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
+import java.net.URI
 import java.net.URL
+import java.net.URLEncoder
 import java.util.*
 
 
@@ -41,6 +47,7 @@ class SettingsActivity : AppCompatActivity() {
         val client = TaskwarriorClient(config)
 
         override fun onPreExecute() {
+            save()
         }
 
         override fun doInBackground(vararg v: Void): String {
@@ -62,7 +69,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         override fun onPostExecute(response: String) {
-            Log.d(this.javaClass.toString(), response)
+            Log.i(this.javaClass.toString(), response)
             settings_syncprogress.visibility = View.INVISIBLE
             if (!response.contains("status=Ok")) {
                 val bar = Snackbar.make(settings_parent, "There was a problem with your sync configuration.", Snackbar.LENGTH_LONG)
@@ -97,18 +104,11 @@ class SettingsActivity : AppCompatActivity() {
         port = if (port=="-1") "" else port
         settings_port.setText(port)
         settings_credentials.setText(prefs.getString("settings_credentials", ""))
-        settings_cert_path.setText(prefs.getString("settings_cert_path", ""))
         settings_cert_ca.setText(prefs.getString("settings_cert_ca", ""))
         settings_private_key.setText(prefs.getString("settings_cert_key", ""))
         settings_cert_private.setText(prefs.getString("settings_cert_private", ""))
 
         settings_sync.setOnClickListener {
-            if(settings_sync.isChecked) {
-                settings_sync.isChecked = false
-                val bar = Snackbar.make(settings_parent, "Sync is coming soon!", Snackbar.LENGTH_SHORT)
-                bar.view.setBackgroundColor(Color.parseColor("#34309f"))
-                bar.show()
-            }
 
 //            if (settings_sync.isChecked && ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
 //                settings_sync.isChecked = false
@@ -122,7 +122,13 @@ class SettingsActivity : AppCompatActivity() {
 //                save()
 //                TestTask().execute()
 //            }
+            save()
+            TestTask().execute()
         }
+
+        settings_cert_ca_button.setOnClickListener { performCertFileSearch(CertType.CERT_CA) }
+        settings_private_key_button.setOnClickListener { performCertFileSearch(CertType.CERT_KEY) }
+        settings_cert_private_button.setOnClickListener { performCertFileSearch(CertType.CERT_PRIVATE) }
 
     }
 
@@ -151,10 +157,9 @@ class SettingsActivity : AppCompatActivity() {
         properties.load(inputFile)
         properties["taskwarrior.server.host"]=settings_address.text.toString()
         properties["taskwarrior.server.port"]=port.toString()
-        properties["taskwarrior.ssl.folder"]=settings_cert_path.text.toString()
-        properties["taskwarrior.ssl.cert.ca.file"]=settings_cert_ca.text.toString()
-        properties["taskwarrior.ssl.private.key.file"]=settings_private_key.text.toString()
-        properties["taskwarrior.ssl.cert.key.file"]=settings_cert_private.text.toString()
+        properties["taskwarrior.ssl.cert.ca.file"]="/storage/emulated/0/Download/ca.cert.pem"
+        properties["taskwarrior.ssl.private.key.file"]="/storage/emulated/0/Download/private.key.pem"
+        properties["taskwarrior.ssl.cert.key.file"]=File(filesDir, "cert_key").absolutePath ?: ""
         if(creds.size == 3){
             properties["taskwarrior.auth.organisation"]=creds[0]
             properties["taskwarrior.auth.user"]=creds[1]
@@ -173,12 +178,75 @@ class SettingsActivity : AppCompatActivity() {
         editor.putString("settings_address", settings_address.text.toString())
         editor.putInt("settings_port", port)
         editor.putString("settings_credentials", settings_credentials.text.toString())
-        editor.putString("settings_cert_path", settings_cert_path.text.toString())
         editor.putString("settings_cert_ca", settings_cert_ca.text.toString())
         editor.putString("settings_cert_key", settings_private_key.text.toString())
         editor.putString("settings_cert_private", settings_cert_private.text.toString())
         editor.apply()
     }
+
+    enum class CertType(val value: Int) {
+        CERT_CA(1),
+        CERT_KEY(2),
+        CERT_PRIVATE(3)
+    }
+
+    private val requestCodes : ArrayList<Int> = ArrayList()
+
+    fun performCertFileSearch(certType: CertType) {
+        requestCodes.add(certType.value)
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            // Filter to only show results that can be "opened", such as a
+            // file (as opposed to a list of contacts or timezones)
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "*/*"
+        }
+        startActivityForResult(intent, certType.value)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, resultData: Intent?) {
+
+        // The ACTION_OPEN_DOCUMENT intent was sent with the request code
+        // READ_REQUEST_CODE. If the request code seen here doesn't match, it's the
+        // response to some other intent, and the code below shouldn't run at all.
+
+        if (requestCodes.remove(requestCode) && resultCode == Activity.RESULT_OK) {
+            // The document selected by the user won't be returned in the intent.
+            // Instead, a URI to that document will be contained in the return intent
+            // provided to this method as a parameter.
+            // Pull that URI using resultData.getData().
+            resultData?.data?.also { uri ->
+                //put uri in bar
+                Log.e(this.javaClass.toString(), uri.toString())
+                Log.e(this.javaClass.toString(), CertType.values().filter{ x -> x.value==requestCode}.first().toString())
+                when(CertType.values().filter{ x -> x.value==requestCode}.first()) {
+                    CertType.CERT_CA -> {
+                        settings_cert_ca.setText(uri.lastPathSegment.toString())
+                        writeCertFile(uri, "cert_ca")
+                    }
+                    CertType.CERT_KEY-> {
+                        settings_private_key.setText(uri.lastPathSegment.toString())
+                        writeCertFile(uri, "cert_key")
+                    }
+                    CertType.CERT_PRIVATE -> {
+                        settings_cert_private.setText(uri.lastPathSegment.toString())
+                        writeCertFile(uri, "cert_private")
+                    }
+                }
+            }
+        }
+    }
+
+    fun writeCertFile(uri:Uri, fileName:String){
+        val inStream = this.contentResolver.openInputStream(uri)
+        val file = File(filesDir, fileName)
+        val buffer = ByteArray(inStream.available())
+        inStream.read(buffer)
+        inStream.close()
+        val outStream = FileOutputStream(file)
+        outStream.write(buffer)
+        outStream.close()
+    }
+
 
     override fun onRequestPermissionsResult(requestCode: Int,
                                             permissions: Array<String>, grantResults: IntArray) {

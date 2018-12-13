@@ -92,7 +92,7 @@
                                 <PersistentState>
                                   <option name="values">
                                     <map>
-                                      <entry key="url" value="jar:file:/home/bgregos/Software/android-studio/plugins/android/lib/android.jar!/images/material_design_icons/notification/ic_sync_black_24dp.xml" />
+                                      <entry key="url" value="jar:file:/home/bgregos/Software/android-studio/plugins/android/lib/android.jar!/images/material_design_icons/file/ic_folder_black_24dp.xml" />
                                     </map>
                                   </option>
                                 </PersistentState>
@@ -103,7 +103,7 @@
                         <option name="values">
                           <map>
                             <entry key="color" value="ffffff" />
-                            <entry key="outputName" value="ic_sync_black_24dp" />
+                            <entry key="outputName" value="ic_folder_black_24dp" />
                             <entry key="sourceFile" value="$USER_HOME$/Downloads/lamp.svg" />
                           </map>
                         </option>
