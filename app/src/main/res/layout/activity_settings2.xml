@@ -31,6 +31,12 @@ android:layout_height="match_parent" >
             android:layout_height="match_parent"
             android:orientation="horizontal" >
 
+            <TextView
+                android:id="@+id/settings_enable_sync_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Enable Sync"
+                android:padding="4dp"/>
             <Switch
                 android:id="@+id/settings_sync"
                 android:layout_width="wrap_content"
@@ -38,7 +44,6 @@ android:layout_height="match_parent" >
                 android:checked="true"
                 android:switchPadding="4dp"
                 android:layout_gravity="left"
-                android:text="Enable Sync"
 
                 tools:checked="true" />
 
@@ -46,9 +51,8 @@ android:layout_height="match_parent" >
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:padding="2dp"
-                android:layout_weight="1"
-                android:layout_gravity="right"
-                android:gravity="right"
+                android:layout_gravity="left"
+                android:gravity="left"
                 android:id="@+id/settings_syncprogress" />
 
         </LinearLayout>

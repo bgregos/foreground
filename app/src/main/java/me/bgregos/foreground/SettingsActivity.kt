@@ -44,25 +44,36 @@ class SettingsActivity : AppCompatActivity() {
     private inner class TestTask : AsyncTask<Void, Void, String>() {
 
         val config = TaskwarriorPropertiesConfiguration(PROPERTIES_TASKWARRIOR)
-        val client = TaskwarriorClient(config)
+        var client : TaskwarriorClient? = null
+        init {
+            try {
+                client = TaskwarriorClient(config)
+            } catch (e:Exception){
+                //keep client as null, weill be caught by async task
+            }
+        }
+
 
         override fun onPreExecute() {
             save()
         }
 
         override fun doInBackground(vararg v: Void): String {
-
+            if (client == null) {
+                return "Invalid Config"
+            }
             val headers = HashMap<String, String>()
             headers.put(TaskwarriorMessage.HEADER_TYPE, "statistics")
             headers.put(TaskwarriorMessage.HEADER_PROTOCOL, "v1")
             headers.put(TaskwarriorMessage.HEADER_CLIENT, "taskwarrior-java-client " + ManifestHelper.getImplementationVersionFromManifest("local-dev"))
 
             try {
-                val response = client.sendAndReceive(TaskwarriorMessage(headers))
+                val response:TaskwarriorMessage = client!!.sendAndReceive(TaskwarriorMessage(headers))
                 return response.toString()
             } catch (e: Exception) {
-                return "Network Failure"
+                return e.message ?: "General Error"
             }
+
         }
 
         override fun onProgressUpdate(vararg v: Void) {
@@ -70,10 +81,16 @@ class SettingsActivity : AppCompatActivity() {
 
         override fun onPostExecute(response: String) {
             Log.i(this.javaClass.toString(), response)
+            settings_sync.visibility = View.VISIBLE
+            settings_enable_sync_text.text = "Enable Sync"
             settings_syncprogress.visibility = View.INVISIBLE
             if (!response.contains("status=Ok")) {
-                val bar = Snackbar.make(settings_parent, "There was a problem with your sync configuration.", Snackbar.LENGTH_LONG)
+                val bar = Snackbar.make(settings_parent, "There was a problem testing the sync configuration: "+response, Snackbar.LENGTH_INDEFINITE)
                 bar.view.setBackgroundColor(Color.parseColor("#34309f"))
+                bar.setAction("Dismiss",  View.OnClickListener {
+                    bar.dismiss()
+                })
+                bar.setActionTextColor(Color.WHITE)
                 bar.show()
 
             }else{
@@ -91,9 +108,11 @@ class SettingsActivity : AppCompatActivity() {
         PROPERTIES_TASKWARRIOR = File(this.filesDir, "taskwarrior.properties").toURI().toURL()
         setContentView(R.layout.activity_settings2)
         settings_syncprogress.visibility = View.INVISIBLE
+        settings_sync.visibility = View.VISIBLE
         actionBar?.setDisplayHomeAsUpEnabled(true)
         actionBar?.setDisplayShowHomeEnabled(true)
         actionBar?.setDisplayShowTitleEnabled(true)
+
         val permissions_response = 240
 
         //load preferences
@@ -122,8 +141,15 @@ class SettingsActivity : AppCompatActivity() {
 //                save()
 //                TestTask().execute()
 //            }
-            save()
-            TestTask().execute()
+
+            if (settings_sync.isChecked) {
+                settings_enable_sync_text.text = "Testing Sync"
+                settings_sync.isChecked = false
+                settings_sync.visibility = View.GONE
+                save()
+                settings_syncprogress.visibility = View.VISIBLE
+                TestTask().execute()
+            }
         }
 
         settings_cert_ca_button.setOnClickListener { performCertFileSearch(CertType.CERT_CA) }
