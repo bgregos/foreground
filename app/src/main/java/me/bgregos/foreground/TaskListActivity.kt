@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.RecyclerView
+import android.text.TextUtils.split
 import android.util.Log
 import android.view.*
 import android.widget.ImageView
@@ -23,6 +24,9 @@ import kotlinx.android.synthetic.main.task_detail.*
 import kotlinx.android.synthetic.main.task_list.*
 import kotlinx.android.synthetic.main.task_list_content.view.*
 import me.bgregos.foreground.task.LocalTasks
+import me.bgregos.foreground.task.LocalTasks.items
+import me.bgregos.foreground.task.LocalTasks.updateVisibleTasks
+import me.bgregos.foreground.task.LocalTasks.visibleTasks
 import me.bgregos.foreground.task.Task
 import java.io.File
 import java.net.URL
@@ -78,6 +82,7 @@ class TaskListActivity : AppCompatActivity() {
             // activity should be in two-pane mode.
             twoPane = true
         }
+        LocalTasks.updateVisibleTasks()
 
         setupRecyclerView(task_list)
     }
@@ -96,12 +101,18 @@ class TaskListActivity : AppCompatActivity() {
 
     }
 
+    fun onClearClick(item: MenuItem) {
+        LocalTasks.items.clear()
+        task_list.adapter?.notifyDataSetChanged()
+        LocalTasks.save(applicationContext)
+    }
+
     fun onSettingsClick(item: MenuItem) {
         startActivity(Intent(this, SettingsActivity::class.java))
     }
 
     private fun setupRecyclerView(recyclerView: RecyclerView) {
-        recyclerView.adapter = SimpleItemRecyclerViewAdapter(this, LocalTasks.items, twoPane)
+        recyclerView.adapter = SimpleItemRecyclerViewAdapter(this, LocalTasks.visibleTasks, twoPane)
     }
 
     private fun openTask(task: Task, v: View, name: String){
@@ -210,14 +221,14 @@ class TaskListActivity : AppCompatActivity() {
 
         override fun onPostExecute(responseString: String) {
             val rcvdmessage = recievedMessage
-            Log.d(this.javaClass.toString(), responseString)
+            //Log.d(this.javaClass.toString(), responseString)
             if (!responseString.contains("status=Ok") || rcvdmessage == null || rcvdmessage.payload == null) {
                 val bar = Snackbar.make(task_list_parent, "Sync Failed.", Snackbar.LENGTH_SHORT)
                 bar.view.setBackgroundColor(Color.parseColor("#34309f"))
                 bar.show()
 
             }else{ //success
-                Log.d(this.javaClass.toString(), rcvdmessage.payload.toString())
+                Log.e(this.javaClass.toString(), rcvdmessage.payload.toString())
 
                 val jsonObjStrArr : ArrayList<String> = rcvdmessage.payload.toString().replaceFirst("Optional[", "").split("\n") as ArrayList<String>
                 jsonObjStrArr.removeAt(jsonObjStrArr.lastIndex)
@@ -243,58 +254,45 @@ class TaskListActivity : AppCompatActivity() {
                         return
                     }
                 }
-                for (str : String in jsonObjStrArr) {
-                    Log.d(this.javaClass.toString(), str)
-                    try {
-                        jArray.add(JSONObject(str))
-                    } catch (e:JSONException){
-                        Log.d(this.javaClass.toString(), "Error parsing to json: "+str)
-                    }
+                for (taskString in jsonObjStrArr){
+                    if (taskString != "") {
+                        val task = Task.fromJson(taskString)
 
-                }
-                for (i in 0..jArray.size)
-                {
-                    try {
-                        val uuid = jArray.get(i).get("uuid")
-                        var task : Task? = null
-                        for(t : Task in LocalTasks.items){
-                            if (t.uuid == uuid){
-                                task = t
+                        val storedTask = LocalTasks.getTaskByUUID(task.uuid)
+                        //add task to LocalTasks. must make sure that tasks with same uuid get overwritten by newest task
+                        //check if stored task is older and not null
+                        if (storedTask?.modifiedDate?.before(task.modifiedDate) == true) {
+                            //stored task is older or has no timestamp, replace
+                            LocalTasks.items.remove(storedTask)
+                            if (!(task.status=="completed" || task.status=="deleted" || task.status=="recurring")){
+                                LocalTasks.items.add(task)
                             }
+                        } else if (storedTask == null) {
+                            //add new task
+                            if (!(task.status=="completed" || task.status=="deleted" || task.status=="recurring")){
+                                LocalTasks.items.add(task)
+                            }
+                        } else {
+                            //task is older than current, do nothing.
                         }
-                        if(task == null) {
-                            task = Task("")
-                        }
-                        task.name = jArray.get(i).getString("description")
-                        task.project = jArray.get(i).optString("project")
-                        task.status = jArray.get(i).getString("status")
-                        task.priority = when (jArray.get(i).optString("priority")) {
-                            "H" -> Task.Priority.H
-                            "M" -> Task.Priority.M
-                            "L" -> Task.Priority.L
-                            else -> null
-                        }
-                        var convDate : Date? = null
-                        convDate = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").parse(jArray.get(i).getString("due"))
-                        task.dueDate = convDate
-                        convDate = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").parse(jArray.get(i).getString("modified"))
-                        task.modifiedDate = convDate
 
-                        val jsontags = jArray.get(i).getJSONArray("tags")
-                        for (j in 0..jsontags.length()) {
-                            task.tags.add(jsontags.getJSONObject(j).keys().next())
-                        }
-                        task.unsupported = rcvdmessage.payload.toString().replaceFirst("Optional[", "")
-
-                    } catch (e: JSONException) {
-                        e.printStackTrace()
                     }
+                }
+                LocalTasks.save(applicationContext)
+
+                val json = rcvdmessage.payload.toString().replaceFirst("Optional[", "").removeSuffix("]")
+                for (line in json.split("\n")){
+                    Log.d("BrightTask: ", line)
                 }
 
 
                 val bar = Snackbar.make(task_list_parent, "Sync successful!", Snackbar.LENGTH_SHORT)
                 bar.view.setBackgroundColor(Color.parseColor("#34309f"))
                 bar.show()
+
+                LocalTasks.updateVisibleTasks()
+                Log.e(this.javaClass.toString(), LocalTasks.visibleTasks.toString())
+                setupRecyclerView(task_list)
             }
 
         }
