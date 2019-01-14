@@ -75,7 +75,6 @@ class TaskDetailFragment : Fragment() {
                 rootView.detail_dueDate.date.setText("")
                 rootView.detail_dueDate.time.setText("")
             }
-            rootView.detail_json.setText(it.mostRecentJSON ?: "no json")
         }
 
 
@@ -128,17 +127,15 @@ class TaskDetailFragment : Fragment() {
             val format = SimpleDateFormat("MMM dd, yyyy hh:mm a", Locale.US)
             val toModify: Task = LocalTasks.getTaskByUUID(item.uuid) ?: throw NullPointerException("Task uuid lookup failed!")
             toModify.name=detail_name.text.toString()
-            toModify.tags=detail_tags.text?.split(", ", ",") as ArrayList<String>
+            toModify.tags=detail_tags.text?.split(" ") as ArrayList<String>
             toModify.project=detail_project.text?.toString()
-            toModify.priority=when (detail_priority.selectedItem.toString()) {
-                "H" -> Task.Priority.H
-                "M" -> Task.Priority.M
-                "L" -> Task.Priority.L
-                else -> null
-            }
+            toModify.priority=detail_priority.selectedItem.toString()
             toModify.modifiedDate=Date() //update modified date
             if(!detail_dueDate.date.text.isNullOrBlank() && !detail_dueDate.time.text.isNullOrBlank()){
                 toModify.dueDate=format.parse(detail_dueDate.date.text.toString()+" "+detail_dueDate.time.text.toString())
+            }
+            if (!LocalTasks.localChanges.contains(toModify)){
+                LocalTasks.localChanges.add(toModify)
             }
             LocalTasks.save(activity!!.applicationContext)
             Log.e(this.javaClass.toString(), "Saving task")

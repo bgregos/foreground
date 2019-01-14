@@ -67,19 +67,13 @@ class RemoteTaskManager(c:Context) {
     fun sync() {
         try{
             val config = TaskwarriorPropertiesConfiguration(PROPERTIES_TASKWARRIOR)
-            Log.e(this.javaClass.toString(), "Alive1")
-
             val client = TaskwarriorClient(config)
-
-            Log.e(this.javaClass.toString(), "Alive2")
-
 
             val headers = HashMap<String, String>()
             headers.put(HEADER_TYPE, "sync")
             headers.put(HEADER_PROTOCOL, "v1")
             headers.put(HEADER_CLIENT, "taskwarrior-java-client " + ManifestHelper.getImplementationVersionFromManifest("local-dev"))
 
-            Log.e(this.javaClass.toString(), "Alive3")
 
             Thread {
                 try {
