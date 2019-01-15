@@ -5,11 +5,13 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.database.Cursor
 import android.graphics.Color
 import android.net.Uri
 import android.opengl.Visibility
 import android.os.AsyncTask
 import android.os.Bundle
+import android.provider.OpenableColumns
 import android.support.design.widget.Snackbar
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
@@ -113,8 +115,6 @@ class SettingsActivity : AppCompatActivity() {
         actionBar?.setDisplayShowHomeEnabled(true)
         actionBar?.setDisplayShowTitleEnabled(true)
 
-        val permissions_response = 240
-
         //load preferences
         val prefs = this.getSharedPreferences("me.bgregos.BrightTask", Context.MODE_PRIVATE)
         settings_sync.isChecked = prefs.getBoolean("settings_sync", false)
@@ -128,19 +128,6 @@ class SettingsActivity : AppCompatActivity() {
         settings_cert_private.setText(prefs.getString("settings_cert_private", ""))
 
         settings_sync.setOnClickListener {
-
-//            if (settings_sync.isChecked && ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-//                settings_sync.isChecked = false
-//                settings_syncprogress.visibility = View.VISIBLE
-//                ActivityCompat.requestPermissions(this,
-//                        arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), permissions_response)
-//            }
-//            if (settings_sync.isChecked){
-//                settings_sync.isChecked = false
-//                settings_syncprogress.visibility = View.VISIBLE
-//                save()
-//                TestTask().execute()
-//            }
 
             if (settings_sync.isChecked) {
                 settings_enable_sync_text.text = "Testing Sync"
@@ -247,20 +234,42 @@ class SettingsActivity : AppCompatActivity() {
                 Log.e(this.javaClass.toString(), CertType.values().filter{ x -> x.value==requestCode}.first().toString())
                 when(CertType.values().filter{ x -> x.value==requestCode}.first()) {
                     CertType.CERT_CA -> {
-                        settings_cert_ca.setText(uri.lastPathSegment.toString().split("/").last())
+                        settings_cert_ca.setText(uriToName(uri))
                         writeCertFile(uri, "cert_ca")
                     }
                     CertType.CERT_KEY-> {
-                        settings_private_key.setText(uri.lastPathSegment.toString().split("/").last())
+                        settings_private_key.setText(uriToName(uri))
                         writeCertFile(uri, "cert_key")
                     }
                     CertType.CERT_PRIVATE -> {
-                        settings_cert_private.setText(uri.lastPathSegment.toString().split("/").last())
+                        settings_cert_private.setText(uriToName(uri))
                         writeCertFile(uri, "cert_private")
                     }
                 }
             }
         }
+    }
+
+    fun uriToName(uri: Uri):String{
+
+        // The query, since it only applies to a single document, will only return
+        // one row. There's no need to filter, sort, or select fields, since we want
+        // all fields for one document.
+        val cursor: Cursor? = contentResolver.query( uri, null, null, null, null, null)
+
+        cursor?.use {
+            // moveToFirst() returns false if the cursor has 0 rows.  Very handy for
+            // "if there's anything to look at, look at it" conditionals.
+            if (it.moveToFirst()) {
+
+                // Note it's called "Display Name".  This is
+                // provider-specific, and might not necessarily be the file name.
+                val displayName: String =
+                        it.getString(it.getColumnIndex(OpenableColumns.DISPLAY_NAME))
+                return displayName
+            }
+        }
+        return "filename not found"
     }
 
     fun writeCertFile(uri:Uri, fileName:String){
@@ -273,29 +282,4 @@ class SettingsActivity : AppCompatActivity() {
         outStream.write(buffer)
         outStream.close()
     }
-
-
-    override fun onRequestPermissionsResult(requestCode: Int,
-                                            permissions: Array<String>, grantResults: IntArray) {
-        when (requestCode) {
-            240 -> {
-                // If request is cancelled, the result arrays are empty.
-                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                    Toast.makeText(this, "File permissions granted!", Toast.LENGTH_SHORT).show()
-                } else {
-                    settings_sync.isChecked = false
-                    Toast.makeText(this, "File permissions not granted, disabling Sync", Toast.LENGTH_LONG).show()
-                }
-                return
-            }
-            else -> {
-                // Ignore all other requests.
-            }
-        }
-    }
-
-
-
-
-
 }

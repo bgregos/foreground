@@ -127,7 +127,7 @@ class TaskDetailFragment : Fragment() {
             val format = SimpleDateFormat("MMM dd, yyyy hh:mm a", Locale.US)
             val toModify: Task = LocalTasks.getTaskByUUID(item.uuid) ?: throw NullPointerException("Task uuid lookup failed!")
             toModify.name=detail_name.text.toString()
-            toModify.tags=detail_tags.text?.split(" ") as ArrayList<String>
+            toModify.tags=detail_tags.text?.split(" ,",",") as ArrayList<String>
             toModify.project=detail_project.text?.toString()
             toModify.priority=detail_priority.selectedItem.toString()
             toModify.modifiedDate=Date() //update modified date
