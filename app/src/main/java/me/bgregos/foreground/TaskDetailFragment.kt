@@ -117,7 +117,7 @@ class TaskDetailFragment : Fragment() {
         return rootView
     }
 
-    fun toUtc(date:Date):Date{
+    fun toLocal(date:Date):Date{
         val dfLocal = SimpleDateFormat()
         dfLocal.setTimeZone(TimeZone.getDefault())
         val dfUtc = SimpleDateFormat()
@@ -125,7 +125,7 @@ class TaskDetailFragment : Fragment() {
         return dfUtc.parse(dfLocal.format(date))
     }
 
-    fun toLocal(date:Date):Date{
+    fun toUtc(date:Date):Date{
         val dfLocal = SimpleDateFormat()
         dfLocal.setTimeZone(TimeZone.getDefault())
         val dfUtc = SimpleDateFormat()
