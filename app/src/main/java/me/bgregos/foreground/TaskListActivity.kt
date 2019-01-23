@@ -22,7 +22,9 @@ import kotlinx.android.synthetic.main.activity_settings2.*
 import kotlinx.android.synthetic.main.activity_task_list.*
 import kotlinx.android.synthetic.main.task_detail.*
 import kotlinx.android.synthetic.main.task_list.*
+import kotlinx.android.synthetic.main.task_list_content.*
 import kotlinx.android.synthetic.main.task_list_content.view.*
+import me.bgregos.foreground.R.id.task_list
 import me.bgregos.foreground.task.LocalTasks
 import me.bgregos.foreground.task.LocalTasks.items
 import me.bgregos.foreground.task.LocalTasks.localChanges
@@ -115,6 +117,29 @@ class TaskListActivity : AppCompatActivity() {
         startActivity(Intent(this, SettingsActivity::class.java))
     }
 
+    class DateCompare : Comparator<Task>{
+        override fun compare(o1: Task?, o2: Task?): Int {
+            if (o1?.dueDate == null && o2?.dueDate == null) {
+                return 0;
+            }
+
+            if (o1?.dueDate == null) {
+                return Int.MAX_VALUE;
+            }
+
+            if (o2?.dueDate == null) {
+                return Int.MIN_VALUE;
+            }
+
+            val out = compareValues(o1.dueDate, o2.dueDate)
+            if (out != 0) {
+                return out
+            }
+            return compareValues(o1.createdDate, o2.createdDate)
+        }
+
+    }
+
     private fun setupRecyclerView(recyclerView: RecyclerView) {
         recyclerView.adapter = SimpleItemRecyclerViewAdapter(this, LocalTasks.visibleTasks, twoPane)
     }
@@ -140,7 +165,7 @@ class TaskListActivity : AppCompatActivity() {
     }
 
     class SimpleItemRecyclerViewAdapter(private val parentActivity: TaskListActivity,
-                                        private val values: List<Task>,
+                                        private var values: List<Task>,
                                         private val twoPane: Boolean) :
             RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder>() {
 
@@ -159,12 +184,20 @@ class TaskListActivity : AppCompatActivity() {
             return ViewHolder(view)
         }
 
+        fun toLocal(date:Date):Date{
+            val dfLocal = SimpleDateFormat()
+            dfLocal.setTimeZone(TimeZone.getDefault())
+            val dfUtc = SimpleDateFormat()
+            dfUtc.setTimeZone(TimeZone.getTimeZone("UTC"))
+            return dfLocal.parse(dfUtc.format(date))
+        }
+
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val format = SimpleDateFormat("MMM dd, yyyy", Locale.ENGLISH)
             val item = values[position]
             holder.title.text = item.name
             if(item.dueDate != null) {
-                holder.due.text = format.format(item.dueDate)
+                holder.due.text = format.format(toLocal(item.dueDate as Date))
             }
 
             with(holder.itemView) {
@@ -191,6 +224,7 @@ class TaskListActivity : AppCompatActivity() {
         }
 
     }
+
 
     private inner class SyncTask : AsyncTask<Void, Void, String>() {
 
@@ -238,7 +272,7 @@ class TaskListActivity : AppCompatActivity() {
             val rcvdmessage = recievedMessage
             //Log.d(this.javaClass.toString(), responseString)
             if ((!responseString.contains("status=Ok") && !responseString.contains("status=No change")) || rcvdmessage == null || rcvdmessage.payload == null) {
-                val bar = Snackbar.make(task_list_parent, "Sync Failed.", Snackbar.LENGTH_SHORT)
+                val bar = Snackbar.make(task_list_parent, "Sync Failed: $responseString", Snackbar.LENGTH_SHORT)
                 Log.i(this.javaClass.toString(), "sync fail: "+ responseString)
                 bar.view.setBackgroundColor(Color.parseColor("#34309f"))
                 bar.show()

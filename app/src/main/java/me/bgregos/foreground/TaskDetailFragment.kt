@@ -50,7 +50,9 @@ class TaskDetailFragment : Fragment() {
                               savedInstanceState: Bundle?): View? {
         val rootView = inflater.inflate(R.layout.task_detail, container, false)
         val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.US)
+        dateFormat.timeZone= TimeZone.getDefault()
         val timeFormat = SimpleDateFormat("hh:mm a", Locale.US)
+        timeFormat.timeZone= TimeZone.getDefault()
 
         // Create an ArrayAdapter using the string array and a default spinner layout
         val adapter: ArrayAdapter<CharSequence> = ArrayAdapter.createFromResource(this.context,
@@ -69,8 +71,8 @@ class TaskDetailFragment : Fragment() {
             it.tags.forEach { task -> builder.append("$task,") }
             rootView.detail_tags.setText(builder.toString().trimEnd(','))
             if(it.dueDate != null){
-                rootView.detail_dueDate.date.setText(dateFormat.format(it.dueDate))
-                rootView.detail_dueDate.time.setText(timeFormat.format(it.dueDate))
+                rootView.detail_dueDate.date.setText(dateFormat.format(toLocal(it.dueDate as Date)))
+                rootView.detail_dueDate.time.setText(timeFormat.format(toLocal(it.dueDate as Date)))
             }else{
                 rootView.detail_dueDate.date.setText("")
                 rootView.detail_dueDate.time.setText("")
@@ -115,6 +117,22 @@ class TaskDetailFragment : Fragment() {
         return rootView
     }
 
+    fun toUtc(date:Date):Date{
+        val dfLocal = SimpleDateFormat()
+        dfLocal.setTimeZone(TimeZone.getDefault())
+        val dfUtc = SimpleDateFormat()
+        dfUtc.setTimeZone(TimeZone.getTimeZone("UTC"))
+        return dfUtc.parse(dfLocal.format(date))
+    }
+
+    fun toLocal(date:Date):Date{
+        val dfLocal = SimpleDateFormat()
+        dfLocal.setTimeZone(TimeZone.getDefault())
+        val dfUtc = SimpleDateFormat()
+        dfUtc.setTimeZone(TimeZone.getTimeZone("UTC"))
+        return dfLocal.parse(dfUtc.format(date))
+    }
+
     override fun onPause() {
         //handle save
         if (detail_name.text.toString().isBlank() || detail_name.text.toString().isEmpty()) {
@@ -125,14 +143,15 @@ class TaskDetailFragment : Fragment() {
             super.onPause()
         } else {
             val format = SimpleDateFormat("MMM dd, yyyy hh:mm a", Locale.US)
+            format.timeZone= TimeZone.getDefault()
             val toModify: Task = LocalTasks.getTaskByUUID(item.uuid) ?: throw NullPointerException("Task uuid lookup failed!")
             toModify.name=detail_name.text.toString()
             toModify.tags=detail_tags.text?.split(" ,",",") as ArrayList<String>
             toModify.project=detail_project.text?.toString()
             toModify.priority=detail_priority.selectedItem.toString()
-            toModify.modifiedDate=Date() //update modified date
+            toModify.modifiedDate=toUtc(Date()) //update modified date
             if(!detail_dueDate.date.text.isNullOrBlank() && !detail_dueDate.time.text.isNullOrBlank()){
-                toModify.dueDate=format.parse(detail_dueDate.date.text.toString()+" "+detail_dueDate.time.text.toString())
+                toModify.dueDate=toUtc(format.parse(detail_dueDate.date.text.toString()+" "+detail_dueDate.time.text.toString()))
             }
             if (!LocalTasks.localChanges.contains(toModify)){
                 LocalTasks.localChanges.add(toModify)

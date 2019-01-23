@@ -5,6 +5,8 @@ import android.util.Log
 import com.google.gson.Gson
 import java.util.*
 import com.google.gson.reflect.TypeToken
+import java.text.SimpleDateFormat
+import kotlin.collections.ArrayList
 
 object LocalTasks {
     var items:ArrayList<Task> = ArrayList()
@@ -32,6 +34,8 @@ object LocalTasks {
         localChanges = Gson().fromJson(prefs.getString("LocalTasks.localChanges", ""), taskType) ?: localChanges
         initSync =  prefs.getString("LocalTasks.initSync", "true")?.toBoolean()?:true
         syncKey = prefs.getString("LocalTasks.syncKey", syncKey)?: syncKey
+        val lastSeenVersion = prefs.getInt("lastSeenVersion", 1)
+
         //migration
         var itemsModified = false
         for (i in items){
@@ -46,6 +50,28 @@ object LocalTasks {
                 i.createdDate = Date()
             }
         }
+        if (lastSeenVersion<2){ //keep track of breaking changes
+            val editor = prefs.edit()
+            editor.putInt("lastSeenVersion", 2)
+            editor.apply()
+            itemsModified = true
+            val dfLocal = SimpleDateFormat()
+            dfLocal.setTimeZone(TimeZone.getDefault())
+            val dfUtc = SimpleDateFormat()
+            dfUtc.setTimeZone(TimeZone.getTimeZone("UTC"))
+            for (i in items) {
+                //convert all Dates from local time to GMT
+                if (i.createdDate != null){
+                    i.createdDate=dfUtc.parse(dfLocal.format(i.createdDate))
+                }
+                if (i.modifiedDate != null){
+                    i.modifiedDate=dfUtc.parse(dfLocal.format(i.modifiedDate))
+                }
+                if (i.dueDate != null){
+                    i.dueDate=dfUtc.parse(dfLocal.format(i.dueDate))
+                }
+            }
+        }
         if (itemsModified) {
             save(context)
             updateVisibleTasks()
@@ -58,6 +84,7 @@ object LocalTasks {
             if (Task.shouldDisplay(t))
                 visibleTasks.add(t)
         }
+        //visibleTasks= ArrayList(visibleTasks.sortedWith(Task.DateCompare()))
     }
 
     fun getTaskByUUID(uuid: UUID): Task?{

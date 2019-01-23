@@ -7,6 +7,7 @@ import java.io.Serializable
 import java.lang.Exception
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.Comparator
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
@@ -22,7 +23,31 @@ data class Task(var name:String) : Serializable {
     var others = mutableMapOf<String, String>() //unaccounted-for fields. (User Defined Attributes)
     //List of all possible Task Statuses at https://taskwarrior.org/docs/design/task.html#attr_status
 
+    class DateCompare : Comparator<Task>{
+        override fun compare(o1: Task?, o2: Task?): Int {
+            if (o1 == null && o2 == null) {
+                return 0;
+            }
+
+            if (o1 == null) {
+                return 1;
+            }
+
+            if (o2 == null) {
+                return -1;
+            }
+
+            val out = compareValues(o1.dueDate, o2.dueDate)
+            if (out != 0) {
+                return out
+            }
+            return compareValues(o1.createdDate, o2.createdDate)
+        }
+
+    }
+
     companion object {
+
         fun shouldDisplay(task:Task):Boolean{
             if (!(task.status=="completed" || task.status=="deleted" || task.status=="recurring" || task.status=="waiting"))
                 return true
