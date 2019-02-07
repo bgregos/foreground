@@ -174,6 +174,14 @@ class TaskListActivity : AppCompatActivity() {
             return dfUtc.parse(dfLocal.format(date))
         }
 
+        fun toUtc(date:Date):Date{
+            val dfLocal = SimpleDateFormat()
+            dfLocal.setTimeZone(TimeZone.getDefault())
+            val dfUtc = SimpleDateFormat()
+            dfUtc.setTimeZone(TimeZone.getTimeZone("UTC"))
+            return dfLocal.parse(dfUtc.format(date))
+        }
+
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val format = SimpleDateFormat("MMM dd, yyyy", Locale.ENGLISH)
             val item = values[position]
@@ -190,11 +198,11 @@ class TaskListActivity : AppCompatActivity() {
             holder.delete.setOnClickListener {
                 val pos = LocalTasks.items.indexOf(item)
                 val visiblePos = LocalTasks.visibleTasks.indexOf(item)
+                item.modifiedDate=toUtc(Date()) //update modified date
                 LocalTasks.items.get(pos).status="completed"
                 LocalTasks.localChanges.add(LocalTasks.items.get(pos))
                 LocalTasks.updateVisibleTasks()
                 LocalTasks.save(parentActivity)
-                LocalTasks.updateVisibleTasks()
                 this.notifyItemRemoved(visiblePos)
                 swap()
             }
@@ -326,8 +334,7 @@ class TaskListActivity : AppCompatActivity() {
                     bar.show()
 
                     LocalTasks.updateVisibleTasks()
-                    Log.e(this.javaClass.toString(), LocalTasks.visibleTasks.toString())
-                    setupRecyclerView(task_list)
+                    task_list.adapter?.notifyDataSetChanged()
                 }
             }
 
