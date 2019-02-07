@@ -1,5 +1,6 @@
 package me.bgregos.foreground
 
+import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.AsyncTask
@@ -97,10 +98,18 @@ class TaskListActivity : AppCompatActivity() {
     }
 
     fun onSyncClick(item: MenuItem) {
-        val bar = Snackbar.make(task_list_parent, "Syncing...", Snackbar.LENGTH_SHORT)
-        bar.view.setBackgroundColor(Color.parseColor("#34309f"))
-        bar.show()
-        SyncTask().execute()
+        val prefs = this.getSharedPreferences("me.bgregos.BrightTask", Context.MODE_PRIVATE)
+        if (prefs.getBoolean("settings_sync", false)){
+            val bar = Snackbar.make(task_list_parent, "Syncing...", Snackbar.LENGTH_SHORT)
+            bar.view.setBackgroundColor(Color.parseColor("#34309f"))
+            bar.show()
+            SyncTask().execute()
+        } else {
+            val bar = Snackbar.make(task_list_parent, "Sync is disabled! Enable it in the settings menu.", Snackbar.LENGTH_LONG)
+            bar.view.setBackgroundColor(Color.parseColor("#34309f"))
+            bar.show()
+        }
+
 
     }
 
@@ -334,7 +343,7 @@ class TaskListActivity : AppCompatActivity() {
                     bar.show()
 
                     LocalTasks.updateVisibleTasks()
-                    task_list.adapter?.notifyDataSetChanged()
+                    setupRecyclerView(task_list)
                 }
             }
 
