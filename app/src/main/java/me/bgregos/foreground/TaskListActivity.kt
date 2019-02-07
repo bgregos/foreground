@@ -189,7 +189,7 @@ class TaskListActivity : AppCompatActivity() {
             dfLocal.setTimeZone(TimeZone.getDefault())
             val dfUtc = SimpleDateFormat()
             dfUtc.setTimeZone(TimeZone.getTimeZone("UTC"))
-            return dfLocal.parse(dfUtc.format(date))
+            return dfUtc.parse(dfLocal.format(date))
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
