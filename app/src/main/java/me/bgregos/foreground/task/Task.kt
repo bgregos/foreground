@@ -24,16 +24,16 @@ data class Task(var name:String) : Serializable {
     //List of all possible Task Statuses at https://taskwarrior.org/docs/design/task.html#attr_status
 
     class DateCompare : Comparator<Task>{
-        override fun compare(o1: Task?, o2: Task?): Int {
-            if (o1 == null && o2 == null) {
+        override fun compare(o1: Task, o2: Task): Int {
+            if (o1.dueDate == null && o2.dueDate == null) {
                 return 0;
             }
 
-            if (o1 == null) {
+            if (o1.dueDate == null) {
                 return 1;
             }
 
-            if (o2 == null) {
+            if (o2.dueDate == null) {
                 return -1;
             }
 

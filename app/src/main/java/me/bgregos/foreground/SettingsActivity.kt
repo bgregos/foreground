@@ -27,6 +27,8 @@ import de.aaschmid.taskwarrior.message.TaskwarriorMessage
 import kotlinx.android.synthetic.main.activity_settings2.*
 import kotlinx.android.synthetic.main.activity_task_list.*
 import kotlinx.android.synthetic.main.task_detail.*
+import kotlinx.android.synthetic.main.task_list.*
+import me.bgregos.foreground.task.LocalTasks
 import me.bgregos.foreground.task.RemoteTaskManager
 import org.bouncycastle.asn1.ASN1Encoding
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo
@@ -127,6 +129,17 @@ class SettingsActivity : AppCompatActivity() {
         settings_private_key.setText(prefs.getString("settings_cert_key", ""))
         settings_cert_private.setText(prefs.getString("settings_cert_private", ""))
 
+        fun onResetSync(){
+            LocalTasks.items.clear()
+            LocalTasks.localChanges.clear()
+            LocalTasks.syncKey = ""
+            LocalTasks.initSync = true
+            LocalTasks.save(applicationContext)
+            val bar = Snackbar.make(settings_parent, "Sync has been reset to its original status.", Snackbar.LENGTH_SHORT)
+            bar.view.setBackgroundColor(Color.parseColor("#34309f"))
+            bar.show()
+        }
+
         settings_sync.setOnClickListener {
 
             if (settings_sync.isChecked) {
@@ -142,6 +155,7 @@ class SettingsActivity : AppCompatActivity() {
         settings_cert_ca_button.setOnClickListener { performCertFileSearch(CertType.CERT_CA) }
         settings_private_key_button.setOnClickListener { performCertFileSearch(CertType.CERT_KEY) }
         settings_cert_private_button.setOnClickListener { performCertFileSearch(CertType.CERT_PRIVATE) }
+        settings_reset_sync.setOnClickListener { onResetSync() }
 
     }
 

@@ -84,7 +84,8 @@ object LocalTasks {
             if (Task.shouldDisplay(t))
                 visibleTasks.add(t)
         }
-        //visibleTasks= ArrayList(visibleTasks.sortedWith(Task.DateCompare()))
+        visibleTasks= ArrayList(visibleTasks.sortedWith(Task.DateCompare()))
+        items= ArrayList(items.sortedWith(Task.DateCompare()))
     }
 
     fun getTaskByUUID(uuid: UUID): Task?{

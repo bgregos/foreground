@@ -117,29 +117,6 @@ class TaskListActivity : AppCompatActivity() {
         startActivity(Intent(this, SettingsActivity::class.java))
     }
 
-    class DateCompare : Comparator<Task>{
-        override fun compare(o1: Task?, o2: Task?): Int {
-            if (o1?.dueDate == null && o2?.dueDate == null) {
-                return 0;
-            }
-
-            if (o1?.dueDate == null) {
-                return Int.MAX_VALUE;
-            }
-
-            if (o2?.dueDate == null) {
-                return Int.MIN_VALUE;
-            }
-
-            val out = compareValues(o1.dueDate, o2.dueDate)
-            if (out != 0) {
-                return out
-            }
-            return compareValues(o1.createdDate, o2.createdDate)
-        }
-
-    }
-
     private fun setupRecyclerView(recyclerView: RecyclerView) {
         recyclerView.adapter = SimpleItemRecyclerViewAdapter(this, LocalTasks.visibleTasks, twoPane)
     }
@@ -165,7 +142,7 @@ class TaskListActivity : AppCompatActivity() {
     }
 
     class SimpleItemRecyclerViewAdapter(private val parentActivity: TaskListActivity,
-                                        private var values: List<Task>,
+                                        private var values: java.util.ArrayList<Task>,
                                         private val twoPane: Boolean) :
             RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder>() {
 
@@ -176,6 +153,11 @@ class TaskListActivity : AppCompatActivity() {
                 val task = v.tag as Task
                 parentActivity.openTask(task, v, task.name)
             }
+        }
+
+        fun swap(){
+            values.clear()
+            values.addAll(LocalTasks.visibleTasks)
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -207,11 +189,14 @@ class TaskListActivity : AppCompatActivity() {
 
             holder.delete.setOnClickListener {
                 val pos = LocalTasks.items.indexOf(item)
+                val visiblePos = LocalTasks.visibleTasks.indexOf(item)
                 LocalTasks.items.get(pos).status="completed"
                 LocalTasks.localChanges.add(LocalTasks.items.get(pos))
-                LocalTasks.items.removeAt(pos)
+                LocalTasks.updateVisibleTasks()
                 LocalTasks.save(parentActivity)
-                this.notifyItemRemoved(pos)
+                LocalTasks.updateVisibleTasks()
+                this.notifyItemRemoved(visiblePos)
+                swap()
             }
         }
 
