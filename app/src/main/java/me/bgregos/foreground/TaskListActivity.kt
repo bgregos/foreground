@@ -204,14 +204,9 @@ class TaskListActivity : AppCompatActivity() {
                 setOnClickListener(onClickListener)
             }
 
-            holder.delete.setOnClickListener {
+            holder.complete.setOnClickListener {
                 val pos = LocalTasks.items.indexOf(item)
                 val visiblePos = LocalTasks.visibleTasks.indexOf(item)
-                item.modifiedDate=toUtc(Date()) //update modified date
-                LocalTasks.items.get(pos).status="completed"
-                LocalTasks.localChanges.add(LocalTasks.items.get(pos))
-                LocalTasks.updateVisibleTasks()
-                LocalTasks.save(parentActivity)
                 this.notifyItemRemoved(visiblePos)
                 swap()
             }
@@ -222,7 +217,7 @@ class TaskListActivity : AppCompatActivity() {
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val title: TextView = view.title
             val due: TextView = view.due
-            val delete: ImageView = view.delete
+            val complete: ImageView = view.complete
         }
 
     }

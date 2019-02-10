@@ -4,8 +4,12 @@ import android.content.Intent
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
+import android.view.Menu
 import android.view.MenuItem
 import kotlinx.android.synthetic.main.activity_task_detail.*
+import me.bgregos.foreground.task.LocalTasks
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 /**
@@ -15,6 +19,8 @@ import kotlinx.android.synthetic.main.activity_task_detail.*
  * in a [TaskListActivity].
  */
 class TaskDetailActivity : AppCompatActivity() {
+
+    var uuid:UUID = UUID.randomUUID();
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,6 +45,7 @@ class TaskDetailActivity : AppCompatActivity() {
             val fragment = TaskDetailFragment()
             val bundle = Bundle()
             bundle.putString("uuid", intent.extras.getString("uuid"))
+            uuid = UUID.fromString(intent.extras.getString("uuid"))
             fragment.arguments = bundle
             updateToolbar(intent.extras.getString("displayName"))
 
@@ -46,6 +53,52 @@ class TaskDetailActivity : AppCompatActivity() {
                     .add(R.id.task_detail_container, fragment)
                     .commit()
 
+        }
+    }
+
+    fun toLocal(date:Date):Date{
+        val dfLocal = SimpleDateFormat()
+        dfLocal.setTimeZone(TimeZone.getDefault())
+        val dfUtc = SimpleDateFormat()
+        dfUtc.setTimeZone(TimeZone.getTimeZone("UTC"))
+        return dfUtc.parse(dfLocal.format(date))
+    }
+
+    fun toUtc(date:Date):Date{
+        val dfLocal = SimpleDateFormat()
+        dfLocal.setTimeZone(TimeZone.getDefault())
+        val dfUtc = SimpleDateFormat()
+        dfUtc.setTimeZone(TimeZone.getTimeZone("UTC"))
+        return dfLocal.parse(dfUtc.format(date))
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        menuInflater.inflate(R.menu.menu_task_detail, menu)
+        return true
+    }
+
+    fun onDeleteClick(item: MenuItem) {
+        val task = LocalTasks.getTaskByUUID(uuid)
+        if (task != null){
+            task.modifiedDate=toUtc(Date()) //update modified date
+            task.status="deleted"
+            LocalTasks.localChanges.add(task.copy())
+            LocalTasks.updateVisibleTasks()
+            LocalTasks.save(applicationContext)
+            navigateUpTo(Intent(this, TaskListActivity::class.java))
+        }
+    }
+
+    fun onCompleteClick(item: MenuItem) {
+        val task = LocalTasks.getTaskByUUID(uuid)
+        if (task != null){
+            task.modifiedDate=toUtc(Date()) //update modified date
+            task.status="completed"
+            LocalTasks.localChanges.add(task.copy())
+            LocalTasks.updateVisibleTasks()
+            LocalTasks.save(applicationContext)
+            navigateUpTo(Intent(this, TaskListActivity::class.java))
         }
     }
 

@@ -36,12 +36,13 @@
         </LinearLayout>
 
         <ImageView
-            android:id="@+id/delete"
+            android:id="@+id/complete"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_weight=".1"
             android:cropToPadding="false"
             android:padding="16dp"
+            android:contentDescription="complete task"
             app:srcCompat="@drawable/ic_check_black_24dp" />
     </LinearLayout>
 
