@@ -192,7 +192,7 @@ class TaskListActivity : AppCompatActivity() {
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            val format = SimpleDateFormat("MMM dd, yyyy", Locale.ENGLISH)
+            val format = SimpleDateFormat("MMM d, yyyy 'at' h:mm aaa", Locale.ENGLISH)
             val item = values[position]
             holder.title.text = item.name
             if(item.dueDate != null) {
