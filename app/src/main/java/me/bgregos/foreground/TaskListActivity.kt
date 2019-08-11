@@ -12,6 +12,7 @@ import android.text.TextUtils.split
 import android.util.Log
 import android.view.*
 import android.widget.ImageView
+import android.widget.PopupMenu
 import android.widget.TextView
 import com.google.gson.JsonObject
 import com.jakewharton.threetenabp.AndroidThreeTen
@@ -25,6 +26,7 @@ import kotlinx.android.synthetic.main.task_detail.*
 import kotlinx.android.synthetic.main.task_list.*
 import kotlinx.android.synthetic.main.task_list_content.*
 import kotlinx.android.synthetic.main.task_list_content.view.*
+import me.bgregos.foreground.R.id.action_visibility
 import me.bgregos.foreground.R.id.task_list
 import me.bgregos.foreground.task.LocalTasks
 import me.bgregos.foreground.task.LocalTasks.items
@@ -51,7 +53,7 @@ import kotlin.collections.ArrayList
  * item details. On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
-class TaskListActivity : AppCompatActivity() {
+class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener {
 
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
@@ -66,11 +68,14 @@ class TaskListActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        AndroidThreeTen.init(this);
+        AndroidThreeTen.init(this)
         LocalTasks.load(this)
 
         setContentView(R.layout.activity_task_list)
         PROPERTIES_TASKWARRIOR = File(this.filesDir, "taskwarrior.properties").toURI().toURL()
+        toolbar.navigationIcon = null
+        toolbar.title = ""
+        toolbar.subtitle = ""
         setSupportActionBar(toolbar)
         fab.setOnClickListener { view ->
             val newTask = Task("")
@@ -109,9 +114,49 @@ class TaskListActivity : AppCompatActivity() {
             bar.view.setBackgroundColor(Color.parseColor("#34309f"))
             bar.show()
         }
-
-
     }
+
+    fun onVisibilityClick(item: MenuItem) {
+        PopupMenu(this, findViewById(action_visibility)).apply {
+            setOnMenuItemClickListener(this@TaskListActivity)
+            inflate(R.menu.menu_visibility)
+            if(LocalTasks.showWaiting){
+                this.menu.getItem(0).isChecked = true
+            }else{
+                this.menu.getItem(1).isChecked = true
+            }
+            show()
+        }
+    }
+
+    override fun onMenuItemClick(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.menu_show_waiting -> {
+                Log.i("recyclerview item count", task_list.adapter?.itemCount.toString())
+                item.isChecked = !item.isChecked
+                LocalTasks.showWaiting = true
+                LocalTasks.updateVisibleTasks()
+                task_list.adapter?.notifyDataSetChanged()
+                task_list.hasPendingAdapterUpdates()
+                Log.i("recyclerview item count", task_list.adapter?.itemCount.toString() + ","+ LocalTasks.visibleTasks.size.toString())
+                true
+            }
+            R.id.menu_hide_waiting -> {
+                Log.i("recyclerview item count", task_list.adapter?.itemCount.toString())
+                item.isChecked = !item.isChecked
+                LocalTasks.showWaiting = false
+                LocalTasks.updateVisibleTasks()
+                task_list.adapter?.notifyDataSetChanged()
+                task_list.adapter?.notifyItemRangeChanged(0, LocalTasks.items.size)
+                task_list.hasPendingAdapterUpdates()
+                Log.i("recyclerview item count", task_list.adapter?.itemCount.toString() + ","+ LocalTasks.visibleTasks.size.toString())
+                true
+            }
+
+            else -> false
+        }
+    }
+
 
     fun onClearClick(item: MenuItem) {
         LocalTasks.items.clear()
@@ -177,17 +222,17 @@ class TaskListActivity : AppCompatActivity() {
 
         fun toLocal(date:Date):Date{
             val dfLocal = SimpleDateFormat()
-            dfLocal.setTimeZone(TimeZone.getDefault())
+            dfLocal.timeZone = TimeZone.getDefault()
             val dfUtc = SimpleDateFormat()
-            dfUtc.setTimeZone(TimeZone.getTimeZone("UTC"))
+            dfUtc.timeZone = TimeZone.getTimeZone("UTC")
             return dfUtc.parse(dfLocal.format(date))
         }
 
         fun toUtc(date:Date):Date{
             val dfLocal = SimpleDateFormat()
-            dfLocal.setTimeZone(TimeZone.getDefault())
+            dfLocal.timeZone = TimeZone.getDefault()
             val dfUtc = SimpleDateFormat()
-            dfUtc.setTimeZone(TimeZone.getTimeZone("UTC"))
+            dfUtc.timeZone = TimeZone.getTimeZone("UTC")
             return dfLocal.parse(dfUtc.format(date))
         }
 
@@ -207,9 +252,15 @@ class TaskListActivity : AppCompatActivity() {
             holder.complete.setOnClickListener {
                 val pos = LocalTasks.items.indexOf(item)
                 val visiblePos = LocalTasks.visibleTasks.indexOf(item)
-                this.notifyItemRemoved(visiblePos)
-                swap()
+                removeAt(position)
+                LocalTasks.items.remove(item)
             }
+        }
+
+        fun removeAt(position:Int) {
+            values.removeAt(position)
+            notifyItemRemoved(position)
+            notifyItemRangeChanged(position, values.size-1)
         }
 
         override fun getItemCount() = values.size

@@ -5,24 +5,27 @@
     android:orientation="horizontal">
 
     <android.support.design.widget.TextInputLayout
+        android:id="@+id/dateInputLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:layout_marginBottom = "10dp">
 
         <android.support.design.widget.TextInputEditText
             android:id="@+id/date"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:focusableInTouchMode="false"
-            android:longClickable="false"
-            android:hint="Date" />
+            android:longClickable="false" />
 
     </android.support.design.widget.TextInputLayout>
 
     <android.support.design.widget.TextInputLayout
+        android:id="@+id/timeInputLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:layout_marginBottom = "10dp">
 
         <android.support.design.widget.TextInputEditText
             android:id="@+id/time"

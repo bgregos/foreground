@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item android:id="@+id/action_complete"
         android:title="Complete"
-        android:icon="@drawable/ic_check_black_24dp"
+        android:icon="@drawable/ic_check_box_black_24dp"
         android:onClick="onCompleteClick"
         app:showAsAction="always"/>
     <item android:id="@+id/action_delete"

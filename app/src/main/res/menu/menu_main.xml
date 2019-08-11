@@ -6,15 +6,20 @@
         <!--android:icon="@drawable/ic_delete_black_24dp"-->
         <!--android:onClick="onClearClick"-->
         <!--app:showAsAction="always"/>-->
+    <item android:id="@+id/action_visibility"
+        android:title="Visibility"
+        android:icon="@drawable/ic_filter_list_black_24dp"
+        android:onClick="onVisibilityClick"
+        app:showAsAction="ifRoom"/>
     <item android:id="@+id/action_sync"
         android:title="Sync"
         android:icon="@drawable/ic_sync_black_24dp"
         android:onClick="onSyncClick"
-        app:showAsAction="always"/>
+        app:showAsAction="ifRoom"/>
     <item android:id="@+id/action_settings"
         android:title="@string/settings"
         android:icon="@drawable/ic_settings_black_24dp"
         android:onClick="onSettingsClick"
-        app:showAsAction="always"/>
+        app:showAsAction="ifRoom"/>
 
 </menu>

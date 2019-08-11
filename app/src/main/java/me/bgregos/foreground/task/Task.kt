@@ -20,6 +20,7 @@ data class Task(var name:String) : Serializable {
     var modifiedDate:Date? = null
     var priority: String? = ""
     var status: String = "pending"
+    var waitDate:Date? = null
     var others = mutableMapOf<String, String>() //unaccounted-for fields. (User Defined Attributes)
     //List of all possible Task Statuses at https://taskwarrior.org/docs/design/task.html#attr_status
 
@@ -51,17 +52,23 @@ data class Task(var name:String) : Serializable {
         fun shouldDisplay(task:Task):Boolean{
             if (!(task.status=="completed" || task.status=="deleted" || task.status=="recurring" || task.status=="waiting"))
                 return true
-            val convDate = task.others.get("wait")?:""
-            Log.e(this.javaClass.toString(), "jsontags: "+convDate.toString())
-            if (!convDate.isNullOrEmpty()) {
-                val date = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").parse(convDate)
-                if (date.after(Date()) && task.status=="waiting"){
+            val date = task.waitDate
+            if(date != null) {
+                if (date.before(Date()) && task.status=="waiting"){
                     task.status="pending"
                     return true
                 }
+                return false
             }
             return false
         }
+
+        fun shouldDisplayShowWaiting(task:Task):Boolean{
+            if (!(task.status=="completed" || task.status=="deleted" || task.status=="recurring" ))
+                return true
+            return false
+        }
+
         fun toJson(task:Task):String{
             Log.v("brighttask", "tojsoning: "+task.name)
             val out = JSONObject()
@@ -73,6 +80,9 @@ data class Task(var name:String) : Serializable {
             if (task.dueDate!=null) {
                 out.putOpt("due", SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").format(task.dueDate))
             }
+            if (task.waitDate!=null) {
+                out.putOpt("wait", SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").format(task.waitDate))
+            }
             if (task.modifiedDate!=null) {
                 out.putOpt("modified", SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").format(task.modifiedDate))
             }
@@ -82,11 +92,12 @@ data class Task(var name:String) : Serializable {
             for(extra in task.others){
                 out.putOpt(extra.key, extra.value)
             }
-
-            JSONObject(out.toString()) //for testing, remove
-
-
+            
             return out.toString()
+        }
+
+        fun unescape(str:String):String {
+            return str.replace("\\", "")
         }
 
         fun fromJson(json:String):Task?{
@@ -113,9 +124,12 @@ data class Task(var name:String) : Serializable {
                 out.modifiedDate = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").parse(convDate)
             }
             convDate = obj.optString("created")?:""
-            Log.v("sanity-check", "created date from import: "+convDate+";")
             if (!convDate.isNullOrBlank()) {
                 out.createdDate = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").parse(convDate)
+            }
+            convDate = obj.optString("wait")?:""
+            if (!convDate.isNullOrBlank()) {
+                out.waitDate = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").parse(convDate)
             }
             val jsontags = obj.optJSONArray("tags")?: JSONArray()
 
@@ -132,9 +146,10 @@ data class Task(var name:String) : Serializable {
             obj.remove("modified")
             obj.remove("created")
             obj.remove("tags")
+            obj.remove("wait")
             //add all others to the others map
             for (key in obj.keys()){
-                out.others[key] =  obj.getString(key)
+                out.others[key] = unescape(obj.getString(key))
             }
             return out
         }

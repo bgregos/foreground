@@ -19,18 +19,24 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             app:popupTheme="@style/AppTheme.PopupOverlay"
+            android:contentInsetLeft="0dp"
+            android:contentInsetStart="0dp"
+            app:contentInsetLeft="0dp"
+            app:contentInsetStart="0dp"
+            app:contentInsetStartWithNavigation="0dp"
+            app:title=""
             >
+            <ImageView
+                android:id="@+id/logo"
+                android:layout_width="220dp"
+                android:layout_height="match_parent"
+                android:src="@drawable/foreground"
+                android:layout_gravity="left"
+                android:layout_alignParentLeft="true"/>
             <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <ImageView
-                    android:id="@+id/logo"
-                    android:layout_width="220dp"
-                    android:layout_height="match_parent"
-                    android:src="@drawable/foreground"
-                    android:layout_gravity="left"
-                    android:layout_alignParentLeft="true"/>
+                android:layout_width="220dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="right">
             </RelativeLayout>
 
         </android.support.v7.widget.Toolbar>

@@ -17,6 +17,9 @@ import me.bgregos.foreground.task.Task
 import java.text.DateFormatSymbols
 import java.text.SimpleDateFormat
 import java.util.*
+import me.bgregos.foreground.R.id.textView
+
+
 
 
 /**
@@ -55,17 +58,22 @@ class TaskDetailFragment : Fragment() {
         timeFormat.timeZone= TimeZone.getDefault()
 
         // Create an ArrayAdapter using the string array and a default spinner layout
-        val adapter: ArrayAdapter<CharSequence> = ArrayAdapter.createFromResource(this.context,
+        val adapter: ArrayAdapter<CharSequence> = ArrayAdapter.createFromResource(this.context ?: this.activity!!.baseContext,
                 R.array.priority_spinner, android.R.layout.simple_spinner_item);
         // Specify the layout to use when the list of choices appears
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         // Apply the adapter to the spinner
-        rootView.detail_priority.setAdapter(adapter);
+        rootView.detail_priority.adapter = adapter
 
         //load from Task into input fields
         item.let {
             rootView.detail_name.setText(it.name)
-            rootView.detail_priority.setSelection(adapter.getPosition(it.priority?.toString() ?: " "))
+            if (it.priority != null) {
+                rootView.detail_priority.setSelection(adapter.getPosition(it.priority))
+            } else {
+                rootView.detail_priority.setSelection(1)
+            }
+
             rootView.detail_project.setText(it.project ?: "")
             val builder = StringBuilder()
             it.tags.forEach { task -> builder.append("$task,") }
@@ -77,9 +85,51 @@ class TaskDetailFragment : Fragment() {
                 rootView.detail_dueDate.date.setText("")
                 rootView.detail_dueDate.time.setText("")
             }
+            if(it.waitDate != null){
+                rootView.detail_waitDate.date.setText(dateFormat.format(toLocal(it.waitDate as Date)))
+                rootView.detail_waitDate.time.setText(timeFormat.format(toLocal(it.waitDate as Date)))
+            }else{
+                rootView.detail_waitDate.date.setText("")
+                rootView.detail_waitDate.time.setText("")
+            }
         }
 
+        rootView.detail_waitDate.dateInputLayout.hint = "Wait Until Date"
+        rootView.detail_waitDate.date.setOnClickListener {
+            val c = Calendar.getInstance()
+            val year = c.get(Calendar.YEAR)
+            val month = c.get(Calendar.MONTH)
+            val day = c.get(Calendar.DAY_OF_MONTH)
+            val dpd = DatePickerDialog(activity, DatePickerDialog.OnDateSetListener { view, year, monthOfYear, dayOfMonth ->
+                // Display Selected date in textbox
+                detail_waitDate.date.setText(DateFormatSymbols().getMonths()[monthOfYear] + " " + dayOfMonth + ", " + year)
+                if(detail_waitDate.time.text.isNullOrBlank()){
+                    detail_waitDate.time.setText("12:00 AM")
+                }
+            }, year, month, day)
+            dpd.show()
+        }
 
+        rootView.detail_waitDate.time.setOnClickListener {
+            val c = Calendar.getInstance()
+            val hour:Int = c.get(Calendar.HOUR_OF_DAY)
+            val minute:Int = c.get(Calendar.MINUTE)
+            val dpd = TimePickerDialog(activity, TimePickerDialog.OnTimeSetListener { view, hour, minute ->
+                // Display Selected date in textbox
+                val inputFormat = SimpleDateFormat("KK:mm", Locale.US)
+                val outputFormat = SimpleDateFormat("hh:mm a", Locale.US)
+                detail_waitDate.time.setText(outputFormat.format(inputFormat.parse(""+hour+":"+minute)))
+                if(detail_waitDate.date.text.isNullOrBlank()){
+                    val year = c.get(Calendar.YEAR)
+                    val month = c.get(Calendar.MONTH)
+                    val day = c.get(Calendar.DAY_OF_MONTH)
+                    detail_waitDate.date.setText(DateFormatSymbols().shortMonths[month] + " " + day + ", " + year)
+                }
+            }, hour, minute, false)
+            dpd.show()
+        }
+
+        rootView.detail_dueDate.dateInputLayout.hint = "Due Date"
         rootView.detail_dueDate.date.setOnClickListener {
             val c = Calendar.getInstance()
             val year = c.get(Calendar.YEAR)
@@ -112,6 +162,14 @@ class TaskDetailFragment : Fragment() {
                 }
             }, hour, minute, false)
             dpd.show()
+        }
+
+        //some strange data race-ish issue requires this to be done late or the view doesn't adjust
+        //to the match content height
+        if (item.priority == null || item.priority == "No Priority Assigned"){
+            rootView.detail_priority.setSelection(0)
+            rootView.detail_priority.setSelection(1)
+            rootView.detail_priority.setSelection(0)
         }
 
         return rootView
@@ -149,15 +207,25 @@ class TaskDetailFragment : Fragment() {
             toModify.tags=detail_tags.text?.split(" ,",",") as ArrayList<String>
             toModify.project=detail_project.text?.toString()
             toModify.priority=detail_priority.selectedItem.toString()
+            if (detail_priority.selectedItem.toString() == "No Priority Assigned") {
+                toModify.priority = null
+            }
             toModify.modifiedDate=toUtc(Date()) //update modified date
             if(!detail_dueDate.date.text.isNullOrBlank() && !detail_dueDate.time.text.isNullOrBlank()){
                 toModify.dueDate=toUtc(format.parse(detail_dueDate.date.text.toString()+" "+detail_dueDate.time.text.toString()))
+            }
+            if(!detail_waitDate.date.text.isNullOrBlank() && !detail_waitDate.time.text.isNullOrBlank()){
+                toModify.waitDate=toUtc(format.parse(detail_waitDate.date.text.toString()+" "+detail_waitDate.time.text.toString()))
+            }
+            val waitdate = toModify.waitDate
+            if(waitdate != null && waitdate.after(Date())) {
+                toModify.status ="waiting"
             }
             if (!LocalTasks.localChanges.contains(toModify)){
                 LocalTasks.localChanges.add(toModify)
             }
             LocalTasks.save(activity!!.applicationContext)
-            Log.e(this.javaClass.toString(), "Saving task")
+            Log.d(this.javaClass.toString(), "Saving task")
             super.onPause()
         }
     }

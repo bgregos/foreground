@@ -14,6 +14,7 @@ object LocalTasks {
     var localChanges:ArrayList<Task> = ArrayList()
     var initSync:Boolean = true
     var syncKey:String = ""
+    var showWaiting:Boolean = false
 
 
     fun save(context: Context) {
@@ -24,6 +25,7 @@ object LocalTasks {
         editor.putString("LocalTasks.localChanges", Gson().toJson(localChanges))
         editor.putString("LocalTasks.initSync", initSync.toString())
         editor.putString("LocalTasks.syncKey", syncKey)
+        editor.putString("LocalTasks.showWaiting", showWaiting.toString())
         editor.apply()
     }
 
@@ -33,27 +35,14 @@ object LocalTasks {
         items = Gson().fromJson(prefs.getString("LocalTasks", ""), taskType) ?: items
         localChanges = Gson().fromJson(prefs.getString("LocalTasks.localChanges", ""), taskType) ?: localChanges
         initSync =  prefs.getString("LocalTasks.initSync", "true")?.toBoolean()?:true
+        showWaiting=  prefs.getString("LocalTasks.showWaiting", "true")?.toBoolean()?:false
         syncKey = prefs.getString("LocalTasks.syncKey", syncKey)?: syncKey
         val lastSeenVersion = prefs.getInt("lastSeenVersion", 1)
 
         //migration
         var itemsModified = false
-        for (i in items){
-            Log.v("migrations","checking migrations for task: "+i.name)
-            if (i.others==null){
-                itemsModified = true
-                i.others = mutableMapOf()
-            }
-            if (i.createdDate==null){
-                Log.v("migrations","adding createdDate for task: "+i.name)
-                itemsModified = true
-                i.createdDate = Date()
-            }
-        }
         if (lastSeenVersion<2){ //keep track of breaking changes
             val editor = prefs.edit()
-            editor.putInt("lastSeenVersion", 2)
-            editor.apply()
             itemsModified = true
             val dfLocal = SimpleDateFormat()
             dfLocal.setTimeZone(TimeZone.getDefault())
@@ -71,6 +60,26 @@ object LocalTasks {
                     i.dueDate=dfUtc.parse(dfLocal.format(i.dueDate))
                 }
             }
+            editor.putInt("lastSeenVersion", 2)
+            editor.apply()
+        }
+        if (lastSeenVersion<3){ //keep track of breaking changes
+            val editor = prefs.edit()
+            itemsModified = true
+            for (i in items) {
+                //convert all Dates from local time to GMT
+                if (i.others["wait"] != null) {
+                    i.waitDate = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").parse(i.others["wait"])
+                    i.others.remove("wait")
+                }
+
+                val waitdate = i.waitDate
+                if(waitdate != null && waitdate.after(Date())) {
+                    i.status ="waiting"
+                }
+            }
+            editor.putInt("lastSeenVersion", 3)
+            editor.apply()
         }
         if (itemsModified) {
             save(context)
@@ -81,11 +90,21 @@ object LocalTasks {
     fun updateVisibleTasks(){
         visibleTasks.clear()
         for (t in items){
-            if (Task.shouldDisplay(t))
-                visibleTasks.add(t)
+            if (showWaiting){
+                if (Task.shouldDisplayShowWaiting(t)){
+                    visibleTasks.add(t)
+                    Log.i("update visible", "showing waiting tasks")
+                }
+
+            } else {
+                if (Task.shouldDisplay(t)) {
+                    visibleTasks.add(t)
+                    Log.i("update visible", "hiding waiting tasks")
+                }
+            }
         }
-        visibleTasks= ArrayList(visibleTasks.sortedWith(Task.DateCompare()))
-        items= ArrayList(items.sortedWith(Task.DateCompare()))
+        visibleTasks.sortWith(Task.DateCompare())
+        items.sortWith(Task.DateCompare())
     }
 
     fun getTaskByUUID(uuid: UUID): Task?{
