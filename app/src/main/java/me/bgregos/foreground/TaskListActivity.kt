@@ -253,7 +253,12 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
                 val pos = LocalTasks.items.indexOf(item)
                 val visiblePos = LocalTasks.visibleTasks.indexOf(item)
                 removeAt(position)
-                LocalTasks.items.remove(item)
+                item.modifiedDate=toUtc(Date()) //update modified date
+                item.status = "completed"
+                if (!LocalTasks.localChanges.contains(item)){
+                    LocalTasks.localChanges.add(item)
+                }
+                LocalTasks.save(this.parentActivity.applicationContext)
             }
         }
 

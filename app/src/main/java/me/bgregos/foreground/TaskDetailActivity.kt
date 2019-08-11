@@ -83,9 +83,11 @@ class TaskDetailActivity : AppCompatActivity() {
         if (task != null){
             task.modifiedDate=toUtc(Date()) //update modified date
             task.status="deleted"
-            LocalTasks.localChanges.add(task.copy())
+            if (!LocalTasks.localChanges.contains(task)){
+                LocalTasks.localChanges.add(task)
+            }
             LocalTasks.updateVisibleTasks()
-            LocalTasks.save(applicationContext)
+            LocalTasks.save(this.applicationContext)
             navigateUpTo(Intent(this, TaskListActivity::class.java))
         }
     }
@@ -94,10 +96,12 @@ class TaskDetailActivity : AppCompatActivity() {
         val task = LocalTasks.getTaskByUUID(uuid)
         if (task != null){
             task.modifiedDate=toUtc(Date()) //update modified date
-            task.status="completed"
-            LocalTasks.localChanges.add(task.copy())
+            task.status = "completed"
+            if (!LocalTasks.localChanges.contains(task)){
+                LocalTasks.localChanges.add(task)
+            }
             LocalTasks.updateVisibleTasks()
-            LocalTasks.save(applicationContext)
+            LocalTasks.save(this.applicationContext)
             navigateUpTo(Intent(this, TaskListActivity::class.java))
         }
     }
