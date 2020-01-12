@@ -30,6 +30,9 @@ import kotlinx.android.synthetic.main.activity_settings2.*
 import kotlinx.android.synthetic.main.activity_task_list.*
 import kotlinx.android.synthetic.main.task_detail.*
 import kotlinx.android.synthetic.main.task_list.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import me.bgregos.foreground.task.LocalTasks
 import me.bgregos.foreground.task.RemoteTaskManager
 import org.bouncycastle.asn1.ASN1Encoding
@@ -45,73 +48,8 @@ import java.util.*
 
 class SettingsActivity : AppCompatActivity() {
 
-    private var PROPERTIES_TASKWARRIOR : URL? = null
-
-    private inner class TestTask : AsyncTask<Void, Void, String>() {
-
-        val config = TaskwarriorPropertiesConfiguration(PROPERTIES_TASKWARRIOR)
-        var client : TaskwarriorClient? = null
-        init {
-            try {
-                client = TaskwarriorClient(config)
-            } catch (e:Exception){
-                //keep client as null, weill be caught by async task
-            }
-        }
-
-
-        override fun onPreExecute() {
-            save()
-        }
-
-        override fun doInBackground(vararg v: Void): String {
-            if (client == null) {
-                return "Invalid Config"
-            }
-            val headers = HashMap<String, String>()
-            headers.put(TaskwarriorMessage.HEADER_TYPE, "statistics")
-            headers.put(TaskwarriorMessage.HEADER_PROTOCOL, "v1")
-            headers.put(TaskwarriorMessage.HEADER_CLIENT, "taskwarrior-java-client " + ManifestHelper.getImplementationVersionFromManifest("local-dev"))
-
-            try {
-                val response:TaskwarriorMessage = client!!.sendAndReceive(TaskwarriorMessage(headers))
-                return response.toString()
-            } catch (e: Exception) {
-                return e.message ?: "General Error"
-            }
-
-        }
-
-        override fun onProgressUpdate(vararg v: Void) {
-        }
-
-        override fun onPostExecute(response: String) {
-            Log.i(this.javaClass.toString(), response)
-            settings_sync.visibility = View.VISIBLE
-            settings_enable_sync_text.text = "Enable Sync"
-            settings_syncprogress.visibility = View.INVISIBLE
-            if (!response.contains("status=Ok")) {
-                val bar = Snackbar.make(settings_parent, "There was a problem testing the sync configuration: "+response, Snackbar.LENGTH_INDEFINITE)
-                bar.view.setBackgroundColor(Color.parseColor("#34309f"))
-                bar.setAction("Dismiss",  View.OnClickListener {
-                    bar.dismiss()
-                })
-                bar.setActionTextColor(Color.WHITE)
-                bar.show()
-
-            }else{
-                settings_sync.isChecked = true
-                val bar = Snackbar.make(settings_parent, "Sync enabled successfully!", Snackbar.LENGTH_SHORT)
-                bar.view.setBackgroundColor(Color.parseColor("#34309f"))
-                bar.show()
-            }
-
-        }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        PROPERTIES_TASKWARRIOR = File(this.filesDir, "taskwarrior.properties").toURI().toURL()
         setContentView(R.layout.activity_settings2)
         settings_syncprogress.visibility = View.INVISIBLE
         settings_sync.visibility = View.VISIBLE
@@ -150,7 +88,27 @@ class SettingsActivity : AppCompatActivity() {
                 settings_sync.visibility = View.GONE
                 save()
                 settings_syncprogress.visibility = View.VISIBLE
-                TestTask().execute()
+                CoroutineScope(Dispatchers.Main).launch {
+                    val response: RemoteTaskManager.SyncResult = RemoteTaskManager(this@SettingsActivity).taskwarriorTestSync()
+                    Log.i(this.javaClass.toString(), response.message)
+                    settings_sync.visibility = View.VISIBLE
+                    settings_enable_sync_text.text = "Enable Sync"
+                    settings_syncprogress.visibility = View.INVISIBLE
+                    if (response.success) {
+                        settings_sync.isChecked = true
+                        val bar = Snackbar.make(settings_parent, "Sync enabled successfully!", Snackbar.LENGTH_SHORT)
+                        bar.view.setBackgroundColor(Color.parseColor("#34309f"))
+                        bar.show()
+                    }else{
+                        val bar = Snackbar.make(settings_parent, response.message, Snackbar.LENGTH_INDEFINITE)
+                        bar.view.setBackgroundColor(Color.parseColor("#34309f"))
+                        bar.setAction("Dismiss",  View.OnClickListener {
+                            bar.dismiss()
+                        })
+                        bar.setActionTextColor(Color.WHITE)
+                        bar.show()
+                    }
+                }
             }
         }
 
@@ -172,7 +130,6 @@ class SettingsActivity : AppCompatActivity() {
         val creds = settings_credentials.text.toString().split("/")
         /*  Generate settings file used by the taskwarrior sync agent. These settings
             are a subset of the full application settings */
-
 
         val infile = File("taskwarrior.properties")
         if (!infile.exists()) { //create empty properties file if it doesnt exist.

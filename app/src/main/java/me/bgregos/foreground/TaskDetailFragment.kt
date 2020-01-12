@@ -170,6 +170,8 @@ class TaskDetailFragment : Fragment() {
             rootView.detail_priority.setSelection(0)
             rootView.detail_priority.setSelection(1)
             rootView.detail_priority.setSelection(0)
+            rootView.detail_priority.setSelection(1)
+            rootView.detail_priority.setSelection(0)
         }
 
         return rootView
@@ -225,7 +227,7 @@ class TaskDetailFragment : Fragment() {
                 LocalTasks.localChanges.add(toModify)
             }
             LocalTasks.save(activity!!.applicationContext)
-            Log.d(this.javaClass.toString(), "Saving task")
+            Log.d(this.javaClass.toString(), "Saved task")
             super.onPause()
         }
     }

@@ -11,6 +11,8 @@ import android.support.v7.widget.RecyclerView
 import android.text.TextUtils.split
 import android.util.Log
 import android.view.*
+import android.view.animation.Animation
+import android.view.animation.RotateAnimation
 import android.widget.ImageView
 import android.widget.PopupMenu
 import android.widget.TextView
@@ -26,13 +28,14 @@ import kotlinx.android.synthetic.main.task_detail.*
 import kotlinx.android.synthetic.main.task_list.*
 import kotlinx.android.synthetic.main.task_list_content.*
 import kotlinx.android.synthetic.main.task_list_content.view.*
-import me.bgregos.foreground.R.id.action_visibility
-import me.bgregos.foreground.R.id.task_list
+import kotlinx.coroutines.*
+import me.bgregos.foreground.R.id.*
 import me.bgregos.foreground.task.LocalTasks
 import me.bgregos.foreground.task.LocalTasks.items
 import me.bgregos.foreground.task.LocalTasks.localChanges
 import me.bgregos.foreground.task.LocalTasks.updateVisibleTasks
 import me.bgregos.foreground.task.LocalTasks.visibleTasks
+import me.bgregos.foreground.task.RemoteTaskManager
 import me.bgregos.foreground.task.Task
 import java.io.File
 import java.net.URL
@@ -61,9 +64,6 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
      */
     private var twoPane: Boolean = false
     private var PROPERTIES_TASKWARRIOR : URL? = null
-    private var recievedMessage : TaskwarriorMessage? = null
-    private var outPayload : String? = null
-    private var syncKey : UUID? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -103,16 +103,38 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
     }
 
     fun onSyncClick(item: MenuItem) {
+        val r = RotateAnimation(360f, 0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f)
+        r.duration = 1000
+        r.repeatCount = Animation.INFINITE
+        val syncButton = this.findViewById<View>(R.id.action_sync)
+        syncButton.clearAnimation()
+        syncButton.startAnimation(r)
+
         val prefs = this.getSharedPreferences("me.bgregos.BrightTask", Context.MODE_PRIVATE)
         if (prefs.getBoolean("settings_sync", false)){
             val bar = Snackbar.make(task_list_parent, "Syncing...", Snackbar.LENGTH_SHORT)
             bar.view.setBackgroundColor(Color.parseColor("#34309f"))
             bar.show()
-            SyncTask().execute()
+            CoroutineScope(Dispatchers.Main).launch {
+                var syncResult: RemoteTaskManager.SyncResult = RemoteTaskManager(this@TaskListActivity).taskwarriorSync()
+                var bar: Snackbar?
+                if(syncResult.success){
+                    val bar = Snackbar.make(task_list_parent, "Sync Successful", Snackbar.LENGTH_SHORT)
+                    bar.view.setBackgroundColor(Color.parseColor("#34309f"))
+                    bar.show()
+                }else{
+                    val bar = Snackbar.make(task_list_parent, "Sync Failed: ${syncResult.message}", Snackbar.LENGTH_LONG)
+                    bar.view.setBackgroundColor(Color.parseColor("#34309f"))
+                    bar.show()
+                }
+                task_list.adapter?.notifyDataSetChanged()
+                r.repeatCount = 0
+            }
         } else {
             val bar = Snackbar.make(task_list_parent, "Sync is disabled! Enable it in the settings menu.", Snackbar.LENGTH_LONG)
             bar.view.setBackgroundColor(Color.parseColor("#34309f"))
             bar.show()
+            r.repeatCount = 0
         }
     }
 
@@ -276,129 +298,6 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
             val complete: ImageView = view.complete
         }
 
-    }
-
-
-    private inner class SyncTask : AsyncTask<Void, Void, String>() {
-
-        val config = TaskwarriorPropertiesConfiguration(PROPERTIES_TASKWARRIOR)
-        val client = TaskwarriorClient(config)
-
-        override fun onPreExecute() {
-            JSONArray()
-        }
-
-        override fun doInBackground(vararg v: Void): String {
-
-            val headers = HashMap<String, String>()
-            headers.put(TaskwarriorMessage.HEADER_TYPE, "sync")
-            headers.put(TaskwarriorMessage.HEADER_PROTOCOL, "v1")
-            headers.put(TaskwarriorMessage.HEADER_CLIENT, "foreground" + ManifestHelper.getImplementationVersionFromManifest("local-dev"))
-
-            if (!LocalTasks.initSync) { //do not upload on first-round initial sync
-                val sb = StringBuilder()
-                sb.appendln(LocalTasks.syncKey) //uuid goes first
-                for (task in LocalTasks.localChanges) {
-                    sb.appendln(Task.toJson(task))
-                }
-                outPayload = sb.toString()
-                Log.d(this.javaClass.toString(), "outpayload: " + outPayload)
-            }
-            try {
-                var response:TaskwarriorMessage
-                if(outPayload.isNullOrBlank()){
-                    response = client.sendAndReceive(TaskwarriorMessage(headers))
-                } else {
-                    response = client.sendAndReceive(TaskwarriorMessage(headers, outPayload))
-                }
-                recievedMessage = response
-                return response.toString()
-            } catch (e: Exception) {
-                return "Network Failure"
-            }
-        }
-
-        override fun onProgressUpdate(vararg v: Void) {
-        }
-
-        override fun onPostExecute(responseString: String) {
-            val rcvdmessage = recievedMessage
-            //Log.d(this.javaClass.toString(), responseString)
-            if ((!responseString.contains("status=Ok") && !responseString.contains("status=No change")) || rcvdmessage == null || rcvdmessage.payload == null) {
-                val bar = Snackbar.make(task_list_parent, "Sync Failed: $responseString", Snackbar.LENGTH_SHORT)
-                Log.i(this.javaClass.toString(), "sync fail: "+ responseString)
-                bar.view.setBackgroundColor(Color.parseColor("#34309f"))
-                bar.show()
-
-            }else{ //success
-                LocalTasks.localChanges.clear()
-                val jsonObjStrArr : ArrayList<String> = rcvdmessage.payload.toString().replaceFirst("Optional[", "").split("\n") as ArrayList<String>
-                jsonObjStrArr.removeAt(jsonObjStrArr.lastIndex)
-                for (str in jsonObjStrArr){
-                    Log.d("full message recieved", str)
-                }
-                val jArray : ArrayList<JSONObject> = ArrayList()
-                try{
-                    UUID.fromString(jsonObjStrArr.get(0))
-                    //sync key is at top
-                    LocalTasks.syncKey = jsonObjStrArr.removeAt(0)
-                } catch (e:IllegalArgumentException) {
-                    try {
-                        UUID.fromString(jsonObjStrArr.get(jsonObjStrArr.lastIndex-1))
-                        //sync key is at bottom
-                        LocalTasks.syncKey = jsonObjStrArr.removeAt(jsonObjStrArr.lastIndex-1)
-                    } catch (e:IllegalArgumentException) {
-                        //no sync key!
-                        Log.e(this.javaClass.toString(), "Error parsing sync data, no sync key.", e)
-                        val bar = Snackbar.make(task_list_parent, "Sync Failed.", Snackbar.LENGTH_SHORT)
-                        bar.view.setBackgroundColor(Color.parseColor("#34309f"))
-                        bar.show()
-                        return
-                    }
-                }
-                Log.v("sync key", LocalTasks.syncKey)
-                for (taskString in jsonObjStrArr){
-                    if (taskString != "") {
-                        val task = Task.fromJson(taskString)
-
-                        if (task != null){
-                            val storedTask = LocalTasks.getTaskByUUID(task.uuid)
-                            //add task to LocalTasks. must make sure that tasks with same uuid get overwritten by newest task
-                            //check if stored task is older and not null
-                            if (storedTask?.modifiedDate?.before(task.modifiedDate) == true) {
-                                //stored task is older or has no timestamp, replace
-                                LocalTasks.items.remove(storedTask)
-                                if (!(task.status=="completed" || task.status=="deleted" || task.status=="recurring")){
-                                    LocalTasks.items.add(task)
-                                }
-                            } else if (storedTask == null) {
-                                //add new task
-                                if (!(task.status=="completed" || task.status=="deleted" || task.status=="recurring")){
-                                    LocalTasks.items.add(task)
-                                }
-                            } else {
-                                //task is older than current, do nothing.
-                            }
-                        }
-
-                    }
-                }
-                LocalTasks.save(applicationContext)
-
-                if (LocalTasks.initSync){ //immediately after initial sync, start another to upload tasks.
-                    LocalTasks.initSync = false
-                    SyncTask().execute()
-                }else {
-                    val bar = Snackbar.make(task_list_parent, "Sync successful!", Snackbar.LENGTH_SHORT)
-                    bar.view.setBackgroundColor(Color.parseColor("#34309f"))
-                    bar.show()
-
-                    LocalTasks.updateVisibleTasks()
-                    setupRecyclerView(task_list)
-                }
-            }
-
-        }
     }
 
 }
