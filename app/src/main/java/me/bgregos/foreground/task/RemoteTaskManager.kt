@@ -1,11 +1,16 @@
 package me.bgregos.foreground.task
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.os.AsyncTask
 import android.support.design.widget.Snackbar
+import android.support.v4.content.LocalBroadcastManager
 import android.util.Log
 import android.widget.Toast
+import androidx.work.CoroutineWorker
+import androidx.work.Worker
+import androidx.work.WorkerParameters
 import de.aaschmid.taskwarrior.TaskwarriorClient
 import de.aaschmid.taskwarrior.message.TaskwarriorMessage
 import de.aaschmid.taskwarrior.internal.ManifestHelper
@@ -15,8 +20,7 @@ import de.aaschmid.taskwarrior.message.TaskwarriorMessage.HEADER_TYPE
 import de.aaschmid.taskwarrior.config.TaskwarriorPropertiesConfiguration
 import kotlinx.android.synthetic.main.activity_task_list.*
 import kotlinx.android.synthetic.main.task_list.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import org.json.JSONObject
 import java.io.File
 import java.lang.IllegalArgumentException
@@ -33,6 +37,22 @@ class RemoteTaskManager(c:Context) {
     private var outPayload : String? = null
     private var syncKey : UUID? = null
     data class SyncResult(var success:Boolean, var message:String)
+
+    class TaskwarriorSyncWorker(appContext: Context, workerParams: WorkerParameters)
+        : CoroutineWorker(appContext, workerParams) {
+        var ctx = appContext
+
+        override suspend fun doWork(): Result = coroutineScope {
+            val job = async {
+                RemoteTaskManager(ctx).taskwarriorSync()
+                Log.i("taskwarrior_sync", "Automatic Sync Complete")
+                var localIntent: Intent = Intent("BRIGHTTASK_REMOTE_TASK_UPDATE") //Send local broadcast
+                LocalBroadcastManager.getInstance(ctx).sendBroadcast(localIntent)
+            }
+            job.await()
+            Result.success()
+        }
+    }
 
     suspend fun taskwarriorTestSync(): SyncResult = withContext(Dispatchers.IO) launch@{
         if (client == null) {

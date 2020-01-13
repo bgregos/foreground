@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
 
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_height="match_parent"
     android:layout_width="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
@@ -8,9 +9,8 @@
     android:theme="@style/AppTheme"
     tools:context=".SettingsActivity">
 
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-xmlns:app="http://schemas.android.com/apk/res-auto"
-android:layout_width="match_parent"
+<ScrollView
+    android:layout_width="match_parent"
 android:layout_height="match_parent" >
 
 <LinearLayout
@@ -24,6 +24,7 @@ android:layout_height="match_parent" >
         android:layout_height="wrap_content"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
+        android:layout_marginTop="8dp"
         android:text="Warning: Sync functionality is currently in beta. Your task list could be corrupted or otherwise lost." />
 
     <android.support.v7.widget.CardView
@@ -32,36 +33,105 @@ android:layout_height="match_parent" >
         android:layout_margin="8dp"
         app:cardCornerRadius="4dp"
         app:cardElevation="4dp"
-        app:contentPadding="6dp">
+        app:contentPadding="6dp" >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal" >
+
+                <TextView
+                    android:id="@+id/settings_enable_sync_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Enable Sync"
+                    android:padding="4dp"/>
+                <Switch
+                    android:id="@+id/settings_sync"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:switchPadding="4dp"
+                    android:layout_gravity="left"
+
+                    tools:checked="true" />
+
+                <ProgressBar
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:padding="2dp"
+                    android:layout_gravity="left"
+                    android:gravity="left"
+                    android:id="@+id/settings_syncprogress" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal" >
+
+                <TextView
+                    android:id="@+id/settings_auto_sync_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Sync Automatically"
+                    android:padding="4dp" />
+                <Switch
+                    android:id="@+id/settings_auto_sync"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:switchPadding="4dp"
+                    android:layout_gravity="left"
+
+                    tools:checked="true" />
+
+            </LinearLayout>
+        </LinearLayout>
+
+    </android.support.v7.widget.CardView>
+
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="8dp"
+        app:cardCornerRadius="4dp"
+        app:cardElevation="4dp"
+        app:contentPadding="6dp" >
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="horizontal" >
 
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" >
+
+                <android.support.design.widget.TextInputEditText
+                    android:id="@+id/settings_auto_sync_interval"
+                    android:layout_width="200dp"
+                    android:layout_height="wrap_content"
+                    android:hint="Auto Sync Interval"
+                    android:text="60"
+                    android:inputType="number"
+                    android:selectAllOnFocus="true"
+                    android:singleLine="true" />
+            </android.support.design.widget.TextInputLayout>
+
             <TextView
-                android:id="@+id/settings_enable_sync_text"
+                android:id="@+id/settings_auto_sync_interval_text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Enable Sync"
-                android:padding="4dp"/>
-            <Switch
-                android:id="@+id/settings_sync"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="true"
-                android:switchPadding="4dp"
-                android:layout_gravity="left"
-
-                tools:checked="true" />
-
-            <ProgressBar
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:padding="2dp"
-                android:layout_gravity="left"
-                android:gravity="left"
-                android:id="@+id/settings_syncprogress" />
+                android:text="minutes"
+                android:layout_gravity="center_vertical"
+                android:padding="4dp" />
 
         </LinearLayout>
 
@@ -291,6 +361,7 @@ android:layout_height="match_parent" >
         android:layout_height="wrap_content"
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
+        android:layout_marginBottom="8dp"
         android:text="This app is licensed under the Apache License 2.0. Full terms of the license are available at https://www.apache.org/licenses/LICENSE-2.0.html" />
 
 

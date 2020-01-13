@@ -21,7 +21,12 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
 import android.widget.ArrayAdapter
+import android.widget.TextView
 import android.widget.Toast
+import androidx.work.PeriodicWorkRequest
+import androidx.work.WorkManager
+import androidx.work.Worker
+import androidx.work.WorkerParameters
 import de.aaschmid.taskwarrior.TaskwarriorClient
 import de.aaschmid.taskwarrior.config.TaskwarriorPropertiesConfiguration
 import de.aaschmid.taskwarrior.internal.ManifestHelper
@@ -32,6 +37,7 @@ import kotlinx.android.synthetic.main.task_detail.*
 import kotlinx.android.synthetic.main.task_list.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import me.bgregos.foreground.task.LocalTasks
 import me.bgregos.foreground.task.RemoteTaskManager
@@ -43,7 +49,9 @@ import java.io.IOException
 import java.net.URI
 import java.net.URL
 import java.net.URLEncoder
+import java.time.Duration
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 
 class SettingsActivity : AppCompatActivity() {
@@ -60,6 +68,8 @@ class SettingsActivity : AppCompatActivity() {
         //load preferences
         val prefs = this.getSharedPreferences("me.bgregos.BrightTask", Context.MODE_PRIVATE)
         settings_sync.isChecked = prefs.getBoolean("settings_sync", false)
+        settings_auto_sync.isChecked = prefs.getBoolean("settings_auto_sync", false)
+        settings_auto_sync_interval.setText(prefs.getString("settings_auto_sync_interval", "60"))
         settings_address.setText(prefs.getString("settings_address", ""))
         var port = prefs.getInt("settings_port", -1).toString()
         port = if (port=="-1") "" else port
@@ -109,6 +119,8 @@ class SettingsActivity : AppCompatActivity() {
                         bar.show()
                     }
                 }
+            } else {
+                settings_auto_sync.isChecked = false
             }
         }
 
@@ -116,7 +128,33 @@ class SettingsActivity : AppCompatActivity() {
         settings_private_key_button.setOnClickListener { performCertFileSearch(CertType.CERT_KEY) }
         settings_cert_private_button.setOnClickListener { performCertFileSearch(CertType.CERT_PRIVATE) }
         settings_reset_sync.setOnClickListener { onResetSync() }
+        settings_auto_sync.setOnClickListener { onAutoSyncClicked() }
+        settings_auto_sync.setOnFocusChangeListener { _, focused -> if(!focused) onAutoSyncIntervalChanged() }
+    }
 
+    fun onAutoSyncIntervalChanged(){
+        settings_auto_sync.isChecked = false
+        var interval: Long = settings_auto_sync_interval.text.toString().toLong()
+        if (interval < 15){
+            settings_auto_sync_interval.setText("15")
+        }
+    }
+
+    fun onAutoSyncClicked(){
+        if(settings_auto_sync.isChecked){
+            var interval: Long = settings_auto_sync_interval.text.toString().toLong()
+            if (interval < 15){
+                interval = 15
+                settings_auto_sync_interval.setText("15")
+            }
+            val syncRequest =
+                    PeriodicWorkRequest.Builder(RemoteTaskManager.TaskwarriorSyncWorker::class.java, interval, TimeUnit.MINUTES)
+                            .build()
+            WorkManager.getInstance().enqueue(syncRequest)
+
+        }else{
+            WorkManager.getInstance().cancelAllWork()
+        }
     }
 
     override fun onPause() {
@@ -125,6 +163,7 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     fun save() {
+        onAutoSyncClicked()
         //handle port save
         val port = if (settings_port.text.toString() == "") -1 else settings_port.text.toString().toInt()
         val creds = settings_credentials.text.toString().split("/")
@@ -162,6 +201,8 @@ class SettingsActivity : AppCompatActivity() {
         val editor = sp.edit()
 
         editor.putBoolean("settings_sync", settings_sync.isChecked)
+        editor.putBoolean("settings_auto_sync", settings_auto_sync.isChecked)
+        editor.putString("settings_auto_sync_interval", settings_auto_sync_interval.text.toString())
         editor.putString("settings_address", settings_address.text.toString())
         editor.putInt("settings_port", port)
         editor.putString("settings_credentials", settings_credentials.text.toString())

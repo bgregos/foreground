@@ -1,14 +1,15 @@
 package me.bgregos.foreground
 
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Color
-import android.os.AsyncTask
 import android.os.Bundle
 import android.support.design.widget.Snackbar
+import android.support.v4.content.LocalBroadcastManager
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.RecyclerView
-import android.text.TextUtils.split
 import android.util.Log
 import android.view.*
 import android.view.animation.Animation
@@ -16,36 +17,19 @@ import android.view.animation.RotateAnimation
 import android.widget.ImageView
 import android.widget.PopupMenu
 import android.widget.TextView
-import com.google.gson.JsonObject
 import com.jakewharton.threetenabp.AndroidThreeTen
-import de.aaschmid.taskwarrior.TaskwarriorClient
-import de.aaschmid.taskwarrior.config.TaskwarriorPropertiesConfiguration
-import de.aaschmid.taskwarrior.internal.ManifestHelper
-import de.aaschmid.taskwarrior.message.TaskwarriorMessage
-import kotlinx.android.synthetic.main.activity_settings2.*
 import kotlinx.android.synthetic.main.activity_task_list.*
-import kotlinx.android.synthetic.main.task_detail.*
 import kotlinx.android.synthetic.main.task_list.*
-import kotlinx.android.synthetic.main.task_list_content.*
 import kotlinx.android.synthetic.main.task_list_content.view.*
 import kotlinx.coroutines.*
 import me.bgregos.foreground.R.id.*
 import me.bgregos.foreground.task.LocalTasks
-import me.bgregos.foreground.task.LocalTasks.items
-import me.bgregos.foreground.task.LocalTasks.localChanges
-import me.bgregos.foreground.task.LocalTasks.updateVisibleTasks
-import me.bgregos.foreground.task.LocalTasks.visibleTasks
 import me.bgregos.foreground.task.RemoteTaskManager
 import me.bgregos.foreground.task.Task
 import java.io.File
 import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.*
-import org.json.JSONObject
-import org.json.JSONArray
-import org.json.JSONException
-import java.lang.IllegalArgumentException
-import kotlin.collections.ArrayList
 
 
 /**
@@ -64,6 +48,7 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
      */
     private var twoPane: Boolean = false
     private var PROPERTIES_TASKWARRIOR : URL? = null
+    var syncButton: View? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -91,9 +76,25 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
             // activity should be in two-pane mode.
             twoPane = true
         }
-        LocalTasks.updateVisibleTasks()
 
+        syncButton = this.findViewById<View>(action_sync)
+
+        LocalTasks.updateVisibleTasks()
         setupRecyclerView(task_list)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        LocalBroadcastManager.getInstance(this)
+                .registerReceiver(broadcastReceiver, IntentFilter("BRIGHTTASK_REMOTE_TASK_UPDATE"))
+        LocalTasks.updateVisibleTasks()
+        setupRecyclerView(task_list)
+    }
+
+    override fun onPause() {
+        LocalBroadcastManager.getInstance(this)
+                .unregisterReceiver(broadcastReceiver)
+        super.onPause()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -103,12 +104,12 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
     }
 
     fun onSyncClick(item: MenuItem) {
-        val r = RotateAnimation(360f, 0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f)
-        r.duration = 1000
-        r.repeatCount = Animation.INFINITE
+        val syncRotateAnimation = RotateAnimation(360f, 0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f)
+        syncRotateAnimation.duration = 1000
+        syncRotateAnimation.repeatCount = Animation.INFINITE
         val syncButton = this.findViewById<View>(R.id.action_sync)
         syncButton.clearAnimation()
-        syncButton.startAnimation(r)
+        syncButton.startAnimation(syncRotateAnimation)
 
         val prefs = this.getSharedPreferences("me.bgregos.BrightTask", Context.MODE_PRIVATE)
         if (prefs.getBoolean("settings_sync", false)){
@@ -128,13 +129,13 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
                     bar.show()
                 }
                 task_list.adapter?.notifyDataSetChanged()
-                r.repeatCount = 0
+                syncRotateAnimation.repeatCount = 0
             }
         } else {
             val bar = Snackbar.make(task_list_parent, "Sync is disabled! Enable it in the settings menu.", Snackbar.LENGTH_LONG)
             bar.view.setBackgroundColor(Color.parseColor("#34309f"))
             bar.show()
-            r.repeatCount = 0
+            syncRotateAnimation.repeatCount = 0
         }
     }
 
@@ -195,6 +196,25 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
 
     private fun setupRecyclerView(recyclerView: RecyclerView) {
         recyclerView.adapter = SimpleItemRecyclerViewAdapter(this, LocalTasks.visibleTasks, twoPane)
+    }
+
+    val broadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            when (intent?.action) {
+                "BRIGHTTASK_REMOTE_TASK_UPDATE" -> {
+                    val syncRotateAnimation = RotateAnimation(360f, 0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f)
+                    syncRotateAnimation.duration = 1000
+                    syncRotateAnimation.repeatCount = 0
+                    syncButton?.clearAnimation()
+                    syncButton?.startAnimation(syncRotateAnimation)
+
+                    LocalTasks.updateVisibleTasks()
+                    setupRecyclerView(task_list)
+                    task_list.adapter?.notifyDataSetChanged()
+                    Log.i("auto_sync", "Task List received auto-update")
+                }
+            }
+        }
     }
 
     private fun openTask(task: Task, v: View, name: String){
