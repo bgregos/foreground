@@ -46,6 +46,7 @@ import org.bouncycastle.asn1.pkcs.PrivateKeyInfo
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.lang.Exception
 import java.net.URI
 import java.net.URL
 import java.net.URLEncoder
@@ -99,9 +100,14 @@ class SettingsActivity : AppCompatActivity() {
                 save()
                 settings_syncprogress.visibility = View.VISIBLE
                 CoroutineScope(Dispatchers.Main).launch {
-                    val response: RemoteTaskManager.SyncResult = RemoteTaskManager(this@SettingsActivity).taskwarriorTestSync()
+                    var response: RemoteTaskManager.SyncResult
+                    try {
+                        response = RemoteTaskManager(this@SettingsActivity).taskwarriorTestSync()
+                    }catch (e: Exception){
+                        response = RemoteTaskManager.SyncResult(false, "Invalid or incomplete configuration.")
+                    }
                     Log.i(this.javaClass.toString(), response.message)
-                    settings_sync.visibility = View.VISIBLE
+                    settings_sync.visibility = View.VISIBLE:x
                     settings_enable_sync_text.text = "Enable Sync"
                     settings_syncprogress.visibility = View.INVISIBLE
                     if (response.success) {
