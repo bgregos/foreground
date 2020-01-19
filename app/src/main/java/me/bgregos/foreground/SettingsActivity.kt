@@ -107,7 +107,7 @@ class SettingsActivity : AppCompatActivity() {
                         response = RemoteTaskManager.SyncResult(false, "Invalid or incomplete configuration.")
                     }
                     Log.i(this.javaClass.toString(), response.message)
-                    settings_sync.visibility = View.VISIBLE:x
+                    settings_sync.visibility = View.VISIBLE
                     settings_enable_sync_text.text = "Enable Sync"
                     settings_syncprogress.visibility = View.INVISIBLE
                     if (response.success) {
