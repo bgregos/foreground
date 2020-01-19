@@ -10,8 +10,8 @@ android {
         applicationId "me.bgregos.brighttask"
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 5
-        versionName "1.2"
+        versionCode 6
+        versionName "1.2.1"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
