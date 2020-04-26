@@ -24,6 +24,7 @@ import kotlinx.android.synthetic.main.task_list_content.view.*
 import kotlinx.coroutines.*
 import me.bgregos.foreground.R.id.*
 import me.bgregos.foreground.task.LocalTasks
+import me.bgregos.foreground.task.NotificationService
 import me.bgregos.foreground.task.RemoteTaskManager
 import me.bgregos.foreground.task.Task
 import java.io.File
@@ -55,6 +56,7 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
         super.onCreate(savedInstanceState)
         AndroidThreeTen.init(this)
         LocalTasks.load(this)
+        NotificationService.load(this)
 
         setContentView(R.layout.activity_task_list)
         PROPERTIES_TASKWARRIOR = File(this.filesDir, "taskwarrior.properties").toURI().toURL()
@@ -88,12 +90,14 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
         LocalBroadcastManager.getInstance(this)
                 .registerReceiver(broadcastReceiver, IntentFilter("BRIGHTTASK_REMOTE_TASK_UPDATE"))
         LocalTasks.updateVisibleTasks()
+        updatePendingNotifications()
         setupRecyclerView(task_list)
     }
 
     override fun onPause() {
         LocalBroadcastManager.getInstance(this)
                 .unregisterReceiver(broadcastReceiver)
+        NotificationService.save(this)
         super.onPause()
     }
 
@@ -101,6 +105,11 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.menu_main, menu)
         return true
+    }
+
+    private fun updatePendingNotifications() {
+        //prune existing notifications if cleared (does this need done?)
+        //schedule any uncleared notifications that were due at this time or before
     }
 
     fun onSyncClick(item: MenuItem) {
