@@ -60,7 +60,6 @@
         style="@style/InputLabel" />
 
     <Spinner
-        android:layout_marginTop="0dp"
         android:spinnerMode="dialog"
         android:id="@+id/detail_priority"
         android:layout_width="match_parent"
