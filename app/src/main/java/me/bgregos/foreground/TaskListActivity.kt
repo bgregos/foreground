@@ -48,6 +48,7 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
         AndroidThreeTen.init(this)
         LocalTasks.load(this)
         NotificationService.load(this)
+        NotificationService.createNotificationChannel(this)
 
         setContentView(R.layout.activity_task_list)
         PROPERTIES_TASKWARRIOR = File(this.filesDir, "taskwarrior.properties").toURI().toURL()
@@ -78,8 +79,11 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
 
     override fun onResume() {
         super.onResume()
-        LocalBroadcastManager.getInstance(this)
-                .registerReceiver(broadcastReceiver, IntentFilter("BRIGHTTASK_REMOTE_TASK_UPDATE"))
+        var intentFilter = IntentFilter()
+        intentFilter.addAction("BRIGHTTASK_REMOTE_TASK_UPDATE")
+        intentFilter.addAction("BRIGHTTASK_SEND_NOTIFICATION")
+        var lbm = LocalBroadcastManager.getInstance(this)
+        lbm.registerReceiver(broadcastReceiver, intentFilter)
         LocalTasks.updateVisibleTasks()
         updatePendingNotifications()
         setupRecyclerView(task_list)
@@ -101,6 +105,8 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
     private fun updatePendingNotifications() {
         //prune existing notifications if cleared (does this need done?)
         //schedule any uncleared notifications that were due at this time or before
+        NotificationService.clearNotifications(this)
+        NotificationService.scheduleNotificationForTasks(LocalTasks.visibleTasks, this)
     }
 
     fun onSyncClick(item: MenuItem) {
@@ -199,7 +205,8 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
     }
 
     val broadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
+        override fun onReceive(context: Context, intent: Intent?) {
+            Log.d("notif", "received a broadcast intent")
             when (intent?.action) {
                 "BRIGHTTASK_REMOTE_TASK_UPDATE" -> {
                     val syncRotateAnimation = RotateAnimation(360f, 0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f)
@@ -212,6 +219,15 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
                     setupRecyclerView(task_list)
                     task_list.adapter?.notifyDataSetChanged()
                     Log.i("auto_sync", "Task List received auto-update")
+                }
+
+                "BRIGHTTASK_SEND_NOTIFICATION" -> {
+                    val uuid : String? = intent.extras.get("uuid") as String?
+
+                    val task = LocalTasks.getTaskByUUID(UUID.fromString(uuid ?: ""))
+                    if (task != null) {
+                        NotificationService.showDueNotification(task, context)
+                    }
                 }
             }
         }
@@ -262,28 +278,12 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
             return ViewHolder(view)
         }
 
-        fun toLocal(date:Date):Date{
-            val dfLocal = SimpleDateFormat()
-            dfLocal.timeZone = TimeZone.getDefault()
-            val dfUtc = SimpleDateFormat()
-            dfUtc.timeZone = TimeZone.getTimeZone("UTC")
-            return dfUtc.parse(dfLocal.format(date))
-        }
-
-        fun toUtc(date:Date):Date{
-            val dfLocal = SimpleDateFormat()
-            dfLocal.timeZone = TimeZone.getDefault()
-            val dfUtc = SimpleDateFormat()
-            dfUtc.timeZone = TimeZone.getTimeZone("UTC")
-            return dfLocal.parse(dfUtc.format(date))
-        }
-
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            val format = SimpleDateFormat("MMM d, yyyy 'at' h:mm aaa", Locale.ENGLISH)
+            val format = SimpleDateFormat("MMM d, yyyy 'at' h:mm aaa", Locale.getDefault())
             val item = values[position]
             holder.title.text = item.name
             if(item.dueDate != null) {
-                holder.due.text = format.format(toLocal(item.dueDate as Date))
+                holder.due.text = format.format((item.dueDate as Date).toLocal())
             }
 
             with(holder.itemView) {
@@ -295,7 +295,7 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
                 val pos = LocalTasks.items.indexOf(item)
                 val visiblePos = LocalTasks.visibleTasks.indexOf(item)
                 removeAt(position)
-                item.modifiedDate=toUtc(Date()) //update modified date
+                item.modifiedDate=Date().toUtc() //update modified date
                 item.status = "completed"
                 if (!LocalTasks.localChanges.contains(item)){
                     LocalTasks.localChanges.add(item)

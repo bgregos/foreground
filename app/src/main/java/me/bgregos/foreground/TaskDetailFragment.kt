@@ -52,9 +52,9 @@ class TaskDetailFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         val rootView = inflater.inflate(R.layout.task_detail, container, false)
-        val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.US)
+        val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
         dateFormat.timeZone= TimeZone.getDefault()
-        val timeFormat = SimpleDateFormat("hh:mm a", Locale.US)
+        val timeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
         timeFormat.timeZone= TimeZone.getDefault()
 
         // Create an ArrayAdapter using the string array and a default spinner layout
@@ -116,8 +116,8 @@ class TaskDetailFragment : Fragment() {
             val minute:Int = c.get(Calendar.MINUTE)
             val dpd = TimePickerDialog(activity, TimePickerDialog.OnTimeSetListener { view, hour, minute ->
                 // Display Selected date in textbox
-                val inputFormat = SimpleDateFormat("KK:mm", Locale.US)
-                val outputFormat = SimpleDateFormat("hh:mm a", Locale.US)
+                val inputFormat = SimpleDateFormat("KK:mm", Locale.getDefault())
+                val outputFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
                 detail_waitDate.time.setText(outputFormat.format(inputFormat.parse(""+hour+":"+minute)))
                 if(detail_waitDate.date.text.isNullOrBlank()){
                     val year = c.get(Calendar.YEAR)
@@ -151,8 +151,8 @@ class TaskDetailFragment : Fragment() {
             val minute:Int = c.get(Calendar.MINUTE)
             val dpd = TimePickerDialog(activity, TimePickerDialog.OnTimeSetListener { view, hour, minute ->
                 // Display Selected date in textbox
-                val inputFormat = SimpleDateFormat("KK:mm", Locale.US)
-                val outputFormat = SimpleDateFormat("hh:mm a", Locale.US)
+                val inputFormat = SimpleDateFormat("KK:mm", Locale.getDefault())
+                val outputFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
                 detail_dueDate.time.setText(outputFormat.format(inputFormat.parse(""+hour+":"+minute)))
                 if(detail_dueDate.date.text.isNullOrBlank()){
                     val year = c.get(Calendar.YEAR)
@@ -202,7 +202,7 @@ class TaskDetailFragment : Fragment() {
             LocalTasks.save(activity!!.applicationContext)
             super.onPause()
         } else {
-            val format = SimpleDateFormat("MMM dd, yyyy hh:mm a", Locale.US)
+            val format = SimpleDateFormat("MMM dd, yyyy hh:mm a", Locale.getDefault())
             format.timeZone= TimeZone.getDefault()
             val toModify: Task = LocalTasks.getTaskByUUID(item.uuid) ?: throw NullPointerException("Task uuid lookup failed!")
             toModify.name=detail_name.text.toString()
