@@ -1,0 +1,1 @@
+Task manager app, supporting syncing with Taskwarrior.
