@@ -5,6 +5,7 @@ import android.util.Log
 import com.google.gson.Gson
 import java.util.*
 import com.google.gson.reflect.TypeToken
+import me.bgregos.foreground.toUtc
 import java.text.SimpleDateFormat
 import kotlin.collections.ArrayList
 
@@ -84,6 +85,19 @@ object LocalTasks {
         if (itemsModified) {
             save(context)
             updateVisibleTasks()
+        }
+    }
+
+    fun markTaskDone(uuid: UUID) {
+        val item = getTaskByUUID(uuid)
+        if(item == null) {
+            Log.e("LocalTasks", "Failed to find a task with the given UUID")
+            return
+        }
+        item.modifiedDate=Date().toUtc() //update modified date
+        item.status = "completed"
+        if (!localChanges.contains(item)){
+            localChanges.add(item)
         }
     }
 

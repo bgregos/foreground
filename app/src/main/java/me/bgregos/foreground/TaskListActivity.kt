@@ -81,9 +81,10 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
         super.onResume()
         var intentFilter = IntentFilter()
         intentFilter.addAction("BRIGHTTASK_REMOTE_TASK_UPDATE")
-        intentFilter.addAction("BRIGHTTASK_SEND_NOTIFICATION")
+        intentFilter.addAction("BRIGHTTASK_MARK_TASK_DONE")
         var lbm = LocalBroadcastManager.getInstance(this)
         lbm.registerReceiver(broadcastReceiver, intentFilter)
+        Log.d("broadcast", "Broadcast receiver registered")
         LocalTasks.updateVisibleTasks()
         updatePendingNotifications()
         setupRecyclerView(task_list)
@@ -92,6 +93,7 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
     override fun onPause() {
         LocalBroadcastManager.getInstance(this)
                 .unregisterReceiver(broadcastReceiver)
+        Log.d("broadcast", "Broadcast receiver unregistered")
         NotificationService.save(this)
         super.onPause()
     }
@@ -103,9 +105,6 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
     }
 
     private fun updatePendingNotifications() {
-        //prune existing notifications if cleared (does this need done?)
-        //schedule any uncleared notifications that were due at this time or before
-        NotificationService.clearNotifications(this)
         NotificationService.scheduleNotificationForTasks(LocalTasks.visibleTasks, this)
     }
 
@@ -204,9 +203,8 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
         recyclerView.adapter = SimpleItemRecyclerViewAdapter(this, LocalTasks.visibleTasks, twoPane)
     }
 
-    val broadcastReceiver = object : BroadcastReceiver() {
+    private val broadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent?) {
-            Log.d("notif", "received a broadcast intent")
             when (intent?.action) {
                 "BRIGHTTASK_REMOTE_TASK_UPDATE" -> {
                     val syncRotateAnimation = RotateAnimation(360f, 0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f)
@@ -219,15 +217,6 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
                     setupRecyclerView(task_list)
                     task_list.adapter?.notifyDataSetChanged()
                     Log.i("auto_sync", "Task List received auto-update")
-                }
-
-                "BRIGHTTASK_SEND_NOTIFICATION" -> {
-                    val uuid : String? = intent.extras?.get("uuid") as String?
-
-                    val task = LocalTasks.getTaskByUUID(UUID.fromString(uuid ?: ""))
-                    if (task != null) {
-                        NotificationService.showDueNotification(task, context)
-                    }
                 }
             }
         }

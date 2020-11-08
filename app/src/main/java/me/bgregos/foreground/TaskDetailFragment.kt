@@ -135,7 +135,7 @@ class TaskDetailFragment : Fragment() {
             val year = c.get(Calendar.YEAR)
             val month = c.get(Calendar.MONTH)
             val day = c.get(Calendar.DAY_OF_MONTH)
-            val dpd = DatePickerDialog(activity!!.applicationContext, DatePickerDialog.OnDateSetListener { view, year, monthOfYear, dayOfMonth ->
+            val dpd = DatePickerDialog(this.requireContext(), { _, year, monthOfYear, dayOfMonth ->
                 // Display Selected date in textbox
                 detail_dueDate.date.setText("${DateFormatSymbols().months[monthOfYear]} $dayOfMonth, $year")
                 if(detail_dueDate.time.text.isNullOrBlank()){
@@ -149,7 +149,7 @@ class TaskDetailFragment : Fragment() {
             val c = Calendar.getInstance()
             val hour:Int = c.get(Calendar.HOUR_OF_DAY)
             val minute:Int = c.get(Calendar.MINUTE)
-            val dpd = TimePickerDialog(activity, TimePickerDialog.OnTimeSetListener { view, hour, minute ->
+            val dpd = TimePickerDialog(this.requireContext(), TimePickerDialog.OnTimeSetListener { _, hour, minute ->
                 // Display Selected date in textbox
                 val inputFormat = SimpleDateFormat("KK:mm", Locale.getDefault())
                 val outputFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
