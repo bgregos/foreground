@@ -189,7 +189,6 @@ class SettingsActivity : AppCompatActivity() {
         properties["taskwarrior.server.host"]=settings_address.text.toString()
         properties["taskwarrior.server.port"]=port.toString()
         properties["taskwarrior.ssl.cert.ca.file"]=File(filesDir, "cert_ca").absolutePath ?: ""
-        //TODO: This leads to a parsing error in the lib. Try external storage?
         properties["taskwarrior.ssl.private.key.file"]=File(filesDir, "cert_key").absolutePath ?: ""
         properties["taskwarrior.ssl.cert.key.file"]=File(filesDir, "cert_private").absolutePath ?: ""
         if(creds.size == 3){
@@ -295,11 +294,16 @@ class SettingsActivity : AppCompatActivity() {
     fun writeCertFile(uri:Uri, fileName:String){
         val inStream = this.contentResolver.openInputStream(uri)
         val file = File(filesDir, fileName)
-        val buffer = ByteArray(inStream.available())
-        inStream.read(buffer)
-        inStream.close()
-        val outStream = FileOutputStream(file)
-        outStream.write(buffer)
-        outStream.close()
+        if (inStream != null){
+            val buffer = ByteArray(inStream.available())
+            inStream.read(buffer)
+            inStream.close()
+            val outStream = FileOutputStream(file)
+            outStream.write(buffer)
+            outStream.close()
+        } else {
+            Log.e("Foreground Settings", "Failed to write cert file!")
+        }
+
     }
 }

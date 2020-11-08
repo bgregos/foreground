@@ -54,7 +54,7 @@ class RemoteTaskManager(c:Context) {
         headers.put(TaskwarriorMessage.HEADER_CLIENT, "foreground " + ManifestHelper.getImplementationVersionFromManifest("local-dev"))
 
         try {
-            val response:TaskwarriorMessage = client!!.sendAndReceive(TaskwarriorMessage(headers))
+            val response:TaskwarriorMessage = client.sendAndReceive(TaskwarriorMessage(headers))
             if (response.toString().contains("status=Ok")){
                 return@launch SyncResult(true, response.toString())
             }else{

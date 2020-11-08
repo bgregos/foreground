@@ -5,13 +5,13 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 30
     defaultConfig {
         applicationId "me.bgregos.brighttask"
         minSdkVersion 21
-        targetSdkVersion 28
-        versionCode 7
-        versionName "1.2.2"
+        targetSdkVersion 30
+        versionCode 8
+        versionName "1.3.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {

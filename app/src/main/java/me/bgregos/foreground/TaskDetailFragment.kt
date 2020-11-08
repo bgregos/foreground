@@ -100,7 +100,7 @@ class TaskDetailFragment : Fragment() {
             val year = c.get(Calendar.YEAR)
             val month = c.get(Calendar.MONTH)
             val day = c.get(Calendar.DAY_OF_MONTH)
-            val dpd = DatePickerDialog(activity, DatePickerDialog.OnDateSetListener { view, year, monthOfYear, dayOfMonth ->
+            val dpd = DatePickerDialog(activity!!.applicationContext, DatePickerDialog.OnDateSetListener { view, year, monthOfYear, dayOfMonth ->
                 // Display Selected date in textbox
                 detail_waitDate.date.setText(DateFormatSymbols().getMonths()[monthOfYear] + " " + dayOfMonth + ", " + year)
                 if(detail_waitDate.time.text.isNullOrBlank()){
@@ -135,9 +135,9 @@ class TaskDetailFragment : Fragment() {
             val year = c.get(Calendar.YEAR)
             val month = c.get(Calendar.MONTH)
             val day = c.get(Calendar.DAY_OF_MONTH)
-            val dpd = DatePickerDialog(activity, DatePickerDialog.OnDateSetListener { view, year, monthOfYear, dayOfMonth ->
+            val dpd = DatePickerDialog(activity!!.applicationContext, DatePickerDialog.OnDateSetListener { view, year, monthOfYear, dayOfMonth ->
                 // Display Selected date in textbox
-                detail_dueDate.date.setText(DateFormatSymbols().getMonths()[monthOfYear] + " " + dayOfMonth + ", " + year)
+                detail_dueDate.date.setText("${DateFormatSymbols().months[monthOfYear]} $dayOfMonth, $year")
                 if(detail_dueDate.time.text.isNullOrBlank()){
                     detail_dueDate.time.setText("12:00 AM")
                 }
@@ -158,7 +158,7 @@ class TaskDetailFragment : Fragment() {
                     val year = c.get(Calendar.YEAR)
                     val month = c.get(Calendar.MONTH)
                     val day = c.get(Calendar.DAY_OF_MONTH)
-                    detail_dueDate.date.setText(DateFormatSymbols().shortMonths[month] + " " + day + ", " + year)
+                    detail_dueDate.date.setText("${DateFormatSymbols().shortMonths[month]} $day, $year")
                 }
             }, hour, minute, false)
             dpd.show()
@@ -214,10 +214,10 @@ class TaskDetailFragment : Fragment() {
             }
             toModify.modifiedDate=toUtc(Date()) //update modified date
             if(!detail_dueDate.date.text.isNullOrBlank() && !detail_dueDate.time.text.isNullOrBlank()){
-                toModify.dueDate=toUtc(format.parse(detail_dueDate.date.text.toString()+" "+detail_dueDate.time.text.toString()))
+                toModify.dueDate=toUtc(format.parse("${detail_dueDate.date.text.toString()} ${detail_dueDate.time.text.toString()}"))
             }
             if(!detail_waitDate.date.text.isNullOrBlank() && !detail_waitDate.time.text.isNullOrBlank()){
-                toModify.waitDate=toUtc(format.parse(detail_waitDate.date.text.toString()+" "+detail_waitDate.time.text.toString()))
+                toModify.waitDate=toUtc(format.parse("${detail_waitDate.date.text.toString()} ${detail_waitDate.time.text.toString()}"))
             }
             val waitdate = toModify.waitDate
             if(waitdate != null && waitdate.after(Date())) {

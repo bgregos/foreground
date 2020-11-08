@@ -44,10 +44,11 @@ class TaskDetailActivity : AppCompatActivity() {
             // using a fragment transaction.
             val fragment = TaskDetailFragment()
             val bundle = Bundle()
-            bundle.putString("uuid", intent.extras.getString("uuid"))
-            uuid = UUID.fromString(intent.extras.getString("uuid"))
+
+            bundle.putString("uuid", intent.extras?.getString("uuid"))
+            uuid = UUID.fromString(intent.extras?.getString("uuid"))
             fragment.arguments = bundle
-            updateToolbar(intent.extras.getString("displayName"))
+            updateToolbar(intent.extras?.getString("displayName"))
 
             supportFragmentManager.beginTransaction()
                     .add(R.id.task_detail_container, fragment)

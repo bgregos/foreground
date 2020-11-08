@@ -222,7 +222,7 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
                 }
 
                 "BRIGHTTASK_SEND_NOTIFICATION" -> {
-                    val uuid : String? = intent.extras.get("uuid") as String?
+                    val uuid : String? = intent.extras?.get("uuid") as String?
 
                     val task = LocalTasks.getTaskByUUID(UUID.fromString(uuid ?: ""))
                     if (task != null) {
