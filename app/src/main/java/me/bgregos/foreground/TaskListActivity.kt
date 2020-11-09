@@ -1,9 +1,7 @@
 package me.bgregos.foreground
 
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
+import android.app.Activity
+import android.content.*
 import android.graphics.Color
 import android.os.Bundle
 import com.google.android.material.snackbar.Snackbar
@@ -17,6 +15,7 @@ import android.view.animation.RotateAnimation
 import android.widget.ImageView
 import android.widget.PopupMenu
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import com.jakewharton.threetenabp.AndroidThreeTen
 import kotlinx.android.synthetic.main.activity_task_list.*
 import kotlinx.android.synthetic.main.task_list.*
@@ -131,6 +130,7 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
                 }else{
                     val bar = Snackbar.make(task_list_parent, "Sync Failed: ${syncResult.message}", Snackbar.LENGTH_LONG)
                     bar.view.setBackgroundColor(Color.parseColor("#34309f"))
+                    bar.setAction("Details", SyncErrorDetail(syncResult.message, this@TaskListActivity))
                     bar.show()
                 }
                 task_list.adapter?.notifyDataSetChanged()
@@ -141,6 +141,22 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
             bar.view.setBackgroundColor(Color.parseColor("#34309f"))
             bar.show()
             syncRotateAnimation.repeatCount = 0
+        }
+    }
+
+    private class SyncErrorDetail(val error: String, val activity: Activity): View.OnClickListener {
+        override fun onClick(view: View?) {
+            AlertDialog.Builder(activity).let {
+                it.setTitle("Sync Failed")
+                it.setMessage(error)
+                it.setPositiveButton("Close", DialogInterface.OnClickListener { _, _ -> Unit })
+                it.setNeutralButton("Copy", DialogInterface.OnClickListener {_, _ ->
+                    val clipboard = activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    val clip: ClipData = ClipData.newPlainText("foreground_error", error)
+                    clipboard.setPrimaryClip(clip)
+                })
+                it.create()
+            }.show()
         }
     }
 
