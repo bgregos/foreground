@@ -94,15 +94,16 @@ object NotificationService {
             putExtra("notification_id", lastAssignedNotificationId)
             putExtra("uuid", task.uuid.toString())
         }
-        val donePendingIntent = getBroadcast(context, 1, doneIntent, 0)
+        val donePendingIntent = getBroadcast(context, lastAssignedNotificationId, doneIntent, 0)
 
-        val pendingIntent: PendingIntent = PendingIntent.getActivity(context, 0, intent, 0)
+        val pendingIntent: PendingIntent = PendingIntent.getActivity(context, lastAssignedNotificationId, intent, 0)
 
         val builder = NotificationCompat.Builder(context, "me.bgregos.foreground.tasksdue")
                 .setSmallIcon(R.drawable.ic_notif)
                 .setContentTitle(task.name)
                 //.setContentText(task.dueDate.toString())
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setCategory(NotificationCompat.CATEGORY_REMINDER)
                 .addAction(R.drawable.ic_check_black_24dp, "Done", donePendingIntent)
                 // Set the intent that will fire when the user taps the notification
                 .setContentIntent(pendingIntent)

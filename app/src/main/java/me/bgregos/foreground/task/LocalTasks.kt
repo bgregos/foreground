@@ -18,7 +18,7 @@ object LocalTasks {
     var showWaiting:Boolean = false
 
 
-    fun save(context: Context) {
+    fun save(context: Context, synchronous: Boolean = false) {
         updateVisibleTasks()
         val prefs = context.getSharedPreferences("me.bgregos.BrightTask", Context.MODE_PRIVATE)
         val editor = prefs.edit()
@@ -27,10 +27,10 @@ object LocalTasks {
         editor.putString("LocalTasks.initSync", initSync.toString())
         editor.putString("LocalTasks.syncKey", syncKey)
         editor.putString("LocalTasks.showWaiting", showWaiting.toString())
-        editor.apply()
+        if(synchronous) editor.apply() else editor.commit()
     }
 
-    fun load(context: Context) {
+    fun load(context: Context, synchronous: Boolean = false) {
         val prefs = context.getSharedPreferences("me.bgregos.BrightTask", Context.MODE_PRIVATE)
         val taskType = object : TypeToken<ArrayList<Task>>() {}.type
         items = Gson().fromJson(prefs.getString("LocalTasks", ""), taskType) ?: items
@@ -62,7 +62,7 @@ object LocalTasks {
                 }
             }
             editor.putInt("lastSeenVersion", 2)
-            editor.apply()
+            if(synchronous) editor.apply() else editor.commit()
         }
         if (lastSeenVersion<3){ //keep track of breaking changes
             val editor = prefs.edit()
@@ -80,24 +80,11 @@ object LocalTasks {
                 }
             }
             editor.putInt("lastSeenVersion", 3)
-            editor.apply()
+            if(synchronous) editor.apply() else editor.commit()
         }
         if (itemsModified) {
-            save(context)
+            save(context, synchronous)
             updateVisibleTasks()
-        }
-    }
-
-    fun markTaskDone(uuid: UUID) {
-        val item = getTaskByUUID(uuid)
-        if(item == null) {
-            Log.e("LocalTasks", "Failed to find a task with the given UUID")
-            return
-        }
-        item.modifiedDate=Date().toUtc() //update modified date
-        item.status = "completed"
-        if (!localChanges.contains(item)){
-            localChanges.add(item)
         }
     }
 

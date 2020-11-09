@@ -25,7 +25,16 @@ class TaskReceiver: BroadcastReceiver() {
                 }
                 if(context != null){
                     LocalTasks.load(context)
-                    LocalTasks.markTaskDone(UUID.fromString(uuid))
+                    val item = LocalTasks.getTaskByUUID(UUID.fromString(uuid))
+                    if(item == null) {
+                        Log.e("LocalTasks", "Failed to find a task with the given UUID")
+                        return
+                    }
+                    item.modifiedDate=Date().toUtc() //update modified date
+                    item.status = "completed"
+                    if (!LocalTasks.localChanges.contains(item)){
+                        LocalTasks.localChanges.add(item)
+                    }
                     LocalTasks.save(context)
                     var localIntent: Intent = Intent("BRIGHTTASK_REMOTE_TASK_UPDATE") //Send local broadcast
                     LocalBroadcastManager.getInstance(context).sendBroadcast(localIntent)
