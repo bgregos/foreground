@@ -2,8 +2,8 @@ package me.bgregos.foreground
 
 import android.content.Intent
 import android.os.Bundle
-import android.support.design.widget.Snackbar
-import android.support.v7.app.AppCompatActivity
+import com.google.android.material.snackbar.Snackbar
+import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import kotlinx.android.synthetic.main.activity_task_detail.*
@@ -44,10 +44,11 @@ class TaskDetailActivity : AppCompatActivity() {
             // using a fragment transaction.
             val fragment = TaskDetailFragment()
             val bundle = Bundle()
-            bundle.putString("uuid", intent.extras.getString("uuid"))
-            uuid = UUID.fromString(intent.extras.getString("uuid"))
+
+            bundle.putString("uuid", intent.extras?.getString("uuid"))
+            uuid = UUID.fromString(intent.extras?.getString("uuid"))
             fragment.arguments = bundle
-            updateToolbar(intent.extras.getString("displayName"))
+            updateToolbar(intent.extras?.getString("displayName"))
 
             supportFragmentManager.beginTransaction()
                     .add(R.id.task_detail_container, fragment)

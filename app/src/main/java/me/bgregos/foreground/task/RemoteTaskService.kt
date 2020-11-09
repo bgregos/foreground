@@ -2,24 +2,14 @@ package me.bgregos.foreground.task
 
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
-import android.os.AsyncTask
-import android.support.design.widget.Snackbar
-import android.support.v4.content.LocalBroadcastManager
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import android.util.Log
-import android.widget.Toast
 import androidx.work.CoroutineWorker
-import androidx.work.Worker
 import androidx.work.WorkerParameters
 import de.aaschmid.taskwarrior.TaskwarriorClient
 import de.aaschmid.taskwarrior.message.TaskwarriorMessage
 import de.aaschmid.taskwarrior.internal.ManifestHelper
-import de.aaschmid.taskwarrior.message.TaskwarriorMessage.HEADER_CLIENT
-import de.aaschmid.taskwarrior.message.TaskwarriorMessage.HEADER_PROTOCOL
-import de.aaschmid.taskwarrior.message.TaskwarriorMessage.HEADER_TYPE
 import de.aaschmid.taskwarrior.config.TaskwarriorPropertiesConfiguration
-import kotlinx.android.synthetic.main.activity_task_list.*
-import kotlinx.android.synthetic.main.task_list.*
 import kotlinx.coroutines.*
 import org.json.JSONObject
 import java.io.File
@@ -61,10 +51,10 @@ class RemoteTaskManager(c:Context) {
         val headers = HashMap<String, String>()
         headers.put(TaskwarriorMessage.HEADER_TYPE, "statistics")
         headers.put(TaskwarriorMessage.HEADER_PROTOCOL, "v1")
-        headers.put(TaskwarriorMessage.HEADER_CLIENT, "taskwarrior-java-client " + ManifestHelper.getImplementationVersionFromManifest("local-dev"))
+        headers.put(TaskwarriorMessage.HEADER_CLIENT, "foreground " + ManifestHelper.getImplementationVersionFromManifest("local-dev"))
 
         try {
-            val response:TaskwarriorMessage = client!!.sendAndReceive(TaskwarriorMessage(headers))
+            val response:TaskwarriorMessage = client.sendAndReceive(TaskwarriorMessage(headers))
             if (response.toString().contains("status=Ok")){
                 return@launch SyncResult(true, response.toString())
             }else{

@@ -14,10 +14,10 @@ import android.opengl.Visibility
 import android.os.AsyncTask
 import android.os.Bundle
 import android.provider.OpenableColumns
-import android.support.design.widget.Snackbar
-import android.support.v4.app.ActivityCompat
-import android.support.v4.content.ContextCompat
-import android.support.v7.app.AppCompatActivity
+import com.google.android.material.snackbar.Snackbar
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import android.view.View
 import android.widget.ArrayAdapter
@@ -189,7 +189,6 @@ class SettingsActivity : AppCompatActivity() {
         properties["taskwarrior.server.host"]=settings_address.text.toString()
         properties["taskwarrior.server.port"]=port.toString()
         properties["taskwarrior.ssl.cert.ca.file"]=File(filesDir, "cert_ca").absolutePath ?: ""
-        //TODO: This leads to a parsing error in the lib. Try external storage?
         properties["taskwarrior.ssl.private.key.file"]=File(filesDir, "cert_key").absolutePath ?: ""
         properties["taskwarrior.ssl.cert.key.file"]=File(filesDir, "cert_private").absolutePath ?: ""
         if(creds.size == 3){
@@ -295,11 +294,16 @@ class SettingsActivity : AppCompatActivity() {
     fun writeCertFile(uri:Uri, fileName:String){
         val inStream = this.contentResolver.openInputStream(uri)
         val file = File(filesDir, fileName)
-        val buffer = ByteArray(inStream.available())
-        inStream.read(buffer)
-        inStream.close()
-        val outStream = FileOutputStream(file)
-        outStream.write(buffer)
-        outStream.close()
+        if (inStream != null){
+            val buffer = ByteArray(inStream.available())
+            inStream.read(buffer)
+            inStream.close()
+            val outStream = FileOutputStream(file)
+            outStream.write(buffer)
+            outStream.close()
+        } else {
+            Log.e("Foreground Settings", "Failed to write cert file!")
+        }
+
     }
 }

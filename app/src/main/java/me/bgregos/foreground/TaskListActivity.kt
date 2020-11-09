@@ -1,15 +1,13 @@
 package me.bgregos.foreground
 
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
+import android.app.Activity
+import android.content.*
 import android.graphics.Color
 import android.os.Bundle
-import android.support.design.widget.Snackbar
-import android.support.v4.content.LocalBroadcastManager
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.RecyclerView
+import com.google.android.material.snackbar.Snackbar
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.RecyclerView
 import android.util.Log
 import android.view.*
 import android.view.animation.Animation
@@ -17,6 +15,7 @@ import android.view.animation.RotateAnimation
 import android.widget.ImageView
 import android.widget.PopupMenu
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import com.jakewharton.threetenabp.AndroidThreeTen
 import kotlinx.android.synthetic.main.activity_task_list.*
 import kotlinx.android.synthetic.main.task_list.*
@@ -48,6 +47,7 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
         AndroidThreeTen.init(this)
         LocalTasks.load(this)
         NotificationService.load(this)
+        NotificationService.createNotificationChannel(this)
 
         setContentView(R.layout.activity_task_list)
         PROPERTIES_TASKWARRIOR = File(this.filesDir, "taskwarrior.properties").toURI().toURL()
@@ -78,8 +78,12 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
 
     override fun onResume() {
         super.onResume()
-        LocalBroadcastManager.getInstance(this)
-                .registerReceiver(broadcastReceiver, IntentFilter("BRIGHTTASK_REMOTE_TASK_UPDATE"))
+        var intentFilter = IntentFilter()
+        intentFilter.addAction("BRIGHTTASK_REMOTE_TASK_UPDATE")
+        intentFilter.addAction("BRIGHTTASK_MARK_TASK_DONE")
+        var lbm = LocalBroadcastManager.getInstance(this)
+        lbm.registerReceiver(broadcastReceiver, intentFilter)
+        Log.d("broadcast", "Broadcast receiver registered")
         LocalTasks.updateVisibleTasks()
         updatePendingNotifications()
         setupRecyclerView(task_list)
@@ -88,6 +92,7 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
     override fun onPause() {
         LocalBroadcastManager.getInstance(this)
                 .unregisterReceiver(broadcastReceiver)
+        Log.d("broadcast", "Broadcast receiver unregistered")
         NotificationService.save(this)
         super.onPause()
     }
@@ -99,8 +104,7 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
     }
 
     private fun updatePendingNotifications() {
-        //prune existing notifications if cleared (does this need done?)
-        //schedule any uncleared notifications that were due at this time or before
+        NotificationService.scheduleNotificationForTasks(LocalTasks.visibleTasks, this)
     }
 
     fun onSyncClick(item: MenuItem) {
@@ -126,6 +130,7 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
                 }else{
                     val bar = Snackbar.make(task_list_parent, "Sync Failed: ${syncResult.message}", Snackbar.LENGTH_LONG)
                     bar.view.setBackgroundColor(Color.parseColor("#34309f"))
+                    bar.setAction("Details", SyncErrorDetail(syncResult.message, this@TaskListActivity))
                     bar.show()
                 }
                 task_list.adapter?.notifyDataSetChanged()
@@ -136,6 +141,22 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
             bar.view.setBackgroundColor(Color.parseColor("#34309f"))
             bar.show()
             syncRotateAnimation.repeatCount = 0
+        }
+    }
+
+    private class SyncErrorDetail(val error: String, val activity: Activity): View.OnClickListener {
+        override fun onClick(view: View?) {
+            AlertDialog.Builder(activity).let {
+                it.setTitle("Sync Failed")
+                it.setMessage(error)
+                it.setPositiveButton("Close", DialogInterface.OnClickListener { _, _ -> Unit })
+                it.setNeutralButton("Copy", DialogInterface.OnClickListener {_, _ ->
+                    val clipboard = activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    val clip: ClipData = ClipData.newPlainText("foreground_error", error)
+                    clipboard.setPrimaryClip(clip)
+                })
+                it.create()
+            }.show()
         }
     }
 
@@ -198,8 +219,8 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
         recyclerView.adapter = SimpleItemRecyclerViewAdapter(this, LocalTasks.visibleTasks, twoPane)
     }
 
-    val broadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
+    private val broadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent?) {
             when (intent?.action) {
                 "BRIGHTTASK_REMOTE_TASK_UPDATE" -> {
                     val syncRotateAnimation = RotateAnimation(360f, 0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f)
@@ -262,28 +283,12 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
             return ViewHolder(view)
         }
 
-        fun toLocal(date:Date):Date{
-            val dfLocal = SimpleDateFormat()
-            dfLocal.timeZone = TimeZone.getDefault()
-            val dfUtc = SimpleDateFormat()
-            dfUtc.timeZone = TimeZone.getTimeZone("UTC")
-            return dfUtc.parse(dfLocal.format(date))
-        }
-
-        fun toUtc(date:Date):Date{
-            val dfLocal = SimpleDateFormat()
-            dfLocal.timeZone = TimeZone.getDefault()
-            val dfUtc = SimpleDateFormat()
-            dfUtc.timeZone = TimeZone.getTimeZone("UTC")
-            return dfLocal.parse(dfUtc.format(date))
-        }
-
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            val format = SimpleDateFormat("MMM d, yyyy 'at' h:mm aaa", Locale.ENGLISH)
+            val format = SimpleDateFormat("MMM d, yyyy 'at' h:mm aaa", Locale.getDefault())
             val item = values[position]
             holder.title.text = item.name
             if(item.dueDate != null) {
-                holder.due.text = format.format(toLocal(item.dueDate as Date))
+                holder.due.text = format.format((item.dueDate as Date).toLocal())
             }
 
             with(holder.itemView) {
@@ -295,7 +300,7 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
                 val pos = LocalTasks.items.indexOf(item)
                 val visiblePos = LocalTasks.visibleTasks.indexOf(item)
                 removeAt(position)
-                item.modifiedDate=toUtc(Date()) //update modified date
+                item.modifiedDate=Date().toUtc() //update modified date
                 item.status = "completed"
                 if (!LocalTasks.localChanges.contains(item)){
                     LocalTasks.localChanges.add(item)

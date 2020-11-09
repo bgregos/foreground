@@ -3,7 +3,7 @@ package me.bgregos.foreground
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.os.Bundle
-import android.support.v4.app.Fragment
+import androidx.fragment.app.Fragment
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -52,9 +52,9 @@ class TaskDetailFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         val rootView = inflater.inflate(R.layout.task_detail, container, false)
-        val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.US)
+        val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
         dateFormat.timeZone= TimeZone.getDefault()
-        val timeFormat = SimpleDateFormat("hh:mm a", Locale.US)
+        val timeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
         timeFormat.timeZone= TimeZone.getDefault()
 
         // Create an ArrayAdapter using the string array and a default spinner layout
@@ -100,7 +100,7 @@ class TaskDetailFragment : Fragment() {
             val year = c.get(Calendar.YEAR)
             val month = c.get(Calendar.MONTH)
             val day = c.get(Calendar.DAY_OF_MONTH)
-            val dpd = DatePickerDialog(activity, DatePickerDialog.OnDateSetListener { view, year, monthOfYear, dayOfMonth ->
+            val dpd = DatePickerDialog(this.requireContext(), DatePickerDialog.OnDateSetListener { view, year, monthOfYear, dayOfMonth ->
                 // Display Selected date in textbox
                 detail_waitDate.date.setText(DateFormatSymbols().getMonths()[monthOfYear] + " " + dayOfMonth + ", " + year)
                 if(detail_waitDate.time.text.isNullOrBlank()){
@@ -114,10 +114,10 @@ class TaskDetailFragment : Fragment() {
             val c = Calendar.getInstance()
             val hour:Int = c.get(Calendar.HOUR_OF_DAY)
             val minute:Int = c.get(Calendar.MINUTE)
-            val dpd = TimePickerDialog(activity, TimePickerDialog.OnTimeSetListener { view, hour, minute ->
+            val dpd = TimePickerDialog(this.requireContext(), TimePickerDialog.OnTimeSetListener { view, hour, minute ->
                 // Display Selected date in textbox
-                val inputFormat = SimpleDateFormat("KK:mm", Locale.US)
-                val outputFormat = SimpleDateFormat("hh:mm a", Locale.US)
+                val inputFormat = SimpleDateFormat("KK:mm", Locale.getDefault())
+                val outputFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
                 detail_waitDate.time.setText(outputFormat.format(inputFormat.parse(""+hour+":"+minute)))
                 if(detail_waitDate.date.text.isNullOrBlank()){
                     val year = c.get(Calendar.YEAR)
@@ -135,9 +135,9 @@ class TaskDetailFragment : Fragment() {
             val year = c.get(Calendar.YEAR)
             val month = c.get(Calendar.MONTH)
             val day = c.get(Calendar.DAY_OF_MONTH)
-            val dpd = DatePickerDialog(activity, DatePickerDialog.OnDateSetListener { view, year, monthOfYear, dayOfMonth ->
+            val dpd = DatePickerDialog(this.requireContext(), { _, year, monthOfYear, dayOfMonth ->
                 // Display Selected date in textbox
-                detail_dueDate.date.setText(DateFormatSymbols().getMonths()[monthOfYear] + " " + dayOfMonth + ", " + year)
+                detail_dueDate.date.setText("${DateFormatSymbols().months[monthOfYear]} $dayOfMonth, $year")
                 if(detail_dueDate.time.text.isNullOrBlank()){
                     detail_dueDate.time.setText("12:00 AM")
                 }
@@ -149,16 +149,16 @@ class TaskDetailFragment : Fragment() {
             val c = Calendar.getInstance()
             val hour:Int = c.get(Calendar.HOUR_OF_DAY)
             val minute:Int = c.get(Calendar.MINUTE)
-            val dpd = TimePickerDialog(activity, TimePickerDialog.OnTimeSetListener { view, hour, minute ->
+            val dpd = TimePickerDialog(this.requireContext(), TimePickerDialog.OnTimeSetListener { _, hour, minute ->
                 // Display Selected date in textbox
-                val inputFormat = SimpleDateFormat("KK:mm", Locale.US)
-                val outputFormat = SimpleDateFormat("hh:mm a", Locale.US)
+                val inputFormat = SimpleDateFormat("KK:mm", Locale.getDefault())
+                val outputFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
                 detail_dueDate.time.setText(outputFormat.format(inputFormat.parse(""+hour+":"+minute)))
                 if(detail_dueDate.date.text.isNullOrBlank()){
                     val year = c.get(Calendar.YEAR)
                     val month = c.get(Calendar.MONTH)
                     val day = c.get(Calendar.DAY_OF_MONTH)
-                    detail_dueDate.date.setText(DateFormatSymbols().shortMonths[month] + " " + day + ", " + year)
+                    detail_dueDate.date.setText("${DateFormatSymbols().shortMonths[month]} $day, $year")
                 }
             }, hour, minute, false)
             dpd.show()
@@ -202,7 +202,7 @@ class TaskDetailFragment : Fragment() {
             LocalTasks.save(activity!!.applicationContext)
             super.onPause()
         } else {
-            val format = SimpleDateFormat("MMM dd, yyyy hh:mm a", Locale.US)
+            val format = SimpleDateFormat("MMM dd, yyyy hh:mm a", Locale.getDefault())
             format.timeZone= TimeZone.getDefault()
             val toModify: Task = LocalTasks.getTaskByUUID(item.uuid) ?: throw NullPointerException("Task uuid lookup failed!")
             toModify.name=detail_name.text.toString()
@@ -214,10 +214,10 @@ class TaskDetailFragment : Fragment() {
             }
             toModify.modifiedDate=toUtc(Date()) //update modified date
             if(!detail_dueDate.date.text.isNullOrBlank() && !detail_dueDate.time.text.isNullOrBlank()){
-                toModify.dueDate=toUtc(format.parse(detail_dueDate.date.text.toString()+" "+detail_dueDate.time.text.toString()))
+                toModify.dueDate=toUtc(format.parse("${detail_dueDate.date.text.toString()} ${detail_dueDate.time.text.toString()}"))
             }
             if(!detail_waitDate.date.text.isNullOrBlank() && !detail_waitDate.time.text.isNullOrBlank()){
-                toModify.waitDate=toUtc(format.parse(detail_waitDate.date.text.toString()+" "+detail_waitDate.time.text.toString()))
+                toModify.waitDate=toUtc(format.parse("${detail_waitDate.date.text.toString()} ${detail_waitDate.time.text.toString()}"))
             }
             val waitdate = toModify.waitDate
             if(waitdate != null && waitdate.after(Date())) {
