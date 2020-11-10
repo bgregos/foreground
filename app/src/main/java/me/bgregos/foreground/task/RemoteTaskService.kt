@@ -154,7 +154,7 @@ class RemoteTaskManager(c:Context) {
 
                 }
             }
-            LocalTasks.save(ctx)
+            LocalTasks.save(ctx, true)
 
             if (LocalTasks.initSync) { //immediately after initial sync, start another to upload tasks.
                 LocalTasks.initSync = false

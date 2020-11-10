@@ -80,13 +80,16 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
         super.onResume()
         var intentFilter = IntentFilter()
         intentFilter.addAction("BRIGHTTASK_REMOTE_TASK_UPDATE")
-        intentFilter.addAction("BRIGHTTASK_MARK_TASK_DONE")
         var lbm = LocalBroadcastManager.getInstance(this)
         lbm.registerReceiver(broadcastReceiver, intentFilter)
         Log.d("broadcast", "Broadcast receiver registered")
-        LocalTasks.updateVisibleTasks()
-        updatePendingNotifications()
-        setupRecyclerView(task_list)
+        CoroutineScope(Dispatchers.Main).launch {
+            LocalTasks.load(this@TaskListActivity, true)
+            LocalTasks.updateVisibleTasks()
+            updatePendingNotifications()
+            setupRecyclerView(task_list)
+        }
+
     }
 
     override fun onPause() {
@@ -94,6 +97,7 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
                 .unregisterReceiver(broadcastReceiver)
         Log.d("broadcast", "Broadcast receiver unregistered")
         NotificationService.save(this)
+        LocalTasks.save(this, true)
         super.onPause()
     }
 
@@ -305,7 +309,6 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
                 if (!LocalTasks.localChanges.contains(item)){
                     LocalTasks.localChanges.add(item)
                 }
-                LocalTasks.save(this.parentActivity.applicationContext)
             }
         }
 

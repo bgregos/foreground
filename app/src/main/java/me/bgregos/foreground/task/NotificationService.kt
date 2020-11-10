@@ -5,6 +5,7 @@ import android.app.Notification.EXTRA_NOTIFICATION_ID
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.app.PendingIntent.FLAG_CANCEL_CURRENT
 import android.app.PendingIntent.getBroadcast
 import android.content.Context
 import android.content.Intent
@@ -94,9 +95,9 @@ object NotificationService {
             putExtra("notification_id", lastAssignedNotificationId)
             putExtra("uuid", task.uuid.toString())
         }
-        val donePendingIntent = getBroadcast(context, lastAssignedNotificationId, doneIntent, 0)
+        val donePendingIntent = getBroadcast(context, Int.MAX_VALUE-lastAssignedNotificationId, doneIntent, FLAG_CANCEL_CURRENT)
 
-        val pendingIntent: PendingIntent = PendingIntent.getActivity(context, lastAssignedNotificationId, intent, 0)
+        val pendingIntent: PendingIntent = PendingIntent.getActivity(context, lastAssignedNotificationId, intent, FLAG_CANCEL_CURRENT)
 
         val builder = NotificationCompat.Builder(context, "me.bgregos.foreground.tasksdue")
                 .setSmallIcon(R.drawable.ic_notif)
