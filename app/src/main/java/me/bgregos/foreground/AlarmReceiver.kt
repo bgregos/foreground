@@ -16,12 +16,18 @@ class AlarmReceiver : BroadcastReceiver() {
                 val uuid: String? = intent.extras?.get("uuid") as String?
                 if (uuid == null) {
                     Log.e("notif", "Failed to display notification for task with null uuid")
+                    return
                 }
-                val task = LocalTasks.getTaskByUUID(UUID.fromString(uuid ?: ""))
-                if (task != null && context != null) {
-                    NotificationService.showDueNotification(task, context)
-                } else {
-                    Log.e("notif", "Couldn't show notification - null task or context")
+                if (context == null){
+                    Log.e("notif", "Couldn't show notification - null context")
+                }else{
+                    LocalTasks.load(context, true)
+                    val task = LocalTasks.getTaskByUUID(UUID.fromString(uuid))
+                    if (task != null) {
+                        NotificationService.showDueNotification(task, context)
+                    } else {
+                        Log.e("notif", "Couldn't show notification - null task")
+                    }
                 }
             }
         }
