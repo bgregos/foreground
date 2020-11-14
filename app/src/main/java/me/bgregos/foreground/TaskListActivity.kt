@@ -224,6 +224,7 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
     }
 
     private val broadcastReceiver = object : BroadcastReceiver() {
+        @Synchronized
         override fun onReceive(context: Context, intent: Intent?) {
             when (intent?.action) {
                 "BRIGHTTASK_REMOTE_TASK_UPDATE" -> {
@@ -234,7 +235,6 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
                     syncButton?.startAnimation(syncRotateAnimation)
 
                     LocalTasks.updateVisibleTasks()
-                    setupRecyclerView(task_list)
                     task_list.adapter?.notifyDataSetChanged()
                     Log.i("auto_sync", "Task List received auto-update")
                 }
@@ -270,15 +270,11 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
         private val onClickListener: View.OnClickListener
 
         init {
+            this.setHasStableIds(false)
             onClickListener = View.OnClickListener { v ->
                 val task = v.tag as Task
                 parentActivity.openTask(task, v, task.name)
             }
-        }
-
-        fun swap(){
-            values.clear()
-            values.addAll(LocalTasks.visibleTasks)
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
