@@ -23,10 +23,7 @@ import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.TextView
 import android.widget.Toast
-import androidx.work.PeriodicWorkRequest
-import androidx.work.WorkManager
-import androidx.work.Worker
-import androidx.work.WorkerParameters
+import androidx.work.*
 import de.aaschmid.taskwarrior.TaskwarriorClient
 import de.aaschmid.taskwarrior.config.TaskwarriorPropertiesConfiguration
 import de.aaschmid.taskwarrior.internal.ManifestHelper
@@ -156,7 +153,7 @@ class SettingsActivity : AppCompatActivity() {
             val syncRequest =
                     PeriodicWorkRequest.Builder(RemoteTaskManager.TaskwarriorSyncWorker::class.java, interval, TimeUnit.MINUTES)
                             .build()
-            WorkManager.getInstance().enqueue(syncRequest)
+            WorkManager.getInstance().enqueueUniquePeriodicWork("foreground_sync", ExistingPeriodicWorkPolicy.REPLACE, syncRequest)
 
         }else{
             WorkManager.getInstance().cancelAllWork()

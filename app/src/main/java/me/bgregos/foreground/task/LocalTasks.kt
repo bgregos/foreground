@@ -10,14 +10,21 @@ import java.text.SimpleDateFormat
 import kotlin.collections.ArrayList
 
 object LocalTasks {
+    @Volatile
     var items:ArrayList<Task> = ArrayList()
+    @Volatile
     var visibleTasks:ArrayList<Task> = ArrayList()
+    @Volatile
     var localChanges:ArrayList<Task> = ArrayList()
-    var initSync:Boolean = true
-    var syncKey:String = ""
+
     var showWaiting:Boolean = false
+    var initSync:Boolean = true
+
+    @Volatile
+    var syncKey:String = ""
 
 
+    @Synchronized
     fun save(context: Context, synchronous: Boolean = false) {
         updateVisibleTasks()
         val prefs = context.getSharedPreferences("me.bgregos.BrightTask", Context.MODE_PRIVATE)
@@ -30,6 +37,7 @@ object LocalTasks {
         if(synchronous) editor.apply() else editor.commit()
     }
 
+    @Synchronized
     fun load(context: Context, synchronous: Boolean = false) {
         val prefs = context.getSharedPreferences("me.bgregos.BrightTask", Context.MODE_PRIVATE)
         val taskType = object : TypeToken<ArrayList<Task>>() {}.type
@@ -88,6 +96,7 @@ object LocalTasks {
         }
     }
 
+    @Synchronized
     fun updateVisibleTasks(){
         visibleTasks.clear()
         for (t in items){
