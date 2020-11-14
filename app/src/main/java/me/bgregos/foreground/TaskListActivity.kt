@@ -224,7 +224,6 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
     }
 
     private val broadcastReceiver = object : BroadcastReceiver() {
-        @Synchronized
         override fun onReceive(context: Context, intent: Intent?) {
             when (intent?.action) {
                 "BRIGHTTASK_REMOTE_TASK_UPDATE" -> {
