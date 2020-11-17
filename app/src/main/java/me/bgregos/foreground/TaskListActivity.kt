@@ -234,7 +234,6 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
                     syncButton?.startAnimation(syncRotateAnimation)
 
                     LocalTasks.updateVisibleTasks()
-                    setupRecyclerView(task_list)
                     task_list.adapter?.notifyDataSetChanged()
                     Log.i("auto_sync", "Task List received auto-update")
                 }
@@ -270,15 +269,11 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
         private val onClickListener: View.OnClickListener
 
         init {
+            this.setHasStableIds(false)
             onClickListener = View.OnClickListener { v ->
                 val task = v.tag as Task
                 parentActivity.openTask(task, v, task.name)
             }
-        }
-
-        fun swap(){
-            values.clear()
-            values.addAll(LocalTasks.visibleTasks)
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -301,21 +296,16 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
             }
 
             holder.complete.setOnClickListener {
-                val pos = LocalTasks.items.indexOf(item)
-                val visiblePos = LocalTasks.visibleTasks.indexOf(item)
-                removeAt(position)
+                val pos = holder.layoutPosition
+                values.removeAt(pos)
+                notifyItemRemoved(pos)
+                //notifyItemRangeChanged(pos, values.size)
                 item.modifiedDate=Date().toUtc() //update modified date
                 item.status = "completed"
                 if (!LocalTasks.localChanges.contains(item)){
                     LocalTasks.localChanges.add(item)
                 }
             }
-        }
-
-        fun removeAt(position:Int) {
-            values.removeAt(position)
-            notifyItemRemoved(position)
-            notifyItemRangeChanged(position, values.size-1)
         }
 
         override fun getItemCount() = values.size
