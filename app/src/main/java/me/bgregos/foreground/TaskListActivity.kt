@@ -3,6 +3,9 @@ package me.bgregos.foreground
 import android.app.Activity
 import android.content.*
 import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.media.Image
+import android.opengl.Visibility
 import android.os.Bundle
 import com.google.android.material.snackbar.Snackbar
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
@@ -10,12 +13,15 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import android.util.Log
 import android.view.*
+import android.view.View.GONE
+import android.view.View.VISIBLE
 import android.view.animation.Animation
 import android.view.animation.RotateAnimation
 import android.widget.ImageView
 import android.widget.PopupMenu
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import com.jakewharton.threetenabp.AndroidThreeTen
 import kotlinx.android.synthetic.main.activity_task_list.*
 import kotlinx.android.synthetic.main.task_list.*
@@ -273,8 +279,26 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
             val item = values[position]
             holder.title.text = item.name
             if(item.dueDate != null) {
+                holder.due.visibility = VISIBLE
                 holder.due.text = format.format((item.dueDate as Date).toLocal())
+            }else{
+                holder.due.visibility = GONE
             }
+            if(item.project.isNullOrEmpty() && item.tags.size < 1){
+                holder.projectTags.visibility = GONE
+            }else{
+                holder.projectTags.visibility = VISIBLE
+                val needsSeparator: Boolean = !item.project.isNullOrEmpty() && item.tags.size > 0
+                val projectTags = "${item.project} ${if (needsSeparator) ":" else ""} ${item.tags.joinToString(", ")}"
+                holder.projectTags.text = projectTags
+            }
+            val color = ColorDrawable(when (item.priority) {
+                "H" -> Color.parseColor("#550000")
+                "M" -> Color.parseColor("#666600")
+                "L" -> Color.parseColor("#303066")
+                else -> Color.parseColor("#3a3a3a")
+            })
+            holder.accent.background = color
 
             with(holder.itemView) {
                 tag = item
@@ -299,7 +323,10 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val title: TextView = view.title
             val due: TextView = view.due
+            val projectTags: TextView = view.project_tags
+            val accent: View = view.task_list_card_accentbar
             val complete: ImageView = view.complete
+            val delete: ImageView = view.delete
         }
 
     }

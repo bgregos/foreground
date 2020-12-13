@@ -90,6 +90,12 @@ object LocalTasks {
             editor.putInt("lastSeenVersion", 3)
             if(synchronous) editor.apply() else editor.commit()
         }
+        if(lastSeenVersion<4){
+            val editor = prefs.edit()
+            items.forEach{it.tags.removeAll { tag -> tag.isBlank() }}
+            editor.putInt("lastSeenVersion", 4)
+            if(synchronous) editor.apply() else editor.commit()
+        }
         if (itemsModified) {
             save(context, synchronous)
             updateVisibleTasks()

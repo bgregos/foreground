@@ -1,49 +1,98 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView  xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     xmlns:debug="http://schemas.android.com/tools"
-    app:cardCornerRadius="4dp"
+    android:elevation="20dp"
+    app:cardCornerRadius="8dp"
     app:cardElevation="4dp"
-    app:contentPaddingTop="2dp"
+    app:strokeWidth="0dp"
+    app:strokeColor="#424242"
+    android:background="#424242"
+    android:theme="@style/floatingElement"
     android:layout_marginTop="8dp">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-        <LinearLayout
-            android:layout_width="match_parent"
+        <View
+            android:id="@+id/task_list_card_accentbar"
+            android:layout_width="8dp"
+            android:layout_height="0dp"
+            android:background="#3a3a3a"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_weight="1"
-            android:padding="6dp">
+            android:padding="8dp"
+            android:id="@+id/card_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/task_list_card_accentbar"
+            app:layout_constraintTop_toTopOf="parent">
 
             <TextView
                 android:id="@+id/title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                debug:text="title"/>
+                app:layout_constraintBottom_toTopOf="@+id/due"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                debug:text="title" />
 
             <TextView
                 android:id="@+id/due"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                debug:text="due"/>
+                app:layout_constraintBottom_toTopOf="@+id/project_tags"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/title"
+                debug:text="due" />
 
-        </LinearLayout>
+            <TextView
+                android:id="@+id/project_tags"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/due"
+                debug:text="project : tags" />
 
-        <ImageView
-            android:id="@+id/complete"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_weight=".1"
-            android:cropToPadding="false"
-            android:padding="16dp"
-            android:contentDescription="complete task"
-            app:srcCompat="@drawable/ic_check_black_24dp" />
-    </LinearLayout>
+            <ImageView
+                android:id="@+id/complete"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight=".1"
+                android:contentDescription="complete task"
+                android:cropToPadding="false"
+                android:padding="8dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/ic_check_black_24dp" />
 
-</androidx.cardview.widget.CardView>
+            <ImageView
+                android:id="@+id/delete"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_weight=".1"
+                android:contentDescription="delete task"
+                android:cropToPadding="false"
+                android:padding="8dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/complete"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/ic_delete_black_24dp" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.google.android.material.card.MaterialCardView>
