@@ -218,7 +218,7 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
                     syncRotateAnimation.repeatCount = 0
                     syncButton?.clearAnimation()
                     syncButton?.startAnimation(syncRotateAnimation)
-
+                    LocalTasks.load(context, true)
                     LocalTasks.updateVisibleTasks()
                     task_list.adapter?.notifyDataSetChanged()
                     Log.i("auto_sync", "Task List received auto-update")
