@@ -316,6 +316,18 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
                     LocalTasks.localChanges.add(item)
                 }
             }
+
+            holder.delete.setOnClickListener {
+                val pos = holder.layoutPosition
+                values.removeAt(pos)
+                notifyItemRemoved(pos)
+                //notifyItemRangeChanged(pos, values.size)
+                item.modifiedDate=Date().toUtc() //update modified date
+                item.status = "deleted"
+                if (!LocalTasks.localChanges.contains(item)){
+                    LocalTasks.localChanges.add(item)
+                }
+            }
         }
 
         override fun getItemCount() = values.size
