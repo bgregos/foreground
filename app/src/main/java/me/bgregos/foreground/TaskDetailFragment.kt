@@ -207,6 +207,7 @@ class TaskDetailFragment : Fragment() {
             val toModify: Task = LocalTasks.getTaskByUUID(item.uuid) ?: throw NullPointerException("Task uuid lookup failed!")
             toModify.name=detail_name.text.toString()
             toModify.tags=detail_tags.text?.split(" ,",",") as ArrayList<String>
+            toModify.tags.removeAll { tag -> tag.isBlank() }
             toModify.project=detail_project.text?.toString()
             toModify.priority=detail_priority.selectedItem.toString()
             if (detail_priority.selectedItem.toString() == "No Priority Assigned") {

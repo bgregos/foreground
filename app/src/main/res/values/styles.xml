@@ -25,8 +25,11 @@
         <item name="android:paddingRight">@dimen/input_label_horizontal_spacing</item>
     </style>
 
+    <style name="floatingElement" parent="@style/Theme.MaterialComponents">
+        <item name="android:background">#424242</item>
+    </style>
+
     <style name="TextInputLayout" parent="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
 
     </style>
-
 </resources>
