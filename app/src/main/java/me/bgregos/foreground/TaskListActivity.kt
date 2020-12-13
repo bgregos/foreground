@@ -26,6 +26,7 @@ import me.bgregos.foreground.task.LocalTasks
 import me.bgregos.foreground.task.NotificationService
 import me.bgregos.foreground.task.RemoteTaskManager
 import me.bgregos.foreground.task.Task
+import me.bgregos.foreground.util.ShowErrorDetail
 import java.io.File
 import java.net.URL
 import java.text.SimpleDateFormat
@@ -134,7 +135,7 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
                 }else{
                     val bar = Snackbar.make(task_list_parent, "Sync Failed: ${syncResult.message}", Snackbar.LENGTH_LONG)
                     bar.view.setBackgroundColor(Color.parseColor("#34309f"))
-                    bar.setAction("Details", SyncErrorDetail(syncResult.message, this@TaskListActivity))
+                    bar.setAction("Details", ShowErrorDetail(syncResult.message, this@TaskListActivity))
                     bar.show()
                 }
                 task_list.adapter?.notifyDataSetChanged()
@@ -145,22 +146,6 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
             bar.view.setBackgroundColor(Color.parseColor("#34309f"))
             bar.show()
             syncRotateAnimation.repeatCount = 0
-        }
-    }
-
-    private class SyncErrorDetail(val error: String, val activity: Activity): View.OnClickListener {
-        override fun onClick(view: View?) {
-            AlertDialog.Builder(activity).let {
-                it.setTitle("Sync Failed")
-                it.setMessage(error)
-                it.setPositiveButton("Close", DialogInterface.OnClickListener { _, _ -> Unit })
-                it.setNeutralButton("Copy", DialogInterface.OnClickListener {_, _ ->
-                    val clipboard = activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    val clip: ClipData = ClipData.newPlainText("foreground_error", error)
-                    clipboard.setPrimaryClip(clip)
-                })
-                it.create()
-            }.show()
         }
     }
 

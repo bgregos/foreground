@@ -1,0 +1,13 @@
+# Gradle
+.gradle/
+build/
+
+# Eclipse
+.groovy/
+.settings/
+bin/
+
+.classpath
+.project
+
+taskwarrior.properties

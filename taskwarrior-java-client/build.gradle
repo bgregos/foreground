@@ -1,0 +1,42 @@
+plugins {
+    id "com.github.spotbugs" version "4.6.0"
+    id 'com.android.library'
+}
+
+
+android {
+    compileSdkVersion 30
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 30
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+archivesBaseName = 'taskwarrior-java-client'
+description = 'A Java client to communicate with a taskwarrior server (= taskd).'
+group = 'de.aaschmid'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '6.5'
+}
+
+dependencies {
+    // https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on
+    implementation group: 'org.bouncycastle', name: 'bcpkix-jdk15on', version: '1.60'
+}
