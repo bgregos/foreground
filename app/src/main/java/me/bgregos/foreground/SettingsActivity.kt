@@ -38,8 +38,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import me.bgregos.foreground.task.LocalTasks
 import me.bgregos.foreground.task.RemoteTaskManager
-import org.bouncycastle.asn1.ASN1Encoding
-import org.bouncycastle.asn1.pkcs.PrivateKeyInfo
+import me.bgregos.foreground.util.ShowErrorDetail
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -98,9 +97,12 @@ class SettingsActivity : AppCompatActivity() {
                 settings_syncprogress.visibility = View.VISIBLE
                 CoroutineScope(Dispatchers.Main).launch {
                     var response: RemoteTaskManager.SyncResult
+                    var exception: Exception? = null
                     try {
                         response = RemoteTaskManager(this@SettingsActivity).taskwarriorTestSync()
                     }catch (e: Exception){
+                        exception = e
+                        Log.e("test sync error", e.toString())
                         response = RemoteTaskManager.SyncResult(false, "Invalid or incomplete configuration.")
                     }
                     Log.i(this.javaClass.toString(), response.message)
@@ -113,11 +115,9 @@ class SettingsActivity : AppCompatActivity() {
                         bar.view.setBackgroundColor(Color.parseColor("#34309f"))
                         bar.show()
                     }else{
-                        val bar = Snackbar.make(settings_parent, response.message, Snackbar.LENGTH_INDEFINITE)
+                        val bar = Snackbar.make(settings_parent, response.message, Snackbar.LENGTH_LONG)
                         bar.view.setBackgroundColor(Color.parseColor("#34309f"))
-                        bar.setAction("Dismiss",  View.OnClickListener {
-                            bar.dismiss()
-                        })
+                        bar.setAction("Details", ShowErrorDetail(exception?.toString() ?: response.message, this@SettingsActivity))
                         bar.setActionTextColor(Color.WHITE)
                         bar.show()
                     }

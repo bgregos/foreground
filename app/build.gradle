@@ -31,24 +31,20 @@ android {
 dependencies {
     //implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.3'
-    implementation 'androidx.work:work-runtime-ktx:2.0.1'
-    implementation 'androidx.appcompat:appcompat:1.0.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.4'
+    implementation 'androidx.work:work-runtime-ktx:2.4.0'
+    implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    implementation 'androidx.recyclerview:recyclerview:1.0.0'
-    implementation 'com.google.android.material:material:1.0.0'
-    implementation 'com.google.code.gson:gson:2.8.2'
-    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+    implementation 'androidx.recyclerview:recyclerview:1.1.0'
+    implementation 'com.google.android.material:material:1.2.1'
+    implementation 'com.google.code.gson:gson:2.8.5'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0'
-    implementation files('libs/taskwarrior-java-client-1.0-SNAPSHOT.jar')
+    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+    implementation project(':taskwarrior-java-client')
 
-    // https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on
-    implementation 'org.bouncycastle:bcprov-jdk15on:1.60'
-    // https://mvnrepository.com/artifact/org.bouncycastle/bcpkix-jdk15on
-    implementation 'org.bouncycastle:bcpkix-jdk15on:1.60'
     //java 8 time backport
     implementation 'com.jakewharton.threetenabp:threetenabp:1.1.0'
-    implementation 'androidx.work:work-runtime:2.0.1'
+    implementation 'androidx.work:work-runtime:2.4.0'
 }

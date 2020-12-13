@@ -1,1 +1,2 @@
+include ':taskwarrior-java-client'
 include ':app'

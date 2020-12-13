@@ -1,0 +1,14 @@
+# Host and Port for SSL connection
+taskwarrior.server.host=
+taskwarrior.server.port=
+
+# Certificates and keys for SSL connection
+taskwarrior.ssl.folder=
+taskwarrior.ssl.cert.ca.file=
+taskwarrior.ssl.cert.key.file=
+taskwarrior.ssl.private.key.file=
+
+# Authentication data for requests to taskwarrior server (= taskd)
+taskwarrior.auth.organisation=
+taskwarrior.auth.user=
+taskwarrior.auth.key=
