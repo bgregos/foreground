@@ -126,6 +126,7 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
             bar.view.setBackgroundColor(Color.parseColor("#34309f"))
             bar.show()
             CoroutineScope(Dispatchers.Main).launch {
+                LocalTasks.save(this@TaskListActivity, true)
                 var syncResult: RemoteTaskManager.SyncResult = RemoteTaskManager(this@TaskListActivity).taskwarriorSync()
                 var bar: Snackbar?
                 if(syncResult.success){
