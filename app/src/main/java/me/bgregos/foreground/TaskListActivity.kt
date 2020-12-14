@@ -66,8 +66,7 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
         fab.setOnClickListener { view ->
             val newTask = Task("")
             LocalTasks.items.add(newTask)
-            openTask(newTask, view, "New Task")
-
+            openTask(newTask, view, newTask.name)
         }
 
         if (task_detail_container != null) {
@@ -86,9 +85,11 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
 
     override fun onResume() {
         super.onResume()
-        var intentFilter = IntentFilter()
-        intentFilter.addAction("BRIGHTTASK_REMOTE_TASK_UPDATE")
-        var lbm = LocalBroadcastManager.getInstance(this)
+        val intentFilter = IntentFilter().apply {
+            addAction("BRIGHTTASK_REMOTE_TASK_UPDATE")
+            addAction("BRIGHTTASK_LOCAL_TASK_UPDATE")
+        }
+        val lbm = LocalBroadcastManager.getInstance(this)
         lbm.registerReceiver(broadcastReceiver, intentFilter)
         Log.d("broadcast", "Broadcast receiver registered")
         CoroutineScope(Dispatchers.Main).launch {
@@ -229,6 +230,13 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
                     LocalTasks.updateVisibleTasks()
                     task_list.adapter?.notifyDataSetChanged()
                     Log.i("auto_sync", "Task List received auto-update")
+                }
+
+                "BRIGHTTASK_LOCAL_TASK_UPDATE" -> {
+                    LocalTasks.load(context, true)
+                    LocalTasks.updateVisibleTasks()
+                    task_list.adapter?.notifyDataSetChanged()
+                    Log.i("task_list", "Task list updated by detail")
                 }
             }
         }

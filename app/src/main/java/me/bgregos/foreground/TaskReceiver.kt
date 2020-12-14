@@ -36,7 +36,7 @@ class TaskReceiver: BroadcastReceiver() {
                         LocalTasks.localChanges.add(item)
                     }
                     LocalTasks.save(context)
-                    var localIntent: Intent = Intent("BRIGHTTASK_REMOTE_TASK_UPDATE") //Send local broadcast
+                    val localIntent: Intent = Intent("BRIGHTTASK_REMOTE_TASK_UPDATE") //Send local broadcast
                     LocalBroadcastManager.getInstance(context).sendBroadcast(localIntent)
                 } else {
                     Log.e("notif", "Failed to save task marked done- null context")
