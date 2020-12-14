@@ -11,12 +11,22 @@
 
 <ScrollView
     android:layout_width="match_parent"
-android:layout_height="match_parent" >
+    android:layout_height="match_parent"
+    android:layout_marginTop="10dp"
+    android:layout_marginBottom="10dp">
 
 <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical" >
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:textSize="24sp"
+        android:text="Taskwarrior Sync" />
 
     <TextView
         android:id="@+id/sync_warning"
@@ -332,9 +342,19 @@ android:layout_height="match_parent" >
         android:text="Undo changes since last sync"/>
 
     <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="10dp"
+        android:textSize="24sp"
+        android:text="General" />
+
+    <TextView
         android:id="@+id/textView2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
         android:text="Credits" />

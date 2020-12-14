@@ -76,8 +76,12 @@ class TaskDetailFragment : Fragment() {
 
             rootView.detail_project.setText(it.project ?: "")
             val builder = StringBuilder()
-            it.tags.forEach { task -> builder.append("$task,") }
-            rootView.detail_tags.setText(builder.toString().trimEnd(','))
+            it.tags.forEach { task -> builder.append("$task, ") }
+            rootView.detail_tags.setText(builder.toString().trimEnd(',', ' '))
+            it.tags.removeAll { tag -> tag.isBlank() }
+            it.tags = it.tags.map{ tag -> tag.trim() } as ArrayList<String>
+
+
             if(it.dueDate != null){
                 rootView.detail_dueDate.date.setText(dateFormat.format(toLocal(it.dueDate as Date)))
                 rootView.detail_dueDate.time.setText(timeFormat.format(toLocal(it.dueDate as Date)))
@@ -206,7 +210,7 @@ class TaskDetailFragment : Fragment() {
             format.timeZone= TimeZone.getDefault()
             val toModify: Task = LocalTasks.getTaskByUUID(item.uuid) ?: throw NullPointerException("Task uuid lookup failed!")
             toModify.name=detail_name.text.toString()
-            toModify.tags=detail_tags.text?.split(" ,",",") as ArrayList<String>
+            toModify.tags=detail_tags.text?.split(", ",",") as ArrayList<String>
             toModify.tags.removeAll { tag -> tag.isBlank() }
             toModify.project=detail_project.text?.toString()
             toModify.priority=detail_priority.selectedItem.toString()

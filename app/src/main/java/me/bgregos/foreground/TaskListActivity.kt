@@ -33,6 +33,7 @@ import me.bgregos.foreground.task.NotificationService
 import me.bgregos.foreground.task.RemoteTaskManager
 import me.bgregos.foreground.task.Task
 import me.bgregos.foreground.util.ShowErrorDetail
+import org.w3c.dom.Text
 import java.io.File
 import java.net.URL
 import java.text.SimpleDateFormat
@@ -280,23 +281,37 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
             holder.title.text = item.name
             if(item.dueDate != null) {
                 holder.due.visibility = VISIBLE
+                holder.dueicon.visibility = VISIBLE
                 holder.due.text = format.format((item.dueDate as Date).toLocal())
             }else{
+                holder.dueicon.visibility = GONE
                 holder.due.visibility = GONE
             }
-            if(item.project.isNullOrEmpty() && item.tags.size < 1){
-                holder.projectTags.visibility = GONE
+            if(item.project.isNullOrEmpty()){
+                holder.project.visibility = GONE
+                holder.projecticon.visibility = GONE
+                //remove margin from tags icon so it lines up with where this was
+                val param = holder.tagsicon.layoutParams as ViewGroup.MarginLayoutParams
+                param.marginStart = 0
+                holder.tagsicon.layoutParams = param
             }else{
-                holder.projectTags.visibility = VISIBLE
-                val needsSeparator: Boolean = !item.project.isNullOrEmpty() && item.tags.size > 0
-                val projectTags = "${item.project} ${if (needsSeparator) ":" else ""} ${item.tags.joinToString(", ")}"
-                holder.projectTags.text = projectTags
+                holder.project.visibility = VISIBLE
+                holder.projecticon.visibility = VISIBLE
+                holder.project.text = item.project
+            }
+            if(item.tags.size == 0 || item.tags[0].isBlank()){
+                holder.tags.visibility = GONE
+                holder.tagsicon.visibility = GONE
+            }else{
+                holder.tags.visibility = VISIBLE
+                holder.tagsicon.visibility = VISIBLE
+                holder.tags.text = item.tags.joinToString(", ")
             }
             val color = ColorDrawable(when (item.priority) {
                 "H" -> Color.parseColor("#550000")
                 "M" -> Color.parseColor("#666600")
                 "L" -> Color.parseColor("#303066")
-                else -> Color.parseColor("#3a3a3a")
+                else -> Color.parseColor("#373737")
             })
             holder.accent.background = color
 
@@ -316,18 +331,6 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
                     LocalTasks.localChanges.add(item)
                 }
             }
-
-            holder.delete.setOnClickListener {
-                val pos = holder.layoutPosition
-                values.removeAt(pos)
-                notifyItemRemoved(pos)
-                //notifyItemRangeChanged(pos, values.size)
-                item.modifiedDate=Date().toUtc() //update modified date
-                item.status = "deleted"
-                if (!LocalTasks.localChanges.contains(item)){
-                    LocalTasks.localChanges.add(item)
-                }
-            }
         }
 
         override fun getItemCount() = values.size
@@ -335,10 +338,13 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val title: TextView = view.title
             val due: TextView = view.due
-            val projectTags: TextView = view.project_tags
+            val dueicon: ImageView = view.ic_date
+            val project: TextView = view.project
+            val projecticon: ImageView = view.ic_proj
+            val tags: TextView = view.tags
+            val tagsicon: ImageView = view.ic_tags
             val accent: View = view.task_list_card_accentbar
             val complete: ImageView = view.complete
-            val delete: ImageView = view.delete
         }
 
     }

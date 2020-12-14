@@ -28,47 +28,91 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/card_content"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:padding="8dp"
-            android:id="@+id/card_content"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintStart_toEndOf="@+id/task_list_card_accentbar"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.0">
 
             <TextView
                 android:id="@+id/title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:layout_constraintBottom_toTopOf="@+id/due"
+                android:textSize="16sp"
+                android:textStyle="bold"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 debug:text="title" />
+
+            <ImageView
+                android:id="@+id/ic_date"
+                android:layout_width="14sp"
+                android:layout_height="14sp"
+                android:contentDescription="due date icon"
+                android:src="@drawable/ic_date"
+                app:layout_constraintBottom_toBottomOf="@id/due"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@id/due"
+                debug:layout_editor_absoluteY="30dp" />
 
             <TextView
                 android:id="@+id/due"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:layout_constraintBottom_toTopOf="@+id/project_tags"
-                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginStart="4dp"
+                android:layout_marginTop="2dp"
+                app:layout_constraintStart_toEndOf="@+id/ic_date"
                 app:layout_constraintTop_toBottomOf="@+id/title"
                 debug:text="due" />
 
+            <ImageView
+                android:id="@+id/ic_proj"
+                android:layout_width="14sp"
+                android:layout_height="14sp"
+                android:src="@drawable/ic_project"
+                app:layout_constraintBottom_toBottomOf="@+id/project"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/project"
+                debug:visibility="gone" />
+
             <TextView
-                android:id="@+id/project_tags"
+                android:id="@+id/project"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginStart="4dp"
+                app:layout_constraintStart_toEndOf="@+id/ic_proj"
                 app:layout_constraintTop_toBottomOf="@+id/due"
-                debug:text="project : tags" />
+                debug:text="project"
+                debug:visibility="gone" />
+
+            <ImageView
+                android:id="@+id/ic_tags"
+                android:layout_width="14sp"
+                android:layout_height="14sp"
+                android:layout_marginStart="12dp"
+                android:src="@drawable/ic_tag"
+                app:layout_constraintBottom_toBottomOf="@+id/tags"
+                app:layout_constraintStart_toEndOf="@id/project"
+                app:layout_constraintTop_toTopOf="@+id/tags" />
+
+            <TextView
+                android:id="@+id/tags"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                app:layout_constraintStart_toEndOf="@+id/ic_tags"
+                app:layout_constraintTop_toBottomOf="@+id/due"
+                debug:text="tag1, tag2" />
 
             <ImageView
                 android:id="@+id/complete"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight=".1"
                 android:contentDescription="complete task"
                 android:cropToPadding="false"
                 android:padding="8dp"
@@ -76,20 +120,6 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:srcCompat="@drawable/ic_check_black_24dp" />
-
-            <ImageView
-                android:id="@+id/delete"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
-                android:layout_weight=".1"
-                android:contentDescription="delete task"
-                android:cropToPadding="false"
-                android:padding="8dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@id/complete"
-                app:layout_constraintTop_toTopOf="parent"
-                app:srcCompat="@drawable/ic_delete_black_24dp" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
