@@ -2,6 +2,7 @@ package me.bgregos.foreground
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.util.Log
@@ -9,6 +10,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import kotlinx.android.synthetic.main.date_layout.view.*
 import kotlinx.android.synthetic.main.task_detail.*
 import kotlinx.android.synthetic.main.task_detail.view.*
@@ -17,9 +19,6 @@ import me.bgregos.foreground.task.Task
 import java.text.DateFormatSymbols
 import java.text.SimpleDateFormat
 import java.util.*
-import me.bgregos.foreground.R.id.textView
-
-
 
 
 /**
@@ -100,6 +99,7 @@ class TaskDetailFragment : Fragment() {
 
         rootView.detail_waitDate.dateInputLayout.hint = "Wait Until Date"
         rootView.detail_waitDate.date.setOnClickListener {
+            saveAndUpdateTaskList()
             val c = Calendar.getInstance()
             val year = c.get(Calendar.YEAR)
             val month = c.get(Calendar.MONTH)
@@ -115,6 +115,7 @@ class TaskDetailFragment : Fragment() {
         }
 
         rootView.detail_waitDate.time.setOnClickListener {
+            saveAndUpdateTaskList()
             val c = Calendar.getInstance()
             val hour:Int = c.get(Calendar.HOUR_OF_DAY)
             val minute:Int = c.get(Calendar.MINUTE)
@@ -135,6 +136,7 @@ class TaskDetailFragment : Fragment() {
 
         rootView.detail_dueDate.dateInputLayout.hint = "Due Date"
         rootView.detail_dueDate.date.setOnClickListener {
+            saveAndUpdateTaskList()
             val c = Calendar.getInstance()
             val year = c.get(Calendar.YEAR)
             val month = c.get(Calendar.MONTH)
@@ -150,6 +152,7 @@ class TaskDetailFragment : Fragment() {
         }
 
         rootView.detail_dueDate.time.setOnClickListener {
+            saveAndUpdateTaskList()
             val c = Calendar.getInstance()
             val hour:Int = c.get(Calendar.HOUR_OF_DAY)
             val minute:Int = c.get(Calendar.MINUTE)
@@ -197,8 +200,21 @@ class TaskDetailFragment : Fragment() {
         return dfLocal.parse(dfUtc.format(date))
     }
 
+    // This allows side-by-side tablet support to work
+    private fun saveAndUpdateTaskList(){
+        save()
+        val localIntent: Intent = Intent("BRIGHTTASK_LOCAL_TASK_UPDATE") //Send local broadcast
+        context?.let { LocalBroadcastManager.getInstance(it).sendBroadcast(localIntent) }
+        Log.d("detail", "sent update broadcast")
+    }
+
     override fun onPause() {
         //handle save
+        saveAndUpdateTaskList()
+        super.onPause()
+    }
+
+    private fun save(){
         if (detail_name.text.toString().isBlank() || detail_name.text.toString().isEmpty()) {
             Log.d(this.javaClass.toString(), "Removing task w/ no name")
             val pos = LocalTasks.items.indexOf(item)
@@ -231,7 +247,7 @@ class TaskDetailFragment : Fragment() {
             if (!LocalTasks.localChanges.contains(toModify)){
                 LocalTasks.localChanges.add(toModify)
             }
-            LocalTasks.save(activity!!.applicationContext)
+            LocalTasks.save(activity!!.applicationContext, true)
             Log.d(this.javaClass.toString(), "Saved task")
             super.onPause()
         }
