@@ -64,7 +64,7 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
         toolbar.subtitle = ""
         setSupportActionBar(toolbar)
         fab.setOnClickListener { view ->
-            val newTask = Task("")
+            val newTask = Task("New Task")
             LocalTasks.items.add(newTask)
             openTask(newTask, view, newTask.name)
         }
