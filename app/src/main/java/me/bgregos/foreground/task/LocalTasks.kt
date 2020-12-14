@@ -91,8 +91,12 @@ object LocalTasks {
             if(synchronous) editor.apply() else editor.commit()
         }
         if(lastSeenVersion<4){
+            //normalize tags
             val editor = prefs.edit()
-            items.forEach{it.tags.removeAll { tag -> tag.isBlank() }}
+            items.forEach{
+                it.tags.removeAll { tag -> tag.isBlank() }
+                it.tags = it.tags.map{ tag -> tag.trim() } as ArrayList<String>
+            }
             editor.putInt("lastSeenVersion", 4)
             if(synchronous) editor.apply() else editor.commit()
         }

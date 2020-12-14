@@ -264,6 +264,7 @@ class SettingsActivity : AppCompatActivity() {
                 }
             }
         }
+        super.onActivityResult(requestCode, resultCode, resultData)
     }
 
     fun uriToName(uri: Uri):String{
