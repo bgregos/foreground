@@ -64,7 +64,7 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
         toolbar.subtitle = ""
         setSupportActionBar(toolbar)
         fab.setOnClickListener { view ->
-            val newTask = Task("New Task")
+            val newTask = Task("")
             LocalTasks.items.add(newTask)
             openTask(newTask, view, newTask.name)
         }
@@ -290,7 +290,7 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
             if(item.dueDate != null) {
                 holder.due.visibility = VISIBLE
                 holder.dueicon.visibility = VISIBLE
-                holder.due.text = format.format((item.dueDate as Date).toLocal())
+                holder.due.text = format.format(item.dueDate as Date)
             }else{
                 holder.dueicon.visibility = GONE
                 holder.due.visibility = GONE
@@ -333,7 +333,7 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
                 values.removeAt(pos)
                 notifyItemRemoved(pos)
                 //notifyItemRangeChanged(pos, values.size)
-                item.modifiedDate=Date().toUtc() //update modified date
+                item.modifiedDate=Date() //update modified date
                 item.status = "completed"
                 if (!LocalTasks.localChanges.contains(item)){
                     LocalTasks.localChanges.add(item)

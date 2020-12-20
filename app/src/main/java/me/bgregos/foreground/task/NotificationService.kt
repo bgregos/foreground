@@ -41,7 +41,7 @@ object NotificationService {
     }
 
     private fun scheduleNotificationForTask(task: Task, context: Context) {
-        val due = task.dueDate?.toLocal()
+        val due = task.dueDate
         if (due != null) {
             if (due.time < System.currentTimeMillis()) {
                 return

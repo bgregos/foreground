@@ -30,7 +30,7 @@ class TaskReceiver: BroadcastReceiver() {
                         Log.e("LocalTasks", "Failed to find a task with the given UUID")
                         return
                     }
-                    item.modifiedDate=Date().toUtc() //update modified date
+                    item.modifiedDate=Date() //update modified date
                     item.status = "completed"
                     if (!LocalTasks.localChanges.contains(item)){
                         LocalTasks.localChanges.add(item)

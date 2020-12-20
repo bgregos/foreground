@@ -82,15 +82,15 @@ class TaskDetailFragment : Fragment() {
 
 
             if(it.dueDate != null){
-                rootView.detail_dueDate.date.setText(dateFormat.format(toLocal(it.dueDate as Date)))
-                rootView.detail_dueDate.time.setText(timeFormat.format(toLocal(it.dueDate as Date)))
+                rootView.detail_dueDate.date.setText(dateFormat.format(it.dueDate as Date))
+                rootView.detail_dueDate.time.setText(timeFormat.format(it.dueDate as Date))
             }else{
                 rootView.detail_dueDate.date.setText("")
                 rootView.detail_dueDate.time.setText("")
             }
             if(it.waitDate != null){
-                rootView.detail_waitDate.date.setText(dateFormat.format(toLocal(it.waitDate as Date)))
-                rootView.detail_waitDate.time.setText(timeFormat.format(toLocal(it.waitDate as Date)))
+                rootView.detail_waitDate.date.setText(dateFormat.format(it.waitDate as Date))
+                rootView.detail_waitDate.time.setText(timeFormat.format(it.waitDate as Date))
             }else{
                 rootView.detail_waitDate.date.setText("")
                 rootView.detail_waitDate.time.setText("")
@@ -184,22 +184,6 @@ class TaskDetailFragment : Fragment() {
         return rootView
     }
 
-    fun toLocal(date:Date):Date{
-        val dfLocal = SimpleDateFormat()
-        dfLocal.setTimeZone(TimeZone.getDefault())
-        val dfUtc = SimpleDateFormat()
-        dfUtc.setTimeZone(TimeZone.getTimeZone("UTC"))
-        return dfUtc.parse(dfLocal.format(date))
-    }
-
-    fun toUtc(date:Date):Date{
-        val dfLocal = SimpleDateFormat()
-        dfLocal.setTimeZone(TimeZone.getDefault())
-        val dfUtc = SimpleDateFormat()
-        dfUtc.setTimeZone(TimeZone.getTimeZone("UTC"))
-        return dfLocal.parse(dfUtc.format(date))
-    }
-
     // This allows side-by-side tablet support to work
     private fun saveAndUpdateTaskList(){
         save()
@@ -233,12 +217,12 @@ class TaskDetailFragment : Fragment() {
             if (detail_priority.selectedItem.toString() == "No Priority Assigned") {
                 toModify.priority = null
             }
-            toModify.modifiedDate=toUtc(Date()) //update modified date
+            toModify.modifiedDate=Date() //update modified date
             if(!detail_dueDate.date.text.isNullOrBlank() && !detail_dueDate.time.text.isNullOrBlank()){
-                toModify.dueDate=toUtc(format.parse("${detail_dueDate.date.text.toString()} ${detail_dueDate.time.text.toString()}"))
+                toModify.dueDate=format.parse("${detail_dueDate.date.text.toString()} ${detail_dueDate.time.text.toString()}")
             }
             if(!detail_waitDate.date.text.isNullOrBlank() && !detail_waitDate.time.text.isNullOrBlank()){
-                toModify.waitDate=toUtc(format.parse("${detail_waitDate.date.text.toString()} ${detail_waitDate.time.text.toString()}"))
+                toModify.waitDate=format.parse("${detail_waitDate.date.text.toString()} ${detail_waitDate.time.text.toString()}")
             }
             val waitdate = toModify.waitDate
             if(waitdate != null && waitdate.after(Date())) {
