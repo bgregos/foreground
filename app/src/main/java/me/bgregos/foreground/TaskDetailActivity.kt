@@ -2,15 +2,12 @@ package me.bgregos.foreground
 
 import android.content.Intent
 import android.os.Bundle
-import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import kotlinx.android.synthetic.main.activity_task_detail.*
 import me.bgregos.foreground.task.LocalTasks
-import java.text.SimpleDateFormat
 import java.util.*
-
 
 /**
  * An activity representing a single Task detail screen. This
@@ -57,22 +54,6 @@ class TaskDetailActivity : AppCompatActivity() {
         }
     }
 
-    fun toLocal(date:Date):Date{
-        val dfLocal = SimpleDateFormat()
-        dfLocal.setTimeZone(TimeZone.getDefault())
-        val dfUtc = SimpleDateFormat()
-        dfUtc.setTimeZone(TimeZone.getTimeZone("UTC"))
-        return dfUtc.parse(dfLocal.format(date))
-    }
-
-    fun toUtc(date:Date):Date{
-        val dfLocal = SimpleDateFormat()
-        dfLocal.setTimeZone(TimeZone.getDefault())
-        val dfUtc = SimpleDateFormat()
-        dfUtc.setTimeZone(TimeZone.getTimeZone("UTC"))
-        return dfLocal.parse(dfUtc.format(date))
-    }
-
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.menu_task_detail, menu)
@@ -82,7 +63,7 @@ class TaskDetailActivity : AppCompatActivity() {
     fun onDeleteClick(item: MenuItem) {
         val task = LocalTasks.getTaskByUUID(uuid)
         if (task != null){
-            task.modifiedDate=toUtc(Date()) //update modified date
+            task.modifiedDate=Date() //update modified date
             task.status="deleted"
             if (!LocalTasks.localChanges.contains(task)){
                 LocalTasks.localChanges.add(task)
@@ -96,7 +77,7 @@ class TaskDetailActivity : AppCompatActivity() {
     fun onCompleteClick(item: MenuItem) {
         val task = LocalTasks.getTaskByUUID(uuid)
         if (task != null){
-            task.modifiedDate=toUtc(Date()) //update modified date
+            task.modifiedDate=Date() //update modified date
             task.status = "completed"
             if (!LocalTasks.localChanges.contains(task)){
                 LocalTasks.localChanges.add(task)
@@ -107,8 +88,8 @@ class TaskDetailActivity : AppCompatActivity() {
         }
     }
 
-    fun updateToolbar(name: String?){
-        detail_toolbar.title = name
+    private fun updateToolbar(name: String?){
+        detail_toolbar.title = if(name.isNullOrEmpty()) "New Task" else name
     }
 
     override fun onOptionsItemSelected(item: MenuItem) =

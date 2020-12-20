@@ -1,11 +1,11 @@
 package me.bgregos.foreground.task
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import com.google.gson.Gson
 import java.util.*
 import com.google.gson.reflect.TypeToken
-import me.bgregos.foreground.toUtc
 import java.text.SimpleDateFormat
 import kotlin.collections.ArrayList
 
@@ -47,7 +47,11 @@ object LocalTasks {
         showWaiting=  prefs.getString("LocalTasks.showWaiting", "true")?.toBoolean()?:false
         syncKey = prefs.getString("LocalTasks.syncKey", syncKey)?: syncKey
         val lastSeenVersion = prefs.getInt("lastSeenVersion", 1)
+        runMigrationsIfRequired(lastSeenVersion, synchronous, context, prefs)
+    }
 
+    @Synchronized
+    fun runMigrationsIfRequired(lastSeenVersion: Int, synchronous: Boolean, context: Context, prefs: SharedPreferences){
         //migration
         var itemsModified = false
         if (lastSeenVersion<2){ //keep track of breaking changes
@@ -93,11 +97,25 @@ object LocalTasks {
         if(lastSeenVersion<4){
             //normalize tags
             val editor = prefs.edit()
+            itemsModified = true
             items.forEach{
                 it.tags.removeAll { tag -> tag.isBlank() }
                 it.tags = it.tags.map{ tag -> tag.trim() } as ArrayList<String>
             }
             editor.putInt("lastSeenVersion", 4)
+            if(synchronous) editor.apply() else editor.commit()
+        }
+        if(lastSeenVersion<5){
+            //time normalization
+            val editor = prefs.edit()
+            itemsModified = true
+            val now = Date()
+            items.forEach {
+                it.waitDate = it.waitDate?.toLocal()
+                it.dueDate = it.dueDate?.toLocal()
+                it.modifiedDate = now
+            }
+            editor.putInt("lastSeenVersion", 5)
             if(synchronous) editor.apply() else editor.commit()
         }
         if (itemsModified) {
@@ -134,5 +152,14 @@ object LocalTasks {
             }
         }
         return null
+    }
+
+    //helper for migrations
+    private fun Date.toLocal(): Date {
+        val dfLocal = SimpleDateFormat()
+        dfLocal.timeZone = TimeZone.getDefault()
+        val dfUtc = SimpleDateFormat()
+        dfUtc.timeZone = TimeZone.getTimeZone("UTC")
+        return dfUtc.parse(dfLocal.format(this))
     }
 }
