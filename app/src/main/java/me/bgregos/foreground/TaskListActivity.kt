@@ -125,8 +125,8 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
         syncRotateAnimation.duration = 1000
         syncRotateAnimation.repeatCount = Animation.INFINITE
         val syncButton = this.findViewById<View>(R.id.action_sync)
-        syncButton.clearAnimation()
-        syncButton.startAnimation(syncRotateAnimation)
+        syncButton?.clearAnimation()
+        syncButton?.startAnimation(syncRotateAnimation)
 
         val prefs = this.getSharedPreferences("me.bgregos.BrightTask", Context.MODE_PRIVATE)
         if (prefs.getBoolean("settings_sync", false)){
