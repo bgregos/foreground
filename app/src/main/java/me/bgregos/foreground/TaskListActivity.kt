@@ -87,7 +87,7 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
         super.onResume()
         val intentFilter = IntentFilter().apply {
             addAction("BRIGHTTASK_REMOTE_TASK_UPDATE")
-            addAction("BRIGHTTASK_LOCAL_TASK_UPDATE")
+            addAction("BRIGHTTASK_TABLET_LOCAL_TASK_UPDATE")
         }
         val lbm = LocalBroadcastManager.getInstance(this)
         lbm.registerReceiver(broadcastReceiver, intentFilter)
@@ -232,11 +232,13 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
                     Log.i("auto_sync", "Task List received auto-update")
                 }
 
-                "BRIGHTTASK_LOCAL_TASK_UPDATE" -> {
-                    LocalTasks.load(context, true)
-                    LocalTasks.updateVisibleTasks()
-                    task_list.adapter?.notifyDataSetChanged()
-                    Log.i("task_list", "Task list updated by detail")
+                "BRIGHTTASK_TABLET_LOCAL_TASK_UPDATE" -> {
+                    if(twoPane){
+                        LocalTasks.load(context, true)
+                        LocalTasks.updateVisibleTasks()
+                        task_list.adapter?.notifyDataSetChanged()
+                        Log.i("task_list", "Task list updated by detail")
+                    }
                 }
             }
         }
@@ -248,8 +250,11 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
                 arguments = Bundle().apply {
                     putString("uuid", task.uuid.toString())
                     putString("displayName", name)
+                    putBoolean("twoPane", true)
                 }
             }
+            LocalTasks.updateVisibleTasks()
+            task_list.adapter?.notifyDataSetChanged()
             this.supportFragmentManager
                     .beginTransaction()
                     .replace(R.id.task_detail_container, fragment)
@@ -258,6 +263,7 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
             val intent = Intent(v.context, TaskDetailActivity::class.java)
             intent.putExtra("uuid", task.uuid.toString())
             intent.putExtra("displayName", name)
+            intent.putExtra("twoPane", false)
             v.context.startActivity(intent)
         }
     }

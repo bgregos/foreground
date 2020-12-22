@@ -6,10 +6,13 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.util.Log
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.TextView
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import kotlinx.android.synthetic.main.date_layout.view.*
 import kotlinx.android.synthetic.main.task_detail.*
@@ -29,10 +32,8 @@ import java.util.*
  */
 class TaskDetailFragment : Fragment() {
 
-    /**
-     * The dummy content this fragment is presenting.
-     */
     private var item: Task = Task("error")
+    private var twoPane: Boolean = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,12 +41,14 @@ class TaskDetailFragment : Fragment() {
         val bundle = this.arguments
 
         //load Task from bundle args
-        if (bundle!!.getString("uuid") != null) {
+        if (bundle?.getString("uuid") != null) {
             item = LocalTasks.getTaskByUUID(UUID.fromString(bundle.getString("uuid")))?: Task("Task lookup error")
         }
         else {
             Log.e(this.javaClass.toString(), "No key found.")
         }
+
+        twoPane = bundle?.getBoolean("twoPane") ?: true
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -97,9 +100,28 @@ class TaskDetailFragment : Fragment() {
             }
         }
 
+        // trigger task list update on focus change
+        rootView.detail_name.setOnFocusChangeListener{ _, _ ->
+            saveAndUpdateTaskListIfTablet()
+        }
+        rootView.detail_tags.setOnFocusChangeListener{ _, _ ->
+            saveAndUpdateTaskListIfTablet()
+        }
+        rootView.detail_project.setOnFocusChangeListener{ _, _ ->
+            saveAndUpdateTaskListIfTablet()
+        }
+        rootView.detail_priority.setOnTouchListener { view, _ ->
+            saveAndUpdateTaskListIfTablet()
+            view.performClick()
+            true
+        }
+        rootView.detail_priority.setOnKeyListener { _, _, _ ->
+            saveAndUpdateTaskListIfTablet()
+            false
+        }
+
         rootView.detail_waitDate.dateInputLayout.hint = "Wait Until Date"
         rootView.detail_waitDate.date.setOnClickListener {
-            saveAndUpdateTaskList()
             val c = Calendar.getInstance()
             val year = c.get(Calendar.YEAR)
             val month = c.get(Calendar.MONTH)
@@ -110,12 +132,12 @@ class TaskDetailFragment : Fragment() {
                 if(detail_waitDate.time.text.isNullOrBlank()){
                     detail_waitDate.time.setText("12:00 AM")
                 }
+                saveAndUpdateTaskListIfTablet()
             }, year, month, day)
             dpd.show()
         }
 
         rootView.detail_waitDate.time.setOnClickListener {
-            saveAndUpdateTaskList()
             val c = Calendar.getInstance()
             val hour:Int = c.get(Calendar.HOUR_OF_DAY)
             val minute:Int = c.get(Calendar.MINUTE)
@@ -130,13 +152,13 @@ class TaskDetailFragment : Fragment() {
                     val day = c.get(Calendar.DAY_OF_MONTH)
                     detail_waitDate.date.setText(DateFormatSymbols().shortMonths[month] + " " + day + ", " + year)
                 }
+                saveAndUpdateTaskListIfTablet()
             }, hour, minute, false)
             dpd.show()
         }
 
         rootView.detail_dueDate.dateInputLayout.hint = "Due Date"
         rootView.detail_dueDate.date.setOnClickListener {
-            saveAndUpdateTaskList()
             val c = Calendar.getInstance()
             val year = c.get(Calendar.YEAR)
             val month = c.get(Calendar.MONTH)
@@ -147,12 +169,12 @@ class TaskDetailFragment : Fragment() {
                 if(detail_dueDate.time.text.isNullOrBlank()){
                     detail_dueDate.time.setText("12:00 AM")
                 }
+                saveAndUpdateTaskListIfTablet()
             }, year, month, day)
             dpd.show()
         }
 
         rootView.detail_dueDate.time.setOnClickListener {
-            saveAndUpdateTaskList()
             val c = Calendar.getInstance()
             val hour:Int = c.get(Calendar.HOUR_OF_DAY)
             val minute:Int = c.get(Calendar.MINUTE)
@@ -167,11 +189,12 @@ class TaskDetailFragment : Fragment() {
                     val day = c.get(Calendar.DAY_OF_MONTH)
                     detail_dueDate.date.setText("${DateFormatSymbols().shortMonths[month]} $day, $year")
                 }
+                saveAndUpdateTaskListIfTablet()
             }, hour, minute, false)
             dpd.show()
         }
 
-        //some strange data race-ish issue requires this to be done late or the view doesn't adjust
+        //some strange issue requires this to be done or the view doesn't adjust
         //to the match content height
         if (item.priority == null || item.priority == "No Priority Assigned"){
             rootView.detail_priority.setSelection(0)
@@ -185,55 +208,63 @@ class TaskDetailFragment : Fragment() {
     }
 
     // This allows side-by-side tablet support to work
-    private fun saveAndUpdateTaskList(){
-        save()
-        val localIntent: Intent = Intent("BRIGHTTASK_LOCAL_TASK_UPDATE") //Send local broadcast
+    private fun saveAndUpdateTaskListIfTablet(){
+        if(twoPane){
+            save()
+            updateTaskList()
+        }
+    }
+
+    private fun updateTaskList() {
+        val localIntent: Intent = Intent("BRIGHTTASK_TABLET_LOCAL_TASK_UPDATE") //Send local broadcast
         context?.let { LocalBroadcastManager.getInstance(it).sendBroadcast(localIntent) }
         Log.d("detail", "sent update broadcast")
     }
 
     override fun onPause() {
-        //handle save
-        saveAndUpdateTaskList()
+        save()
+        //remove this task if it's blank
+        if (item.isBlank()) {
+            Log.d(this.javaClass.toString(), "Removing task w/ no data")
+            LocalTasks.items.remove(item)
+            LocalTasks.save(requireActivity().applicationContext, true)
+            updateTaskList()
+        } else {
+            if (twoPane){
+                saveAndUpdateTaskListIfTablet()
+            }
+        }
         super.onPause()
     }
 
     private fun save(){
-        if (detail_name.text.toString().isBlank() || detail_name.text.toString().isEmpty()) {
-            Log.d(this.javaClass.toString(), "Removing task w/ no name")
-            val pos = LocalTasks.items.indexOf(item)
-            LocalTasks.items.removeAt(pos)
-            LocalTasks.save(activity!!.applicationContext)
-            super.onPause()
-        } else {
-            val format = SimpleDateFormat("MMM dd, yyyy hh:mm a", Locale.getDefault())
-            format.timeZone= TimeZone.getDefault()
-            val toModify: Task = LocalTasks.getTaskByUUID(item.uuid) ?: throw NullPointerException("Task uuid lookup failed!")
-            toModify.name=detail_name.text.toString()
-            toModify.tags=detail_tags.text?.split(", ",",") as ArrayList<String>
-            toModify.tags.removeAll { tag -> tag.isBlank() }
-            toModify.project=detail_project.text?.toString()
-            toModify.priority=detail_priority.selectedItem.toString()
-            if (detail_priority.selectedItem.toString() == "No Priority Assigned") {
-                toModify.priority = null
-            }
-            toModify.modifiedDate=Date() //update modified date
-            if(!detail_dueDate.date.text.isNullOrBlank() && !detail_dueDate.time.text.isNullOrBlank()){
-                toModify.dueDate=format.parse("${detail_dueDate.date.text.toString()} ${detail_dueDate.time.text.toString()}")
-            }
-            if(!detail_waitDate.date.text.isNullOrBlank() && !detail_waitDate.time.text.isNullOrBlank()){
-                toModify.waitDate=format.parse("${detail_waitDate.date.text.toString()} ${detail_waitDate.time.text.toString()}")
-            }
-            val waitdate = toModify.waitDate
-            if(waitdate != null && waitdate.after(Date())) {
-                toModify.status ="waiting"
-            }
-            if (!LocalTasks.localChanges.contains(toModify)){
-                LocalTasks.localChanges.add(toModify)
-            }
-            LocalTasks.save(activity!!.applicationContext, true)
-            Log.d(this.javaClass.toString(), "Saved task")
-            super.onPause()
+        val format = SimpleDateFormat("MMM dd, yyyy hh:mm a", Locale.getDefault())
+        format.timeZone= TimeZone.getDefault()
+        val toModify: Task = LocalTasks.getTaskByUUID(item.uuid) ?: return
+        toModify.name=detail_name.text.toString()
+        toModify.tags=detail_tags.text?.split(", ",",") as ArrayList<String>
+        toModify.tags.removeAll { tag -> tag.isBlank() }
+        toModify.project=detail_project.text?.toString()
+        toModify.priority=detail_priority.selectedItem.toString()
+        if (detail_priority.selectedItem.toString() == "No Priority Assigned") {
+            toModify.priority = null
         }
+        toModify.modifiedDate=Date() //update modified date
+        if(!detail_dueDate.date.text.isNullOrBlank() && !detail_dueDate.time.text.isNullOrBlank()){
+            toModify.dueDate=format.parse("${detail_dueDate.date.text.toString()} ${detail_dueDate.time.text.toString()}")
+        }
+        if(!detail_waitDate.date.text.isNullOrBlank() && !detail_waitDate.time.text.isNullOrBlank()){
+            toModify.waitDate=format.parse("${detail_waitDate.date.text.toString()} ${detail_waitDate.time.text.toString()}")
+        }
+        val waitdate = toModify.waitDate
+        if(waitdate != null && waitdate.after(Date())) {
+            toModify.status ="waiting"
+        }
+        if (!LocalTasks.localChanges.contains(toModify)){
+            LocalTasks.localChanges.add(toModify)
+        }
+        LocalTasks.save(activity!!.applicationContext, true)
+        Log.d(this.javaClass.toString(), "Saved task")
+        super.onPause()
     }
 }
