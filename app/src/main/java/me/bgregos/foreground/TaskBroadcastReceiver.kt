@@ -9,7 +9,7 @@ import android.util.Log
 import me.bgregos.foreground.task.LocalTasks
 import java.util.*
 
-class TaskReceiver: BroadcastReceiver() {
+class TaskBroadcastReceiver: BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         when(intent?.action) {
             "BRIGHTTASK_MARK_TASK_DONE" -> {

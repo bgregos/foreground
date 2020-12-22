@@ -1,43 +1,38 @@
 package me.bgregos.foreground
 
-import android.app.Activity
-import android.content.*
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
-import android.media.Image
-import android.opengl.Visibility
 import android.os.Bundle
-import com.google.android.material.snackbar.Snackbar
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.RecyclerView
 import android.util.Log
-import android.view.*
-import android.view.View.GONE
-import android.view.View.VISIBLE
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
 import android.view.animation.Animation
 import android.view.animation.RotateAnimation
-import android.widget.ImageView
 import android.widget.PopupMenu
-import android.widget.TextView
-import androidx.appcompat.app.AlertDialog
-import androidx.core.content.ContextCompat
+import androidx.appcompat.app.AppCompatActivity
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.snackbar.Snackbar
 import com.jakewharton.threetenabp.AndroidThreeTen
 import kotlinx.android.synthetic.main.activity_task_list.*
 import kotlinx.android.synthetic.main.task_list.*
-import kotlinx.android.synthetic.main.task_list_content.view.*
-import kotlinx.coroutines.*
-import me.bgregos.foreground.R.id.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import me.bgregos.foreground.R.id.action_sync
+import me.bgregos.foreground.R.id.action_visibility
+import me.bgregos.foreground.adapter.TaskListAdapter
 import me.bgregos.foreground.task.LocalTasks
 import me.bgregos.foreground.task.NotificationService
 import me.bgregos.foreground.task.RemoteTaskManager
 import me.bgregos.foreground.task.Task
 import me.bgregos.foreground.util.ShowErrorDetail
-import org.w3c.dom.Text
 import java.io.File
 import java.net.URL
-import java.text.SimpleDateFormat
-import java.util.*
 
 class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener {
 
@@ -136,7 +131,6 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
             CoroutineScope(Dispatchers.Main).launch {
                 LocalTasks.save(this@TaskListActivity, true)
                 var syncResult: RemoteTaskManager.SyncResult = RemoteTaskManager(this@TaskListActivity).taskwarriorSync()
-                var bar: Snackbar?
                 if(syncResult.success){
                     val bar = Snackbar.make(task_list_parent, "Sync Successful", Snackbar.LENGTH_SHORT)
                     bar.view.setBackgroundColor(Color.parseColor("#34309f"))
@@ -199,22 +193,12 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
         }
     }
 
-
-    fun onClearClick(item: MenuItem) {
-        LocalTasks.items.clear()
-        LocalTasks.localChanges.clear()
-        LocalTasks.syncKey = ""
-        LocalTasks.initSync = true
-        task_list.adapter?.notifyDataSetChanged()
-        LocalTasks.save(applicationContext)
-    }
-
     fun onSettingsClick(item: MenuItem) {
         startActivity(Intent(this, SettingsActivity::class.java))
     }
 
     private fun setupRecyclerView(recyclerView: RecyclerView) {
-        recyclerView.adapter = SimpleItemRecyclerViewAdapter(this, LocalTasks.visibleTasks, twoPane)
+        recyclerView.adapter = TaskListAdapter(this, LocalTasks.visibleTasks, twoPane)
     }
 
     private val broadcastReceiver = object : BroadcastReceiver() {
@@ -244,7 +228,13 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
         }
     }
 
-    private fun openTask(task: Task, v: View, name: String){
+    private fun openFilters(){
+        if(twoPane) {
+            val fragment = FiltersFragment
+        }
+    }
+
+    fun openTask(task: Task, v: View, name: String){
         if (twoPane) {
             val fragment = TaskDetailFragment().apply {
                 arguments = Bundle().apply {
@@ -266,101 +256,6 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
             intent.putExtra("twoPane", false)
             v.context.startActivity(intent)
         }
-    }
-
-    class SimpleItemRecyclerViewAdapter(private val parentActivity: TaskListActivity,
-                                        private var values: java.util.ArrayList<Task>,
-                                        private val twoPane: Boolean) :
-            RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder>() {
-
-        private val onClickListener: View.OnClickListener
-
-        init {
-            this.setHasStableIds(false)
-            onClickListener = View.OnClickListener { v ->
-                val task = v.tag as Task
-                parentActivity.openTask(task, v, task.name)
-            }
-        }
-
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            val view = LayoutInflater.from(parent.context)
-                    .inflate(R.layout.task_list_content, parent, false)
-            return ViewHolder(view)
-        }
-
-        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            val format = SimpleDateFormat("MMM d, yyyy 'at' h:mm aaa", Locale.getDefault())
-            val item = values[position]
-            holder.title.text = item.name
-            if(item.dueDate != null) {
-                holder.due.visibility = VISIBLE
-                holder.dueicon.visibility = VISIBLE
-                holder.due.text = format.format(item.dueDate as Date)
-            }else{
-                holder.dueicon.visibility = GONE
-                holder.due.visibility = GONE
-            }
-            if(item.project.isNullOrEmpty()){
-                holder.project.visibility = GONE
-                holder.projecticon.visibility = GONE
-                //remove margin from tags icon so it lines up with where this was
-                val param = holder.tagsicon.layoutParams as ViewGroup.MarginLayoutParams
-                param.marginStart = 0
-                holder.tagsicon.layoutParams = param
-            }else{
-                holder.project.visibility = VISIBLE
-                holder.projecticon.visibility = VISIBLE
-                holder.project.text = item.project
-            }
-            if(item.tags.size == 0 || item.tags[0].isBlank()){
-                holder.tags.visibility = GONE
-                holder.tagsicon.visibility = GONE
-            }else{
-                holder.tags.visibility = VISIBLE
-                holder.tagsicon.visibility = VISIBLE
-                holder.tags.text = item.tags.joinToString(", ")
-            }
-            val color = ColorDrawable(when (item.priority) {
-                "H" -> Color.parseColor("#550000")
-                "M" -> Color.parseColor("#666600")
-                "L" -> Color.parseColor("#303066")
-                else -> Color.parseColor("#373737")
-            })
-            holder.accent.background = color
-
-            with(holder.itemView) {
-                tag = item
-                setOnClickListener(onClickListener)
-            }
-
-            holder.complete.setOnClickListener {
-                val pos = holder.layoutPosition
-                values.removeAt(pos)
-                notifyItemRemoved(pos)
-                //notifyItemRangeChanged(pos, values.size)
-                item.modifiedDate=Date() //update modified date
-                item.status = "completed"
-                if (!LocalTasks.localChanges.contains(item)){
-                    LocalTasks.localChanges.add(item)
-                }
-            }
-        }
-
-        override fun getItemCount() = values.size
-
-        inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-            val title: TextView = view.title
-            val due: TextView = view.due
-            val dueicon: ImageView = view.ic_date
-            val project: TextView = view.project
-            val projecticon: ImageView = view.ic_proj
-            val tags: TextView = view.tags
-            val tagsicon: ImageView = view.ic_tags
-            val accent: View = view.task_list_card_accentbar
-            val complete: ImageView = view.complete
-        }
-
     }
 
 }

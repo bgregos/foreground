@@ -1,7 +1,6 @@
 package me.bgregos.foreground.task
 
 import android.app.AlarmManager
-import android.app.Notification.EXTRA_NOTIFICATION_ID
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -91,7 +90,7 @@ object NotificationService {
 
         val doneIntent = Intent(context, TaskListActivity::class.java).apply {
             action = "BRIGHTTASK_MARK_TASK_DONE"
-            setClass(context, TaskReceiver::class.java)
+            setClass(context, TaskBroadcastReceiver::class.java)
             putExtra("notification_id", lastAssignedNotificationId)
             putExtra("uuid", task.uuid.toString())
         }

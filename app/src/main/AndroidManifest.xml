@@ -44,7 +44,7 @@
             android:exported="false">
         </receiver>
         <receiver
-            android:name=".TaskReceiver"
+            android:name=".TaskBroadcastReceiver"
             android:enabled="true"
             android:exported="false">
         </receiver>
