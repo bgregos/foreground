@@ -1,4 +1,4 @@
-package me.bgregos.foreground.task
+package me.bgregos.foreground.model
 
 import android.util.Log
 import org.json.JSONArray
@@ -9,7 +9,6 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.Comparator
 import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 
 data class Task(var name:String) : Serializable {
     var uuid:UUID = UUID.randomUUID()
@@ -59,7 +58,7 @@ data class Task(var name:String) : Serializable {
 
     companion object {
 
-        fun shouldDisplay(task:Task):Boolean{
+        fun shouldDisplay(task: Task):Boolean{
             if (!(task.status=="completed" || task.status=="deleted" || task.status=="recurring" || task.status=="waiting"))
                 return true
             val date = task.waitDate
@@ -73,13 +72,13 @@ data class Task(var name:String) : Serializable {
             return false
         }
 
-        fun shouldDisplayShowWaiting(task:Task):Boolean{
+        fun shouldDisplayShowWaiting(task: Task):Boolean{
             if (!(task.status=="completed" || task.status=="deleted" || task.status=="recurring" ))
                 return true
             return false
         }
 
-        fun toJson(task:Task):String{
+        fun toJson(task: Task):String{
             Log.v("brighttask", "tojsoning: "+task.name)
             val out = JSONObject()
             out.putOpt("description", task.name)
@@ -110,7 +109,7 @@ data class Task(var name:String) : Serializable {
             return str.replace("\\", "")
         }
 
-        fun fromJson(json:String):Task?{
+        fun fromJson(json:String): Task?{
             val out = Task("")
             var obj = JSONObject()
             try {

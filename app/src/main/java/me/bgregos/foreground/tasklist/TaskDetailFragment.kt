@@ -1,4 +1,4 @@
-package me.bgregos.foreground
+package me.bgregos.foreground.tasklist
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
@@ -6,19 +6,17 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.util.Log
-import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import android.widget.TextView
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import kotlinx.android.synthetic.main.date_layout.view.*
 import kotlinx.android.synthetic.main.task_detail.*
 import kotlinx.android.synthetic.main.task_detail.view.*
-import me.bgregos.foreground.task.LocalTasks
-import me.bgregos.foreground.task.Task
+import me.bgregos.foreground.R
+import me.bgregos.foreground.repository.LocalTasks
+import me.bgregos.foreground.model.Task
 import java.text.DateFormatSymbols
 import java.text.SimpleDateFormat
 import java.util.*

@@ -1,4 +1,4 @@
-package me.bgregos.foreground.adapter
+package me.bgregos.foreground.tasklist
 
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -11,15 +11,14 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.task_list_content.view.*
 import me.bgregos.foreground.R
-import me.bgregos.foreground.TaskListActivity
-import me.bgregos.foreground.task.LocalTasks
-import me.bgregos.foreground.task.Task
+import me.bgregos.foreground.repository.LocalTasks
+import me.bgregos.foreground.model.Task
 import java.text.SimpleDateFormat
 import java.util.*
 
 class TaskListAdapter(private val parentActivity: TaskListActivity,
-                                    private var values: java.util.ArrayList<Task>,
-                                    private val twoPane: Boolean) :
+                      private var values: java.util.ArrayList<Task>,
+                      private val twoPane: Boolean) :
         RecyclerView.Adapter<TaskListAdapter.ViewHolder>() {
 
     private val onClickListener: View.OnClickListener

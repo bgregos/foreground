@@ -1,11 +1,12 @@
-package me.bgregos.foreground.task
+package me.bgregos.foreground.repository
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.util.Log
 import com.google.gson.Gson
 import java.util.*
 import com.google.gson.reflect.TypeToken
+import me.bgregos.foreground.model.Task
+import me.bgregos.foreground.model.TaskFilter
 import java.text.SimpleDateFormat
 import kotlin.collections.ArrayList
 
@@ -16,6 +17,8 @@ object LocalTasks {
     var visibleTasks:ArrayList<Task> = ArrayList()
     @Volatile
     var localChanges:ArrayList<Task> = ArrayList()
+    @Volatile
+    var filters:ArrayList<TaskFilter> = ArrayList()
 
     var showWaiting:Boolean = false
     var initSync:Boolean = true
@@ -127,20 +130,8 @@ object LocalTasks {
     @Synchronized
     fun updateVisibleTasks(){
         visibleTasks.clear()
-        for (t in items){
-            if (showWaiting){
-                if (Task.shouldDisplayShowWaiting(t)){
-                    visibleTasks.add(t)
-                    Log.i("update visible", "showing waiting tasks")
-                }
-
-            } else {
-                if (Task.shouldDisplay(t)) {
-                    visibleTasks.add(t)
-                    Log.i("update visible", "hiding waiting tasks")
-                }
-            }
-        }
+        visibleTasks.addAll(items)
+        filters.forEach { if (it.enabled) visibleTasks = visibleTasks.filter { task -> it.filter(task, it.parameter) } as ArrayList<Task> }
         visibleTasks.sortWith(Task.DateCompare())
         items.sortWith(Task.DateCompare())
     }

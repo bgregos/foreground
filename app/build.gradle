@@ -1,8 +1,7 @@
 apply plugin: 'com.android.application'
-
 apply plugin: 'kotlin-android'
-
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
 
 android {
     compileSdkVersion 30
@@ -10,8 +9,8 @@ android {
         applicationId "me.bgregos.brighttask"
         minSdkVersion 21
         targetSdkVersion 30
-        versionCode 8
-        versionName "1.3.0"
+        versionCode 9
+        versionName "1.4.0"
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
     buildTypes {
@@ -26,7 +25,7 @@ android {
     }
 }
 
-
+def room_version = "2.2.6"
 
 dependencies {
     //implementation fileTree(include: ['*.jar'], dir: 'libs')
@@ -44,9 +43,19 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+
+    //taskwarrior-java-client fork
     implementation project(':taskwarrior-java-client')
+
+    //room db
+    implementation "androidx.room:room-runtime:$room_version"
+    kapt "androidx.room:room-compiler:$room_version"
+    implementation "androidx.room:room-ktx:$room_version"
+    testImplementation "androidx.room:room-testing:$room_version"
 
     //java 8 time backport
     implementation 'com.jakewharton.threetenabp:threetenabp:1.1.0'
+
+    //workmanager
     implementation 'androidx.work:work-runtime:2.4.0'
 }

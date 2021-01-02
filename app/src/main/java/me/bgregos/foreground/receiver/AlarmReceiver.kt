@@ -1,11 +1,11 @@
-package me.bgregos.foreground
+package me.bgregos.foreground.receiver
 
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import me.bgregos.foreground.task.LocalTasks
-import me.bgregos.foreground.task.NotificationService
+import me.bgregos.foreground.repository.LocalTasks
+import me.bgregos.foreground.util.NotificationService
 import java.util.*
 
 class AlarmReceiver : BroadcastReceiver() {

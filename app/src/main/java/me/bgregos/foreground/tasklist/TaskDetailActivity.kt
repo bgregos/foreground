@@ -1,4 +1,4 @@
-package me.bgregos.foreground
+package me.bgregos.foreground.tasklist
 
 import android.content.Intent
 import android.os.Bundle
@@ -6,7 +6,8 @@ import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import kotlinx.android.synthetic.main.activity_task_detail.*
-import me.bgregos.foreground.task.LocalTasks
+import me.bgregos.foreground.R
+import me.bgregos.foreground.repository.LocalTasks
 import java.util.*
 
 /**

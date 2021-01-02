@@ -10,7 +10,7 @@
     android:divider="?android:attr/dividerHorizontal"
     android:orientation="horizontal"
     android:showDividers="middle"
-    tools:context=".TaskListActivity">
+    tools:context=".tasklist.TaskListActivity">
 
     <!--
     This layout is a two-pane layout for the Tasks
@@ -27,7 +27,7 @@
         android:layout_marginRight="16dp"
         android:layout_weight="2"
         app:layoutManager="LinearLayoutManager"
-        tools:context=".TaskListActivity"
+        tools:context=".tasklist.TaskListActivity"
         tools:listitem="@layout/task_list_content" />
 
     <FrameLayout

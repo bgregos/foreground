@@ -1,4 +1,4 @@
-package me.bgregos.foreground.task
+package me.bgregos.foreground.remote
 
 import android.content.Context
 import android.content.Intent
@@ -14,15 +14,18 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import me.bgregos.foreground.BuildConfig
+import me.bgregos.foreground.model.Task
+import me.bgregos.foreground.repository.LocalTasks
+import me.bgregos.foreground.util.NotificationService
 import org.json.JSONObject
 import java.io.File
 import java.lang.IllegalArgumentException
 import java.util.*
 import kotlin.collections.ArrayList
 
-class RemoteTaskManager(c:Context) {
+class RemoteTasks(c: Context) {
     private val PROPERTIES_TASKWARRIOR = File(c.filesDir, "taskwarrior.properties").toURI().toURL()
-    internal val ctx = c
+    private val ctx = c
 
     private val config = TaskwarriorPropertiesConfiguration(PROPERTIES_TASKWARRIOR)
     private val client = TaskwarriorClient(config)
@@ -36,7 +39,7 @@ class RemoteTaskManager(c:Context) {
 
         override suspend fun doWork(): Result = coroutineScope {
             val job = async {
-                RemoteTaskManager(ctx).taskwarriorSync()
+                RemoteTasks(ctx).taskwarriorSync()
                 Log.i("taskwarrior_sync", "Automatic Sync Complete")
                 var localIntent: Intent = Intent("BRIGHTTASK_REMOTE_TASK_UPDATE") //Send local broadcast
                 NotificationService.scheduleNotificationForTasks(LocalTasks.items, ctx)
@@ -48,9 +51,6 @@ class RemoteTaskManager(c:Context) {
     }
 
     suspend fun taskwarriorTestSync(): SyncResult = withContext(Dispatchers.IO) launch@{
-        if (client == null) {
-            return@launch SyncResult(false, "Invalid Config")
-        }
         val headers = HashMap<String, String>()
         headers.put(TaskwarriorMessage.HEADER_TYPE, "statistics")
         headers.put(TaskwarriorMessage.HEADER_PROTOCOL, "v1")

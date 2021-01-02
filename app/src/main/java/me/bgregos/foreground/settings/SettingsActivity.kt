@@ -1,52 +1,29 @@
-package me.bgregos.foreground
+package me.bgregos.foreground.settings
 
-import android.Manifest
 import android.app.Activity
-import android.app.AlertDialog
 import android.content.Context
-import android.content.DialogInterface
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.database.Cursor
 import android.graphics.Color
 import android.net.Uri
-import android.opengl.Visibility
-import android.os.AsyncTask
 import android.os.Bundle
 import android.provider.OpenableColumns
 import com.google.android.material.snackbar.Snackbar
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import android.view.View
-import android.widget.ArrayAdapter
-import android.widget.TextView
-import android.widget.Toast
 import androidx.work.*
-import de.aaschmid.taskwarrior.TaskwarriorClient
-import de.aaschmid.taskwarrior.config.TaskwarriorPropertiesConfiguration
-import de.aaschmid.taskwarrior.internal.ManifestHelper
-import de.aaschmid.taskwarrior.message.TaskwarriorMessage
 import kotlinx.android.synthetic.main.activity_settings2.*
-import kotlinx.android.synthetic.main.activity_task_list.*
-import kotlinx.android.synthetic.main.task_detail.*
-import kotlinx.android.synthetic.main.task_list.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import me.bgregos.foreground.task.LocalTasks
-import me.bgregos.foreground.task.RemoteTaskManager
+import me.bgregos.foreground.R
+import me.bgregos.foreground.repository.LocalTasks
+import me.bgregos.foreground.remote.RemoteTasks
 import me.bgregos.foreground.util.ShowErrorDetail
 import java.io.File
 import java.io.FileOutputStream
-import java.io.IOException
 import java.lang.Exception
-import java.net.URI
-import java.net.URL
-import java.net.URLEncoder
-import java.time.Duration
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -96,14 +73,14 @@ class SettingsActivity : AppCompatActivity() {
                 save()
                 settings_syncprogress.visibility = View.VISIBLE
                 CoroutineScope(Dispatchers.Main).launch {
-                    var response: RemoteTaskManager.SyncResult
+                    var response: RemoteTasks.SyncResult
                     var exception: Exception? = null
                     try {
-                        response = RemoteTaskManager(this@SettingsActivity).taskwarriorTestSync()
+                        response = RemoteTasks(this@SettingsActivity).taskwarriorTestSync()
                     }catch (e: Exception){
                         exception = e
                         Log.e("test sync error", e.toString())
-                        response = RemoteTaskManager.SyncResult(false, "Invalid or incomplete configuration.")
+                        response = RemoteTasks.SyncResult(false, "Invalid or incomplete configuration.")
                     }
                     Log.i(this.javaClass.toString(), response.message)
                     settings_sync.visibility = View.VISIBLE
@@ -151,7 +128,7 @@ class SettingsActivity : AppCompatActivity() {
                 settings_auto_sync_interval.setText("15")
             }
             val syncRequest =
-                    PeriodicWorkRequest.Builder(RemoteTaskManager.TaskwarriorSyncWorker::class.java, interval, TimeUnit.MINUTES)
+                    PeriodicWorkRequest.Builder(RemoteTasks.TaskwarriorSyncWorker::class.java, interval, TimeUnit.MINUTES)
                             .build()
             WorkManager.getInstance().enqueueUniquePeriodicWork("foreground_sync", ExistingPeriodicWorkPolicy.REPLACE, syncRequest)
 
@@ -253,7 +230,7 @@ class SettingsActivity : AppCompatActivity() {
                         settings_cert_ca.setText(uriToName(uri))
                         writeCertFile(uri, "cert_ca")
                     }
-                    CertType.CERT_KEY-> {
+                    CertType.CERT_KEY -> {
                         settings_private_key.setText(uriToName(uri))
                         writeCertFile(uri, "cert_key")
                     }

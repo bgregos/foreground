@@ -1,4 +1,4 @@
-package me.bgregos.foreground
+package me.bgregos.foreground.tasklist
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -23,13 +23,15 @@ import kotlinx.android.synthetic.main.task_list.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import me.bgregos.foreground.R
 import me.bgregos.foreground.R.id.action_sync
 import me.bgregos.foreground.R.id.action_visibility
-import me.bgregos.foreground.adapter.TaskListAdapter
-import me.bgregos.foreground.task.LocalTasks
-import me.bgregos.foreground.task.NotificationService
-import me.bgregos.foreground.task.RemoteTaskManager
-import me.bgregos.foreground.task.Task
+import me.bgregos.foreground.repository.LocalTasks
+import me.bgregos.foreground.util.NotificationService
+import me.bgregos.foreground.remote.RemoteTasks
+import me.bgregos.foreground.model.Task
+import me.bgregos.foreground.filter.FiltersFragment
+import me.bgregos.foreground.settings.SettingsActivity
 import me.bgregos.foreground.util.ShowErrorDetail
 import java.io.File
 import java.net.URL
@@ -130,7 +132,7 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
             bar.show()
             CoroutineScope(Dispatchers.Main).launch {
                 LocalTasks.save(this@TaskListActivity, true)
-                var syncResult: RemoteTaskManager.SyncResult = RemoteTaskManager(this@TaskListActivity).taskwarriorSync()
+                var syncResult: RemoteTasks.SyncResult = RemoteTasks(this@TaskListActivity).taskwarriorSync()
                 if(syncResult.success){
                     val bar = Snackbar.make(task_list_parent, "Sync Successful", Snackbar.LENGTH_SHORT)
                     bar.view.setBackgroundColor(Color.parseColor("#34309f"))
