@@ -18,7 +18,7 @@ import me.bgregos.foreground.*
 import me.bgregos.foreground.model.Task
 import me.bgregos.foreground.receiver.AlarmReceiver
 import me.bgregos.foreground.receiver.TaskBroadcastReceiver
-import me.bgregos.foreground.repository.LocalTasks
+import me.bgregos.foreground.tasklist.LocalTasks
 import me.bgregos.foreground.tasklist.TaskListActivity
 
 

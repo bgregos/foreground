@@ -5,7 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import me.bgregos.foreground.model.TaskFilter
 
-class FiltersFragmentViewModel : ViewModel() {
+class FiltersViewModel : ViewModel() {
 
     val filters: LiveData<ArrayList<TaskFilter>> = MutableLiveData(arrayListOf())
 
@@ -16,4 +16,6 @@ class FiltersFragmentViewModel : ViewModel() {
     fun removeFilter(taskFilter: TaskFilter) {
         filters.value?.remove(taskFilter)
     }
+
+
 }

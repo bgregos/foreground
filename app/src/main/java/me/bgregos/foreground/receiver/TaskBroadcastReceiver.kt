@@ -6,7 +6,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import android.util.Log
-import me.bgregos.foreground.repository.LocalTasks
+import me.bgregos.foreground.tasklist.LocalTasks
 import java.util.*
 
 class TaskBroadcastReceiver: BroadcastReceiver() {

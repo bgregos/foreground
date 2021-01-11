@@ -18,8 +18,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import me.bgregos.foreground.R
-import me.bgregos.foreground.repository.LocalTasks
-import me.bgregos.foreground.remote.RemoteTasks
+import me.bgregos.foreground.tasklist.LocalTasks
+import me.bgregos.foreground.network.RemoteTasks
 import me.bgregos.foreground.util.ShowErrorDetail
 import java.io.File
 import java.io.FileOutputStream

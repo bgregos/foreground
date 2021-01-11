@@ -26,9 +26,8 @@ import kotlinx.coroutines.launch
 import me.bgregos.foreground.R
 import me.bgregos.foreground.R.id.action_sync
 import me.bgregos.foreground.R.id.action_visibility
-import me.bgregos.foreground.repository.LocalTasks
 import me.bgregos.foreground.util.NotificationService
-import me.bgregos.foreground.remote.RemoteTasks
+import me.bgregos.foreground.network.RemoteTasks
 import me.bgregos.foreground.model.Task
 import me.bgregos.foreground.filter.FiltersFragment
 import me.bgregos.foreground.settings.SettingsActivity

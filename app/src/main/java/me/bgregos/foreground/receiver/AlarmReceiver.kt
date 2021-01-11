@@ -4,7 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import me.bgregos.foreground.repository.LocalTasks
+import me.bgregos.foreground.tasklist.LocalTasks
 import me.bgregos.foreground.util.NotificationService
 import java.util.*
 

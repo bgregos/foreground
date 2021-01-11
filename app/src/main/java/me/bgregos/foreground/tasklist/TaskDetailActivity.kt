@@ -7,7 +7,6 @@ import android.view.Menu
 import android.view.MenuItem
 import kotlinx.android.synthetic.main.activity_task_detail.*
 import me.bgregos.foreground.R
-import me.bgregos.foreground.repository.LocalTasks
 import java.util.*
 
 /**

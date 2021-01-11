@@ -1,4 +1,4 @@
-package me.bgregos.foreground.remote
+package me.bgregos.foreground.network
 
 import android.content.Context
 import android.content.Intent
@@ -15,7 +15,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import me.bgregos.foreground.BuildConfig
 import me.bgregos.foreground.model.Task
-import me.bgregos.foreground.repository.LocalTasks
+import me.bgregos.foreground.tasklist.LocalTasks
 import me.bgregos.foreground.util.NotificationService
 import org.json.JSONObject
 import java.io.File

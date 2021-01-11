@@ -1,4 +1,4 @@
-package me.bgregos.foreground.repository
+package me.bgregos.foreground.tasklist
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -7,6 +7,7 @@ import java.util.*
 import com.google.gson.reflect.TypeToken
 import me.bgregos.foreground.model.Task
 import me.bgregos.foreground.model.TaskFilter
+import me.bgregos.foreground.model.TaskFilterTypes
 import java.text.SimpleDateFormat
 import kotlin.collections.ArrayList
 
@@ -47,7 +48,7 @@ object LocalTasks {
         items = Gson().fromJson(prefs.getString("LocalTasks", ""), taskType) ?: items
         localChanges = Gson().fromJson(prefs.getString("LocalTasks.localChanges", ""), taskType) ?: localChanges
         initSync =  prefs.getString("LocalTasks.initSync", "true")?.toBoolean()?:true
-        showWaiting=  prefs.getString("LocalTasks.showWaiting", "true")?.toBoolean()?:false
+        showWaiting =  prefs.getString("LocalTasks.showWaiting", "true")?.toBoolean()?:false
         syncKey = prefs.getString("LocalTasks.syncKey", syncKey)?: syncKey
         val lastSeenVersion = prefs.getInt("lastSeenVersion", 1)
         runMigrationsIfRequired(lastSeenVersion, synchronous, context, prefs)
@@ -55,9 +56,9 @@ object LocalTasks {
 
     @Synchronized
     fun runMigrationsIfRequired(lastSeenVersion: Int, synchronous: Boolean, context: Context, prefs: SharedPreferences){
-        //migration
+        //migration - breaking changes are versioned here
         var itemsModified = false
-        if (lastSeenVersion<2){ //keep track of breaking changes
+        if (lastSeenVersion<2){
             val editor = prefs.edit()
             itemsModified = true
             val dfLocal = SimpleDateFormat()
@@ -79,7 +80,7 @@ object LocalTasks {
             editor.putInt("lastSeenVersion", 2)
             if(synchronous) editor.apply() else editor.commit()
         }
-        if (lastSeenVersion<3){ //keep track of breaking changes
+        if (lastSeenVersion<3){
             val editor = prefs.edit()
             itemsModified = true
             for (i in items) {
@@ -131,7 +132,9 @@ object LocalTasks {
     fun updateVisibleTasks(){
         visibleTasks.clear()
         visibleTasks.addAll(items)
-        filters.forEach { if (it.enabled) visibleTasks = visibleTasks.filter { task -> it.filter(task, it.parameter) } as ArrayList<Task> }
+        filters.forEach {
+            if (it.enabled) visibleTasks = visibleTasks.filter { task -> it.type.filter(task, it.parameter) } as ArrayList<Task>
+        }
         visibleTasks.sortWith(Task.DateCompare())
         items.sortWith(Task.DateCompare())
     }

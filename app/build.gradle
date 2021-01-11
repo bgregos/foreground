@@ -23,9 +23,13 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
 }
 
 def room_version = "2.2.6"
+def dagger_version = "2.30.1"
 
 dependencies {
     //implementation fileTree(include: ['*.jar'], dir: 'libs')
@@ -40,6 +44,7 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.2.0'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.2.0'
+    implementation "androidx.fragment:fragment-ktx:1.2.5"
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
@@ -58,4 +63,9 @@ dependencies {
 
     //workmanager
     implementation 'androidx.work:work-runtime:2.4.0'
+
+    //dagger2
+    implementation "com.google.dagger:dagger:$dagger_version"
+    kapt "com.google.dagger:dagger-compiler:$dagger_version"
+
 }

@@ -11,7 +11,6 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.task_list_content.view.*
 import me.bgregos.foreground.R
-import me.bgregos.foreground.repository.LocalTasks
 import me.bgregos.foreground.model.Task
 import java.text.SimpleDateFormat
 import java.util.*

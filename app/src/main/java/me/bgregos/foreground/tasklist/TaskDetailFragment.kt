@@ -15,7 +15,6 @@ import kotlinx.android.synthetic.main.date_layout.view.*
 import kotlinx.android.synthetic.main.task_detail.*
 import kotlinx.android.synthetic.main.task_detail.view.*
 import me.bgregos.foreground.R
-import me.bgregos.foreground.repository.LocalTasks
 import me.bgregos.foreground.model.Task
 import java.text.DateFormatSymbols
 import java.text.SimpleDateFormat
