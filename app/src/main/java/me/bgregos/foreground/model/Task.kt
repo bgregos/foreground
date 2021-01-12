@@ -46,16 +46,6 @@ data class Task(var name:String) : Serializable {
 
     }
 
-    fun isBlank(): Boolean{
-        return with(this) {
-            name.isBlank() &&
-            dueDate == null &&
-            priority.isNullOrBlank() &&
-            project.isNullOrBlank() &&
-            tags.isEmpty()
-        }
-    }
-
     companion object {
 
         fun shouldDisplay(task: Task):Boolean{

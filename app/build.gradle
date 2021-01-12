@@ -58,9 +58,6 @@ dependencies {
     implementation "androidx.room:room-ktx:$room_version"
     testImplementation "androidx.room:room-testing:$room_version"
 
-    //java 8 time backport
-    implementation 'com.jakewharton.threetenabp:threetenabp:1.1.0'
-
     //workmanager
     implementation 'androidx.work:work-runtime:2.4.0'
 

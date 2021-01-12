@@ -36,7 +36,6 @@ class TaskDetailFragment : Fragment() {
         super.onCreate(savedInstanceState)
 
         val bundle = this.arguments
-
         //load Task from bundle args
         if (bundle?.getString("uuid") != null) {
             item = LocalTasks.getTaskByUUID(UUID.fromString(bundle.getString("uuid")))?: Task("Task lookup error")
@@ -50,6 +49,7 @@ class TaskDetailFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
+
         val rootView = inflater.inflate(R.layout.task_detail, container, false)
         val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
         dateFormat.timeZone= TimeZone.getDefault()
@@ -57,7 +57,7 @@ class TaskDetailFragment : Fragment() {
         timeFormat.timeZone= TimeZone.getDefault()
 
         // Create an ArrayAdapter using the string array and a default spinner layout
-        val adapter: ArrayAdapter<CharSequence> = ArrayAdapter.createFromResource(this.context ?: this.activity!!.baseContext,
+        val adapter: ArrayAdapter<CharSequence> = ArrayAdapter.createFromResource(this.context ?: requireActivity().baseContext,
                 R.array.priority_spinner, android.R.layout.simple_spinner_item);
         // Specify the layout to use when the list of choices appears
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -193,6 +193,7 @@ class TaskDetailFragment : Fragment() {
 
         //some strange issue requires this to be done or the view doesn't adjust
         //to the match content height
+        //TODO: replace this spinner with a different ui element
         if (item.priority == null || item.priority == "No Priority Assigned"){
             rootView.detail_priority.setSelection(0)
             rootView.detail_priority.setSelection(1)
@@ -204,7 +205,7 @@ class TaskDetailFragment : Fragment() {
         return rootView
     }
 
-    // This allows side-by-side tablet support to work
+    // This triggers updates in the task list if it is showing alongside the edit screen
     private fun saveAndUpdateTaskListIfTablet(){
         if(twoPane){
             save()
@@ -213,23 +214,22 @@ class TaskDetailFragment : Fragment() {
     }
 
     private fun updateTaskList() {
+        //TODO: replace broadcasts with livedata
         val localIntent: Intent = Intent("BRIGHTTASK_TABLET_LOCAL_TASK_UPDATE") //Send local broadcast
         context?.let { LocalBroadcastManager.getInstance(it).sendBroadcast(localIntent) }
         Log.d("detail", "sent update broadcast")
     }
 
     override fun onPause() {
-        save()
-        //remove this task if it's blank
-        if (item.isBlank()) {
-            Log.d(this.javaClass.toString(), "Removing task w/ no data")
+        //remove this task if it's blank - taskwarrior disallows tasks with no name
+        if (detail_name.text?.isBlank() != false) {
+            Log.d(this.javaClass.toString(), "Removing task w/ no name")
             LocalTasks.items.remove(item)
-            LocalTasks.save(requireActivity().applicationContext, true)
+            LocalTasks.localChanges.remove(item)
+            LocalTasks.save(requireActivity().applicationContext)
             updateTaskList()
-        } else {
-            if (twoPane){
-                saveAndUpdateTaskListIfTablet()
-            }
+        }else{
+            save()
         }
         super.onPause()
     }
@@ -260,7 +260,7 @@ class TaskDetailFragment : Fragment() {
         if (!LocalTasks.localChanges.contains(toModify)){
             LocalTasks.localChanges.add(toModify)
         }
-        LocalTasks.save(activity!!.applicationContext, true)
+        LocalTasks.save(requireActivity().applicationContext, true)
         Log.d(this.javaClass.toString(), "Saved task")
         super.onPause()
     }

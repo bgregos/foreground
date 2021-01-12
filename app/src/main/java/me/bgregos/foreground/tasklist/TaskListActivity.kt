@@ -17,15 +17,14 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
-import com.jakewharton.threetenabp.AndroidThreeTen
 import kotlinx.android.synthetic.main.activity_task_list.*
 import kotlinx.android.synthetic.main.task_list.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import me.bgregos.foreground.R
+import me.bgregos.foreground.R.id.action_filters
 import me.bgregos.foreground.R.id.action_sync
-import me.bgregos.foreground.R.id.action_visibility
 import me.bgregos.foreground.util.NotificationService
 import me.bgregos.foreground.network.RemoteTasks
 import me.bgregos.foreground.model.Task
@@ -35,7 +34,7 @@ import me.bgregos.foreground.util.ShowErrorDetail
 import java.io.File
 import java.net.URL
 
-class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener {
+class TaskListActivity : AppCompatActivity() {
 
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
@@ -48,7 +47,6 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        AndroidThreeTen.init(this)
         LocalTasks.load(this)
         NotificationService.load(this)
         NotificationService.createNotificationChannel(this)
@@ -133,14 +131,14 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
                 LocalTasks.save(this@TaskListActivity, true)
                 var syncResult: RemoteTasks.SyncResult = RemoteTasks(this@TaskListActivity).taskwarriorSync()
                 if(syncResult.success){
-                    val bar = Snackbar.make(task_list_parent, "Sync Successful", Snackbar.LENGTH_SHORT)
-                    bar.view.setBackgroundColor(Color.parseColor("#34309f"))
-                    bar.show()
+                    val bar2 = Snackbar.make(task_list_parent, "Sync Successful", Snackbar.LENGTH_SHORT)
+                    bar2.view.setBackgroundColor(Color.parseColor("#34309f"))
+                    bar2.show()
                 }else{
-                    val bar = Snackbar.make(task_list_parent, "Sync Failed: ${syncResult.message}", Snackbar.LENGTH_LONG)
-                    bar.view.setBackgroundColor(Color.parseColor("#34309f"))
-                    bar.setAction("Details", ShowErrorDetail(syncResult.message, this@TaskListActivity))
-                    bar.show()
+                    val bar2 = Snackbar.make(task_list_parent, "Sync Failed: ${syncResult.message}", Snackbar.LENGTH_LONG)
+                    bar2.view.setBackgroundColor(Color.parseColor("#34309f"))
+                    bar2.setAction("Details", ShowErrorDetail(syncResult.message, this@TaskListActivity))
+                    bar2.show()
                 }
                 task_list.adapter?.notifyDataSetChanged()
                 syncRotateAnimation.repeatCount = 0
@@ -153,44 +151,13 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
         }
     }
 
-    fun onVisibilityClick(item: MenuItem) {
-        PopupMenu(this, findViewById(action_visibility)).apply {
-            setOnMenuItemClickListener(this@TaskListActivity)
-            inflate(R.menu.menu_visibility)
-            if(LocalTasks.showWaiting){
-                this.menu.getItem(0).isChecked = true
-            }else{
-                this.menu.getItem(1).isChecked = true
-            }
-            show()
-        }
-    }
-
-    override fun onMenuItemClick(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.menu_show_waiting -> {
-                Log.i("recyclerview item count", task_list.adapter?.itemCount.toString())
-                item.isChecked = !item.isChecked
-                LocalTasks.showWaiting = true
-                LocalTasks.updateVisibleTasks()
-                task_list.adapter?.notifyDataSetChanged()
-                task_list.hasPendingAdapterUpdates()
-                Log.i("recyclerview item count", task_list.adapter?.itemCount.toString() + ","+ LocalTasks.visibleTasks.size.toString())
-                true
-            }
-            R.id.menu_hide_waiting -> {
-                Log.i("recyclerview item count", task_list.adapter?.itemCount.toString())
-                item.isChecked = !item.isChecked
-                LocalTasks.showWaiting = false
-                LocalTasks.updateVisibleTasks()
-                task_list.adapter?.notifyDataSetChanged()
-                task_list.adapter?.notifyItemRangeChanged(0, LocalTasks.items.size)
-                task_list.hasPendingAdapterUpdates()
-                Log.i("recyclerview item count", task_list.adapter?.itemCount.toString() + ","+ LocalTasks.visibleTasks.size.toString())
-                true
-            }
-
-            else -> false
+    fun onFiltersClick(item: MenuItem) {
+        if(twoPane){
+            val fragment = FiltersFragment()
+            this.supportFragmentManager
+                    .beginTransaction()
+                    .replace(R.id.task_detail_container, fragment)
+                    .commit()
         }
     }
 
@@ -229,13 +196,8 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
         }
     }
 
-    private fun openFilters(){
-        if(twoPane) {
-            val fragment = FiltersFragment
-        }
-    }
-
     fun openTask(task: Task, v: View, name: String){
+        // Tablet layouts get the task detail fragment opened on the side
         if (twoPane) {
             val fragment = TaskDetailFragment().apply {
                 arguments = Bundle().apply {
@@ -251,6 +213,7 @@ class TaskListActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener 
                     .replace(R.id.task_detail_container, fragment)
                     .commit()
         } else {
+            //phones get the task detail fragment in a new activity
             val intent = Intent(v.context, TaskDetailActivity::class.java)
             intent.putExtra("uuid", task.uuid.toString())
             intent.putExtra("displayName", name)

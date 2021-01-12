@@ -91,6 +91,7 @@ class TaskListAdapter(private val parentActivity: TaskListActivity,
             if (!LocalTasks.localChanges.contains(item)){
                 LocalTasks.localChanges.add(item)
             }
+            LocalTasks.items.remove(item)
         }
     }
 
