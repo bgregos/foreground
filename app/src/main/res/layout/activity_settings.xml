@@ -55,21 +55,22 @@
                 android:layout_height="match_parent"
                 android:orientation="horizontal" >
 
-                <TextView
-                    android:id="@+id/settings_enable_sync_text"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Enable Sync"
-                    android:padding="4dp"/>
                 <Switch
                     android:id="@+id/settings_sync"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:checked="true"
                     android:switchPadding="4dp"
-                    android:layout_gravity="left"
+                    android:layout_gravity="center_vertical"
 
                     tools:checked="true" />
+
+                <TextView
+                    android:id="@+id/settings_enable_sync_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Enable Sync"
+                    android:padding="8dp"/>
 
                 <ProgressBar
                     android:layout_width="wrap_content"
@@ -83,66 +84,45 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:orientation="horizontal" >
 
-                <TextView
-                    android:id="@+id/settings_auto_sync_text"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Sync Automatically"
-                    android:padding="4dp" />
                 <Switch
                     android:id="@+id/settings_auto_sync"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:checked="true"
-                    android:switchPadding="4dp"
-                    android:layout_gravity="left"
-
+                    android:switchPadding="2dp"
+                    android:layout_gravity="center_vertical"
                     tools:checked="true" />
 
-            </LinearLayout>
-        </LinearLayout>
-
-    </androidx.cardview.widget.CardView>
-
-    <androidx.cardview.widget.CardView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_margin="8dp"
-        app:cardCornerRadius="4dp"
-        app:cardElevation="4dp"
-        app:contentPadding="6dp" >
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="horizontal" >
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" >
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/settings_auto_sync_interval"
-                    android:layout_width="200dp"
+                <TextView
+                    android:id="@+id/settings_auto_sync_text"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:hint="Auto Sync Interval"
+                    android:text="Auto sync every"
+                    android:padding="8dp" />
+
+                <EditText
+                    android:id="@+id/settings_auto_sync_interval"
+                    android:layout_width="80dp"
+                    android:layout_height="wrap_content"
+                    android:hint="interval"
                     android:text="60"
+                    android:padding="8dp"
                     android:inputType="number"
                     android:selectAllOnFocus="true"
                     android:singleLine="true" />
-            </com.google.android.material.textfield.TextInputLayout>
 
-            <TextView
-                android:id="@+id/settings_auto_sync_interval_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="minutes"
-                android:layout_gravity="center_vertical"
-                android:padding="4dp" />
+                <TextView
+                    android:id="@+id/settings_auto_sync_interval_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="minutes"
+                    android:layout_gravity="center_vertical"
+                    android:padding="8dp" />
 
+            </LinearLayout>
         </LinearLayout>
 
     </androidx.cardview.widget.CardView>
@@ -166,173 +146,162 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="horizontal">
+            android:orientation="vertical" >
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight=".3" >
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/settings_address"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ems="10"
+                        android:hint="Server Address"
+                        android:inputType="textUri"
+                        android:selectAllOnFocus="false"
+                        android:singleLine="true"
+                        tools:layout_editor_absoluteX="116dp"
+                        tools:layout_editor_absoluteY="51dp" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight=".7" >
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/settings_port"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ems="10"
+                        android:hint="Port"
+                        android:inputType="number"
+                        android:singleLine="true" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+            </LinearLayout>
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight=".3" >
+                android:layout_height="wrap_content" >
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/settings_address"
+                    android:id="@+id/settings_credentials"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:ems="10"
-                    android:hint="Server Address"
-                    android:inputType="textUri"
-                    android:selectAllOnFocus="false"
-                    android:singleLine="true"
-                    tools:layout_editor_absoluteX="116dp"
-                    tools:layout_editor_absoluteY="51dp" />
+                    android:hint="User Credentials organization/user/key"
+                    android:inputType="text"
+                    android:selectAllOnFocus="true"
+                    android:singleLine="true"  />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <com.google.android.material.textfield.TextInputLayout
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight=".7" >
+                android:layout_height="match_parent"
+                android:orientation="vertical">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/settings_port"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:ems="10"
-                    android:hint="Port"
-                    android:inputType="number"
-                    android:singleLine="true" />
-            </com.google.android.material.textfield.TextInputLayout>
+                    android:orientation="horizontal">
 
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
-
-    <androidx.cardview.widget.CardView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_margin="8dp"
-        app:cardCornerRadius="4dp"
-        app:cardElevation="4dp"
-        app:contentPadding="6dp">
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" >
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/settings_credentials"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="User Credentials organization/user/key"
-                android:inputType="text"
-                android:selectAllOnFocus="true"
-                android:singleLine="true"  />
-        </com.google.android.material.textfield.TextInputLayout>
-
-    </androidx.cardview.widget.CardView>
-
-    <androidx.cardview.widget.CardView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:cardCornerRadius="4dp"
-        app:cardElevation="4dp"
-        app:contentPadding="6dp"
-        android:layout_margin="8dp" >
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1" >
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/settings_cert_ca"
-                        android:layout_width="match_parent"
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:hint="CA Certificate"
-                        android:focusableInTouchMode="false"
-                        android:scrollHorizontally="true"
-                        android:singleLine="true"
-                        android:clickable="false" />
+                        android:layout_weight="1" >
 
-                </com.google.android.material.textfield.TextInputLayout>
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/settings_cert_ca"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="CA Certificate"
+                            android:focusableInTouchMode="false"
+                            android:scrollHorizontally="true"
+                            android:singleLine="true"
+                            android:clickable="false" />
 
-                <ImageButton
-                    android:id="@+id/settings_cert_ca_button"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:src="@drawable/ic_folder_black_24dp"
-                    android:clickable="false"/>
+                    </com.google.android.material.textfield.TextInputLayout>
 
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                    <ImageButton
+                        android:id="@+id/settings_cert_ca_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:src="@drawable/ic_folder_black_24dp"
+                        android:clickable="false"/>
 
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="wrap_content"
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1" >
+                    android:orientation="horizontal">
 
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/settings_private_key"
-                        android:layout_width="match_parent"
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:hint="Private Key File"
-                        android:focusableInTouchMode="false"
-                        android:scrollHorizontally="true"
-                        android:singleLine="true"
-                        android:clickable="false" />
+                        android:layout_weight="1" >
 
-                </com.google.android.material.textfield.TextInputLayout>
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/settings_private_key"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Private Key File"
+                            android:focusableInTouchMode="false"
+                            android:scrollHorizontally="true"
+                            android:singleLine="true"
+                            android:clickable="false" />
 
-                <ImageButton
-                    android:id="@+id/settings_private_key_button"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:src="@drawable/ic_folder_black_24dp"
-                    android:clickable="false"/>
+                    </com.google.android.material.textfield.TextInputLayout>
 
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                    <ImageButton
+                        android:id="@+id/settings_private_key_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:src="@drawable/ic_folder_black_24dp"
+                        android:clickable="false"/>
 
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="wrap_content"
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1" >
+                    android:orientation="horizontal">
 
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/settings_cert_private"
-                        android:layout_width="match_parent"
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:hint="Private Certificate"
-                        android:focusableInTouchMode="false"
-                        android:scrollHorizontally="true"
-                        android:singleLine="true"
-                        android:clickable="false" />
+                        android:layout_weight="1" >
 
-                </com.google.android.material.textfield.TextInputLayout>
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/settings_cert_private"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Private Certificate"
+                            android:focusableInTouchMode="false"
+                            android:scrollHorizontally="true"
+                            android:singleLine="true"
+                            android:clickable="false" />
 
-                <ImageButton
-                    android:id="@+id/settings_cert_private_button"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:src="@drawable/ic_folder_black_24dp"
-                    android:clickable="false"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <ImageButton
+                        android:id="@+id/settings_cert_private_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:src="@drawable/ic_folder_black_24dp"
+                        android:clickable="false"/>
+
+                </LinearLayout>
 
             </LinearLayout>
 
         </LinearLayout>
+
     </androidx.cardview.widget.CardView>
 
     <Button
