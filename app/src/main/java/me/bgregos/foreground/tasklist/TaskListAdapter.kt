@@ -15,9 +15,8 @@ import me.bgregos.foreground.model.Task
 import java.text.SimpleDateFormat
 import java.util.*
 
-class TaskListAdapter(private val parentActivity: TaskListActivity,
-                      private var values: java.util.ArrayList<Task>,
-                      private val twoPane: Boolean) :
+class TaskListAdapter(private val parentFragment: TaskListFragment,
+                      private var values: ArrayList<Task>) :
         RecyclerView.Adapter<TaskListAdapter.ViewHolder>() {
 
     private val onClickListener: View.OnClickListener
@@ -26,7 +25,7 @@ class TaskListAdapter(private val parentActivity: TaskListActivity,
         this.setHasStableIds(false)
         onClickListener = View.OnClickListener { v ->
             val task = v.tag as Task
-            parentActivity.openTask(task, v, task.name)
+            parentFragment.openTask(task, v, task.name)
         }
     }
 

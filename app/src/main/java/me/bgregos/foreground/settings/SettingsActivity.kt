@@ -13,7 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import android.view.View
 import androidx.work.*
-import kotlinx.android.synthetic.main.activity_settings2.*
+import kotlinx.android.synthetic.main.activity_settings.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -32,7 +32,7 @@ class SettingsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_settings2)
+        setContentView(R.layout.activity_settings)
         settings_syncprogress.visibility = View.INVISIBLE
         settings_sync.visibility = View.VISIBLE
         actionBar?.setDisplayHomeAsUpEnabled(true)

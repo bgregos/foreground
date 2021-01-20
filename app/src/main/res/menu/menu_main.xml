@@ -9,17 +9,14 @@
     <item android:id="@+id/action_filters"
         android:title="Filters"
         android:icon="@drawable/ic_baseline_filter_list_24"
-        android:onClick="onFiltersClick"
         app:showAsAction="ifRoom"/>
     <item android:id="@+id/action_sync"
         android:title="Sync"
         android:icon="@drawable/ic_sync_black_24dp"
-        android:onClick="onSyncClick"
         app:showAsAction="ifRoom"/>
     <item android:id="@+id/action_settings"
         android:title="@string/settings"
         android:icon="@drawable/ic_settings_black_24dp"
-        android:onClick="onSettingsClick"
         app:showAsAction="ifRoom"/>
 
 </menu>

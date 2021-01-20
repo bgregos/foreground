@@ -12,8 +12,8 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import kotlinx.android.synthetic.main.date_layout.view.*
-import kotlinx.android.synthetic.main.task_detail.*
-import kotlinx.android.synthetic.main.task_detail.view.*
+import kotlinx.android.synthetic.main.fragment_task_detail.*
+import kotlinx.android.synthetic.main.fragment_task_detail.view.*
 import me.bgregos.foreground.R
 import me.bgregos.foreground.model.Task
 import java.text.DateFormatSymbols
@@ -23,14 +23,23 @@ import java.util.*
 
 /**
  * A fragment representing a single Task detail screen.
- * This fragment is either contained in a [TaskListActivity]
+ * This fragment is either contained in a [MainActivity]
  * in two-pane mode (on tablets) or a [TaskDetailActivity]
  * on handsets.
  */
 class TaskDetailFragment : Fragment() {
 
     private var item: Task = Task("error")
-    private var twoPane: Boolean = true
+
+    companion object {
+        fun newInstance(uuid: UUID): TaskDetailFragment{
+            return TaskDetailFragment().apply {
+                arguments = Bundle().apply {
+                    putString("uuid", uuid.toString())
+                }
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,14 +52,13 @@ class TaskDetailFragment : Fragment() {
         else {
             Log.e(this.javaClass.toString(), "No key found.")
         }
-
-        twoPane = bundle?.getBoolean("twoPane") ?: true
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
 
-        val rootView = inflater.inflate(R.layout.task_detail, container, false)
+        val rootView = inflater.inflate(R.layout.fragment_task_detail, container, false)
+        rootView.detail_toolbar.title = if(item.name.isBlank()) "New Task" else item.name
         val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
         dateFormat.timeZone= TimeZone.getDefault()
         val timeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
@@ -192,7 +200,7 @@ class TaskDetailFragment : Fragment() {
         }
 
         //some strange issue requires this to be done or the view doesn't adjust
-        //to the match content height
+        //to match the content height
         //TODO: replace this spinner with a different ui element
         if (item.priority == null || item.priority == "No Priority Assigned"){
             rootView.detail_priority.setSelection(0)
@@ -207,10 +215,13 @@ class TaskDetailFragment : Fragment() {
 
     // This triggers updates in the task list if it is showing alongside the edit screen
     private fun saveAndUpdateTaskListIfTablet(){
-        if(twoPane){
-            save()
-            updateTaskList()
-        }
+        updateToolbar(item.name)
+        save()
+        updateTaskList()
+    }
+
+    private fun updateToolbar(name: String?){
+        detail_toolbar.title = if(name.isNullOrEmpty()) "New Task" else name
     }
 
     private fun updateTaskList() {

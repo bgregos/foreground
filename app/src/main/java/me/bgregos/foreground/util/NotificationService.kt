@@ -19,7 +19,7 @@ import me.bgregos.foreground.model.Task
 import me.bgregos.foreground.receiver.AlarmReceiver
 import me.bgregos.foreground.receiver.TaskBroadcastReceiver
 import me.bgregos.foreground.tasklist.LocalTasks
-import me.bgregos.foreground.tasklist.TaskListActivity
+import me.bgregos.foreground.tasklist.MainActivity
 
 
 object NotificationService {
@@ -89,11 +89,11 @@ object NotificationService {
 
         lastAssignedNotificationId += 1
 
-        val intent = Intent(context, TaskListActivity::class.java).apply {
+        val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
 
-        val doneIntent = Intent(context, TaskListActivity::class.java).apply {
+        val doneIntent = Intent(context, MainActivity::class.java).apply {
             action = "BRIGHTTASK_MARK_TASK_DONE"
             setClass(context, TaskBroadcastReceiver::class.java)
             putExtra("notification_id", lastAssignedNotificationId)

@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat">
         <activity
-            android:name=".tasklist.TaskListActivity"
+            android:name=".tasklist.MainActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
@@ -22,21 +22,12 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".tasklist.TaskDetailActivity"
-            android:label="@string/title_task_detail"
-            android:parentActivityName=".tasklist.TaskListActivity"
-            android:theme="@style/AppTheme.NoActionBar">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".tasklist.TaskListActivity" />
-        </activity>
-        <activity
             android:name=".settings.SettingsActivity"
             android:label="@string/title_activity_settings"
-            android:parentActivityName=".tasklist.TaskListActivity">
+            android:parentActivityName=".tasklist.MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".tasklist.TaskListActivity" />
+                android:value=".tasklist.MainActivity" />
         </activity>
         <receiver
             android:name=".receiver.AlarmReceiver"
