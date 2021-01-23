@@ -47,7 +47,7 @@ class TaskDetailFragment : Fragment() {
         val bundle = this.arguments
         //load Task from bundle args
         if (bundle?.getString("uuid") != null) {
-            item = LocalTasks.getTaskByUUID(UUID.fromString(bundle.getString("uuid")))?: Task("Task lookup error")
+            item = LocalTasks.getTaskByUUID(UUID.fromString(bundle.getString("uuid")))?: run { close(); Task("") }
         }
         else {
             Log.e(this.javaClass.toString(), "No key found.")
@@ -274,5 +274,9 @@ class TaskDetailFragment : Fragment() {
         LocalTasks.save(requireActivity().applicationContext, true)
         Log.d(this.javaClass.toString(), "Saved task")
         super.onPause()
+    }
+
+    private fun close(){
+        activity?.supportFragmentManager?.beginTransaction()?.remove(this)?.commit()
     }
 }
