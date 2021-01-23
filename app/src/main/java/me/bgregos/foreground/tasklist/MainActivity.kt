@@ -28,16 +28,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        if (savedInstanceState == null) {
-            val transaction: FragmentTransaction = supportFragmentManager.beginTransaction()
-            fragment = TaskListFragment.newInstance()
-            transaction.replace(R.id.task_list_container, fragment)
-            transaction.commit()
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
         if (task_detail_container != null) {
             // The detail container view will be present only in the
             // large-screen layouts (res/values-w900dp).
@@ -45,6 +35,16 @@ class MainActivity : AppCompatActivity() {
             // activity should be in two-pane mode.
             twoPane = true
         }
+        if (savedInstanceState == null) {
+            val transaction: FragmentTransaction = supportFragmentManager.beginTransaction()
+            fragment = TaskListFragment.newInstance(twoPane)
+            transaction.replace(R.id.task_list_container, fragment)
+            transaction.commit()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
         val intentFilter = IntentFilter().apply {
             addAction("BRIGHTTASK_REMOTE_TASK_UPDATE")
             addAction("BRIGHTTASK_TABLET_LOCAL_TASK_UPDATE")
@@ -73,7 +73,7 @@ class MainActivity : AppCompatActivity() {
                     syncRotateAnimation.repeatCount = 0
                     LocalTasks.load(context, true)
                     LocalTasks.updateVisibleTasks()
-                    fragment.task_list.adapter?.notifyDataSetChanged()
+                    fragment.task_list?.adapter?.notifyDataSetChanged()
                     Log.i("auto_sync", "Task List received auto-update")
                 }
 
@@ -81,7 +81,7 @@ class MainActivity : AppCompatActivity() {
                     if (twoPane) {
                         LocalTasks.load(context, true)
                         LocalTasks.updateVisibleTasks()
-                        task_list.adapter?.notifyDataSetChanged()
+                        fragment.task_list?.adapter?.notifyDataSetChanged()
                         Log.i("task_list", "Task list updated by detail")
                     }
                 }

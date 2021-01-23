@@ -13,6 +13,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_main.view.*
 import kotlinx.android.synthetic.main.fragment_task_list.*
 import kotlinx.android.synthetic.main.task_list.*
 import kotlinx.coroutines.CoroutineScope
@@ -37,10 +38,11 @@ class TaskListFragment : Fragment() {
      */
     private var twoPane: Boolean = false
     private var PROPERTIES_TASKWARRIOR : URL? = null
-    var syncButton: View? = null
+    private var syncButton: View? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setHasOptionsMenu(true)
+        twoPane = arguments?.getBoolean(TWO_PANE_ARG) ?: savedInstanceState?.getBoolean(TWO_PANE_ARG) ?: false
         super.onCreate(savedInstanceState)
     }
 
@@ -57,19 +59,15 @@ class TaskListFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        if (task_detail_container != null) {
-            // The detail container view will be present only in the
-            // large-screen layouts (res/values-w900dp).
-            // If this view is present, then the
-            // activity should be in two-pane mode.
-            twoPane = true
-        }
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_task_list, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         syncButton = view.findViewById(R.id.action_sync)
+        toolbar.inflateMenu(R.menu.menu_main)
+        toolbar.navigationIcon = null
+        toolbar.title = ""
         (activity as AppCompatActivity?)!!.setSupportActionBar(toolbar)
         toolbar.setOnMenuItemClickListener { item ->
             when (item?.itemId) {
@@ -79,10 +77,6 @@ class TaskListFragment : Fragment() {
                 else -> false
             }
         }
-        toolbar.inflateMenu(R.menu.menu_main);
-        toolbar.navigationIcon = null
-        toolbar.title = ""
-        toolbar.subtitle = ""
         task_list?.let { setupRecyclerView(it) }
         fab.setOnClickListener { view ->
             val newTask = Task("")
@@ -176,9 +170,16 @@ class TaskListFragment : Fragment() {
     }
 
     companion object {
+
+        val TWO_PANE_ARG = "twoPane"
+
         @JvmStatic
-        fun newInstance() =
-                TaskListFragment()
+        fun newInstance(twoPane: Boolean) =
+                TaskListFragment().apply {
+                    arguments = Bundle().apply {
+                        putBoolean("twoPane", twoPane)
+                    }
+                }
     }
 
     fun openTask(task: Task, v: View, name: String){
