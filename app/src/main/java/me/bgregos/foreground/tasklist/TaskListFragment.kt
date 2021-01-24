@@ -68,7 +68,7 @@ class TaskListFragment : Fragment() {
         toolbar.inflateMenu(R.menu.menu_main)
         toolbar.navigationIcon = null
         toolbar.title = ""
-        (activity as AppCompatActivity?)!!.setSupportActionBar(toolbar)
+        (activity as AppCompatActivity?)?.setSupportActionBar(toolbar)
         toolbar.setOnMenuItemClickListener { item ->
             when (item?.itemId) {
                 R.id.action_sync -> onSyncClick(item)
@@ -183,7 +183,7 @@ class TaskListFragment : Fragment() {
     }
 
     fun openTask(task: Task, v: View, name: String){
-        val fragment = TaskDetailFragment.newInstance(task.uuid)
+        val fragment = TaskDetailFragment.newInstance(task.uuid, twoPane)
         LocalTasks.updateVisibleTasks()
         task_list.adapter?.notifyDataSetChanged()
         if (twoPane) {

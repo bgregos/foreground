@@ -10,10 +10,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import androidx.appcompat.app.AppCompatActivity
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import kotlinx.android.synthetic.main.date_layout.view.*
 import kotlinx.android.synthetic.main.fragment_task_detail.*
 import kotlinx.android.synthetic.main.fragment_task_detail.view.*
+import kotlinx.android.synthetic.main.fragment_task_list.*
 import me.bgregos.foreground.R
 import me.bgregos.foreground.model.Task
 import java.text.DateFormatSymbols
@@ -30,12 +32,14 @@ import java.util.*
 class TaskDetailFragment : Fragment() {
 
     private var item: Task = Task("error")
+    private var twoPane: Boolean = false
 
     companion object {
-        fun newInstance(uuid: UUID): TaskDetailFragment{
+        fun newInstance(uuid: UUID, twoPane: Boolean): TaskDetailFragment{
             return TaskDetailFragment().apply {
                 arguments = Bundle().apply {
                     putString("uuid", uuid.toString())
+                    putBoolean("twoPane", twoPane)
                 }
             }
         }
@@ -52,6 +56,7 @@ class TaskDetailFragment : Fragment() {
         else {
             Log.e(this.javaClass.toString(), "No key found.")
         }
+        twoPane = bundle?.getBoolean("twoPane") ?: false
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -63,6 +68,13 @@ class TaskDetailFragment : Fragment() {
         dateFormat.timeZone= TimeZone.getDefault()
         val timeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
         timeFormat.timeZone= TimeZone.getDefault()
+
+        if(!twoPane){
+            (activity as AppCompatActivity?)?.setSupportActionBar(rootView.detail_toolbar)
+            (activity as AppCompatActivity?)?.supportActionBar?.setDisplayHomeAsUpEnabled(true)
+            rootView.detail_toolbar.menu.clear()
+            rootView.detail_toolbar.setNavigationOnClickListener(View.OnClickListener { _ -> activity?.supportFragmentManager?.popBackStack() })
+        }
 
         // Create an ArrayAdapter using the string array and a default spinner layout
         val adapter: ArrayAdapter<CharSequence> = ArrayAdapter.createFromResource(this.context ?: requireActivity().baseContext,
