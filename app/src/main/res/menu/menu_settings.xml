@@ -1,6 +1,6 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".SettingsActivity">
+    tools:context=".settings.SettingsActivity">
     <item
         android:id="@+id/action_settings"
         android:orderInCategory="100"

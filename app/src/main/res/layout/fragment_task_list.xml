@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context=".TaskListActivity"
+    tools:context=".tasklist.MainActivity"
     android:id="@+id/task_list_parent">
 
     <com.google.android.material.appbar.AppBarLayout
@@ -33,11 +33,6 @@
                 android:src="@drawable/foreground"
                 android:layout_gravity="left"
                 android:layout_alignParentLeft="true"/>
-            <RelativeLayout
-                android:layout_width="220dp"
-                android:layout_height="match_parent"
-                android:layout_gravity="right">
-            </RelativeLayout>
 
         </androidx.appcompat.widget.Toolbar>
 

@@ -1,4 +1,4 @@
-package me.bgregos.foreground
+package me.bgregos.foreground.tasklist
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
@@ -6,19 +6,18 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.util.Log
-import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import kotlinx.android.synthetic.main.date_layout.view.*
-import kotlinx.android.synthetic.main.task_detail.*
-import kotlinx.android.synthetic.main.task_detail.view.*
-import me.bgregos.foreground.task.LocalTasks
-import me.bgregos.foreground.task.Task
+import kotlinx.android.synthetic.main.fragment_task_detail.*
+import kotlinx.android.synthetic.main.fragment_task_detail.view.*
+import kotlinx.android.synthetic.main.fragment_task_list.*
+import me.bgregos.foreground.R
+import me.bgregos.foreground.model.Task
 import java.text.DateFormatSymbols
 import java.text.SimpleDateFormat
 import java.util.*
@@ -26,41 +25,59 @@ import java.util.*
 
 /**
  * A fragment representing a single Task detail screen.
- * This fragment is either contained in a [TaskListActivity]
+ * This fragment is either contained in a [MainActivity]
  * in two-pane mode (on tablets) or a [TaskDetailActivity]
  * on handsets.
  */
 class TaskDetailFragment : Fragment() {
 
     private var item: Task = Task("error")
-    private var twoPane: Boolean = true
+    private var twoPane: Boolean = false
+
+    companion object {
+        fun newInstance(uuid: UUID, twoPane: Boolean): TaskDetailFragment{
+            return TaskDetailFragment().apply {
+                arguments = Bundle().apply {
+                    putString("uuid", uuid.toString())
+                    putBoolean("twoPane", twoPane)
+                }
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val bundle = this.arguments
-
         //load Task from bundle args
         if (bundle?.getString("uuid") != null) {
-            item = LocalTasks.getTaskByUUID(UUID.fromString(bundle.getString("uuid")))?: Task("Task lookup error")
+            item = LocalTasks.getTaskByUUID(UUID.fromString(bundle.getString("uuid")))?: run { close(); Task("") }
         }
         else {
             Log.e(this.javaClass.toString(), "No key found.")
         }
-
-        twoPane = bundle?.getBoolean("twoPane") ?: true
+        twoPane = bundle?.getBoolean("twoPane") ?: false
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        val rootView = inflater.inflate(R.layout.task_detail, container, false)
+
+        val rootView = inflater.inflate(R.layout.fragment_task_detail, container, false)
+        rootView.detail_toolbar.title = if(item.name.isBlank()) "New Task" else item.name
         val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
         dateFormat.timeZone= TimeZone.getDefault()
         val timeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
         timeFormat.timeZone= TimeZone.getDefault()
 
+        if(!twoPane){
+            (activity as AppCompatActivity?)?.setSupportActionBar(rootView.detail_toolbar)
+            (activity as AppCompatActivity?)?.supportActionBar?.setDisplayHomeAsUpEnabled(true)
+            rootView.detail_toolbar.menu.clear()
+            rootView.detail_toolbar.setNavigationOnClickListener(View.OnClickListener { _ -> activity?.supportFragmentManager?.popBackStack() })
+        }
+
         // Create an ArrayAdapter using the string array and a default spinner layout
-        val adapter: ArrayAdapter<CharSequence> = ArrayAdapter.createFromResource(this.context ?: this.activity!!.baseContext,
+        val adapter: ArrayAdapter<CharSequence> = ArrayAdapter.createFromResource(this.context ?: requireActivity().baseContext,
                 R.array.priority_spinner, android.R.layout.simple_spinner_item);
         // Specify the layout to use when the list of choices appears
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -195,7 +212,8 @@ class TaskDetailFragment : Fragment() {
         }
 
         //some strange issue requires this to be done or the view doesn't adjust
-        //to the match content height
+        //to match the content height
+        //TODO: replace this spinner with a different ui element
         if (item.priority == null || item.priority == "No Priority Assigned"){
             rootView.detail_priority.setSelection(0)
             rootView.detail_priority.setSelection(1)
@@ -207,32 +225,34 @@ class TaskDetailFragment : Fragment() {
         return rootView
     }
 
-    // This allows side-by-side tablet support to work
+    // This triggers updates in the task list if it is showing alongside the edit screen
     private fun saveAndUpdateTaskListIfTablet(){
-        if(twoPane){
-            save()
-            updateTaskList()
-        }
+        updateToolbar(item.name)
+        save()
+        updateTaskList()
+    }
+
+    private fun updateToolbar(name: String?){
+        detail_toolbar.title = if(name.isNullOrEmpty()) "New Task" else name
     }
 
     private fun updateTaskList() {
+        //TODO: replace broadcasts with livedata
         val localIntent: Intent = Intent("BRIGHTTASK_TABLET_LOCAL_TASK_UPDATE") //Send local broadcast
         context?.let { LocalBroadcastManager.getInstance(it).sendBroadcast(localIntent) }
         Log.d("detail", "sent update broadcast")
     }
 
     override fun onPause() {
-        save()
-        //remove this task if it's blank
-        if (item.isBlank()) {
-            Log.d(this.javaClass.toString(), "Removing task w/ no data")
+        //remove this task if it's blank - taskwarrior disallows tasks with no name
+        if (detail_name.text?.isBlank() != false) {
+            Log.d(this.javaClass.toString(), "Removing task w/ no name")
             LocalTasks.items.remove(item)
-            LocalTasks.save(requireActivity().applicationContext, true)
+            LocalTasks.localChanges.remove(item)
+            LocalTasks.save(requireActivity().applicationContext)
             updateTaskList()
-        } else {
-            if (twoPane){
-                saveAndUpdateTaskListIfTablet()
-            }
+        }else{
+            save()
         }
         super.onPause()
     }
@@ -263,8 +283,12 @@ class TaskDetailFragment : Fragment() {
         if (!LocalTasks.localChanges.contains(toModify)){
             LocalTasks.localChanges.add(toModify)
         }
-        LocalTasks.save(activity!!.applicationContext, true)
+        LocalTasks.save(requireActivity().applicationContext, true)
         Log.d(this.javaClass.toString(), "Saved task")
         super.onPause()
+    }
+
+    private fun close(){
+        activity?.supportFragmentManager?.beginTransaction()?.remove(this)?.commit()
     }
 }

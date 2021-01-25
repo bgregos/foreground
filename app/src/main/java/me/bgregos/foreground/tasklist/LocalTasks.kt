@@ -1,11 +1,13 @@
-package me.bgregos.foreground.task
+package me.bgregos.foreground.tasklist
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.util.Log
 import com.google.gson.Gson
 import java.util.*
 import com.google.gson.reflect.TypeToken
+import me.bgregos.foreground.model.Task
+import me.bgregos.foreground.model.TaskFilter
+import me.bgregos.foreground.model.TaskFilterTypes
 import java.text.SimpleDateFormat
 import kotlin.collections.ArrayList
 
@@ -16,6 +18,8 @@ object LocalTasks {
     var visibleTasks:ArrayList<Task> = ArrayList()
     @Volatile
     var localChanges:ArrayList<Task> = ArrayList()
+    @Volatile
+    var filters:ArrayList<TaskFilter> = ArrayList()
 
     var showWaiting:Boolean = false
     var initSync:Boolean = true
@@ -26,7 +30,6 @@ object LocalTasks {
 
     @Synchronized
     fun save(context: Context, synchronous: Boolean = false) {
-        updateVisibleTasks()
         val prefs = context.getSharedPreferences("me.bgregos.BrightTask", Context.MODE_PRIVATE)
         val editor = prefs.edit()
         editor.putString("LocalTasks", Gson().toJson(items))
@@ -35,6 +38,7 @@ object LocalTasks {
         editor.putString("LocalTasks.syncKey", syncKey)
         editor.putString("LocalTasks.showWaiting", showWaiting.toString())
         if(synchronous) editor.apply() else editor.commit()
+        updateVisibleTasks()
     }
 
     @Synchronized
@@ -44,17 +48,18 @@ object LocalTasks {
         items = Gson().fromJson(prefs.getString("LocalTasks", ""), taskType) ?: items
         localChanges = Gson().fromJson(prefs.getString("LocalTasks.localChanges", ""), taskType) ?: localChanges
         initSync =  prefs.getString("LocalTasks.initSync", "true")?.toBoolean()?:true
-        showWaiting=  prefs.getString("LocalTasks.showWaiting", "true")?.toBoolean()?:false
+        showWaiting =  prefs.getString("LocalTasks.showWaiting", "true")?.toBoolean()?:false
         syncKey = prefs.getString("LocalTasks.syncKey", syncKey)?: syncKey
         val lastSeenVersion = prefs.getInt("lastSeenVersion", 1)
         runMigrationsIfRequired(lastSeenVersion, synchronous, context, prefs)
+        updateVisibleTasks()
     }
 
     @Synchronized
     fun runMigrationsIfRequired(lastSeenVersion: Int, synchronous: Boolean, context: Context, prefs: SharedPreferences){
-        //migration
+        //migration - breaking changes are versioned here
         var itemsModified = false
-        if (lastSeenVersion<2){ //keep track of breaking changes
+        if (lastSeenVersion<2){
             val editor = prefs.edit()
             itemsModified = true
             val dfLocal = SimpleDateFormat()
@@ -76,7 +81,7 @@ object LocalTasks {
             editor.putInt("lastSeenVersion", 2)
             if(synchronous) editor.apply() else editor.commit()
         }
-        if (lastSeenVersion<3){ //keep track of breaking changes
+        if (lastSeenVersion<3){
             val editor = prefs.edit()
             itemsModified = true
             for (i in items) {
@@ -127,20 +132,11 @@ object LocalTasks {
     @Synchronized
     fun updateVisibleTasks(){
         visibleTasks.clear()
-        for (t in items){
-            if (showWaiting){
-                if (Task.shouldDisplayShowWaiting(t)){
-                    visibleTasks.add(t)
-                    Log.i("update visible", "showing waiting tasks")
-                }
-
-            } else {
-                if (Task.shouldDisplay(t)) {
-                    visibleTasks.add(t)
-                    Log.i("update visible", "hiding waiting tasks")
-                }
-            }
+        visibleTasks.addAll(items)
+        filters.forEach {
+            if (it.enabled) visibleTasks = visibleTasks.filter { task -> it.type.filter(task, it.parameter) } as ArrayList<Task>
         }
+        //visibleTasks = visibleTasks.filter { it.name.isNotBlank() } as ArrayList<Task>
         visibleTasks.sortWith(Task.DateCompare())
         items.sortWith(Task.DateCompare())
     }

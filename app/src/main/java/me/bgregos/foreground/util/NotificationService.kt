@@ -1,7 +1,6 @@
-package me.bgregos.foreground.task
+package me.bgregos.foreground.util
 
 import android.app.AlarmManager
-import android.app.Notification.EXTRA_NOTIFICATION_ID
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -16,6 +15,11 @@ import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import me.bgregos.foreground.*
+import me.bgregos.foreground.model.Task
+import me.bgregos.foreground.receiver.AlarmReceiver
+import me.bgregos.foreground.receiver.TaskBroadcastReceiver
+import me.bgregos.foreground.tasklist.LocalTasks
+import me.bgregos.foreground.tasklist.MainActivity
 
 
 object NotificationService {
@@ -75,8 +79,8 @@ object NotificationService {
         val prefs = context.getSharedPreferences("me.bgregos.BrightTask", Context.MODE_PRIVATE)
         val taskType = object : TypeToken<ArrayList<Task>>() {}.type
         val notificationService: NotificationService? = Gson().fromJson(prefs.getString("NotificationService", ""), NotificationService.javaClass)
-        scheduledNotifications = notificationService?.scheduledNotifications ?: ArrayList()
-        lastAssignedNotificationId = notificationService?.lastAssignedNotificationId ?: 0
+        scheduledNotifications = scheduledNotifications ?: ArrayList()
+        lastAssignedNotificationId = lastAssignedNotificationId ?: 0
         Log.d("notif", "restored notification service state")
     }
 
@@ -85,17 +89,17 @@ object NotificationService {
 
         lastAssignedNotificationId += 1
 
-        val intent = Intent(context, TaskListActivity::class.java).apply {
+        val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
 
-        val doneIntent = Intent(context, TaskListActivity::class.java).apply {
+        val doneIntent = Intent(context, MainActivity::class.java).apply {
             action = "BRIGHTTASK_MARK_TASK_DONE"
-            setClass(context, TaskReceiver::class.java)
+            setClass(context, TaskBroadcastReceiver::class.java)
             putExtra("notification_id", lastAssignedNotificationId)
             putExtra("uuid", task.uuid.toString())
         }
-        val donePendingIntent = getBroadcast(context, Int.MAX_VALUE-lastAssignedNotificationId, doneIntent, FLAG_CANCEL_CURRENT)
+        val donePendingIntent = getBroadcast(context, Int.MAX_VALUE- lastAssignedNotificationId, doneIntent, FLAG_CANCEL_CURRENT)
 
         val pendingIntent: PendingIntent = PendingIntent.getActivity(context, lastAssignedNotificationId, intent, FLAG_CANCEL_CURRENT)
 

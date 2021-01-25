@@ -1,4 +1,4 @@
-package me.bgregos.foreground
+package me.bgregos.foreground.receiver
 
 import android.app.NotificationManager
 import android.content.BroadcastReceiver
@@ -6,10 +6,10 @@ import android.content.Context
 import android.content.Intent
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import android.util.Log
-import me.bgregos.foreground.task.LocalTasks
+import me.bgregos.foreground.tasklist.LocalTasks
 import java.util.*
 
-class TaskReceiver: BroadcastReceiver() {
+class TaskBroadcastReceiver: BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         when(intent?.action) {
             "BRIGHTTASK_MARK_TASK_DONE" -> {
