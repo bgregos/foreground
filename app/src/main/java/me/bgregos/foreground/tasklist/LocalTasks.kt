@@ -30,7 +30,6 @@ object LocalTasks {
 
     @Synchronized
     fun save(context: Context, synchronous: Boolean = false) {
-        updateVisibleTasks()
         val prefs = context.getSharedPreferences("me.bgregos.BrightTask", Context.MODE_PRIVATE)
         val editor = prefs.edit()
         editor.putString("LocalTasks", Gson().toJson(items))
@@ -39,6 +38,7 @@ object LocalTasks {
         editor.putString("LocalTasks.syncKey", syncKey)
         editor.putString("LocalTasks.showWaiting", showWaiting.toString())
         if(synchronous) editor.apply() else editor.commit()
+        updateVisibleTasks()
     }
 
     @Synchronized
@@ -52,6 +52,7 @@ object LocalTasks {
         syncKey = prefs.getString("LocalTasks.syncKey", syncKey)?: syncKey
         val lastSeenVersion = prefs.getInt("lastSeenVersion", 1)
         runMigrationsIfRequired(lastSeenVersion, synchronous, context, prefs)
+        updateVisibleTasks()
     }
 
     @Synchronized
@@ -135,6 +136,7 @@ object LocalTasks {
         filters.forEach {
             if (it.enabled) visibleTasks = visibleTasks.filter { task -> it.type.filter(task, it.parameter) } as ArrayList<Task>
         }
+        //visibleTasks = visibleTasks.filter { it.name.isNotBlank() } as ArrayList<Task>
         visibleTasks.sortWith(Task.DateCompare())
         items.sortWith(Task.DateCompare())
     }

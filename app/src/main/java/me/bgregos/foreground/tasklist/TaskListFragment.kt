@@ -10,6 +10,7 @@ import android.view.animation.RotateAnimation
 import android.widget.Toolbar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.commit
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_main.*
@@ -26,6 +27,8 @@ import me.bgregos.foreground.network.RemoteTasks
 import me.bgregos.foreground.settings.SettingsActivity
 import me.bgregos.foreground.util.NotificationService
 import me.bgregos.foreground.util.ShowErrorDetail
+import me.bgregos.foreground.util.phoneDetailAnimations
+import me.bgregos.foreground.util.tabletDetailAnimations
 import java.io.File
 import java.net.URL
 
@@ -145,17 +148,19 @@ class TaskListFragment : Fragment() {
 
     fun onFiltersClick(item: MenuItem): Boolean {
         val fragment = FiltersFragment.newInstance()
-        if(twoPane){
-            activity?.supportFragmentManager
-                    ?.beginTransaction()
-                    ?.replace(R.id.task_detail_container, fragment)
-                    ?.commit()
+        if (twoPane) {
+            // Tablet layouts get the task detail fragment opened on the side
+            activity?.supportFragmentManager?.commit {
+                tabletDetailAnimations()
+                replace(R.id.task_detail_container, fragment)
+            }
         } else {
-            activity?.supportFragmentManager
-                    ?.beginTransaction()
-                    ?.replace(R.id.task_list_container, fragment)
-                    ?.addToBackStack("filters")
-                    ?.commit()
+            //phones get the task detail fragment replacing this one
+            activity?.supportFragmentManager?.commit {
+                phoneDetailAnimations()
+                replace(R.id.task_list_container, fragment)
+                addToBackStack("task_detail")
+            }
         }
         return true
     }
@@ -188,17 +193,17 @@ class TaskListFragment : Fragment() {
         task_list.adapter?.notifyDataSetChanged()
         if (twoPane) {
             // Tablet layouts get the task detail fragment opened on the side
-            activity?.supportFragmentManager
-                    ?.beginTransaction()
-                    ?.replace(R.id.task_detail_container, fragment)
-                    ?.commit()
+            activity?.supportFragmentManager?.commit {
+                tabletDetailAnimations()
+                replace(R.id.task_detail_container, fragment)
+            }
         } else {
             //phones get the task detail fragment replacing this one
-            activity?.supportFragmentManager
-                    ?.beginTransaction()
-                    ?.replace(R.id.task_list_container, fragment)
-                    ?.addToBackStack("task_detail")
-                    ?.commit()
+            activity?.supportFragmentManager?.commit {
+                phoneDetailAnimations()
+                replace(R.id.task_list_container, fragment)
+                addToBackStack("task_detail")
+            }
         }
     }
 }
