@@ -6,7 +6,8 @@ import android.content.Context
 import android.content.Intent
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import android.util.Log
-import me.bgregos.foreground.tasklist.LocalTasks
+import me.bgregos.foreground.tasklist.LocalTasksRepository
+import me.bgregos.foreground.util.contentsChanged
 import java.util.*
 
 class TaskBroadcastReceiver: BroadcastReceiver() {
@@ -24,18 +25,21 @@ class TaskBroadcastReceiver: BroadcastReceiver() {
                     Log.e("notif", "Failed to mark task done- no UUID")
                 }
                 if(context != null){
-                    LocalTasks.load(context)
-                    val item = LocalTasks.getTaskByUUID(UUID.fromString(uuid))
+                    LocalTasksRepository.load(context)
+                    val item = LocalTasksRepository.getTaskByUUID(UUID.fromString(uuid))
                     if(item == null) {
                         Log.e("LocalTasks", "Failed to find a task with the given UUID")
                         return
                     }
                     item.modifiedDate=Date() //update modified date
                     item.status = "completed"
-                    if (!LocalTasks.localChanges.contains(item)){
-                        LocalTasks.localChanges.add(item)
+                    if (!LocalTasksRepository.localChanges.value.contains(item)){
+                        LocalTasksRepository.localChanges.apply{
+                            value.add(item)
+                            contentsChanged()
+                        }
                     }
-                    LocalTasks.save(context)
+                    LocalTasksRepository.save(context)
                     val localIntent: Intent = Intent("BRIGHTTASK_REMOTE_TASK_UPDATE") //Send local broadcast
                     LocalBroadcastManager.getInstance(context).sendBroadcast(localIntent)
                 } else {

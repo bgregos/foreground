@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.view.*
 import android.view.animation.Animation
 import android.view.animation.RotateAnimation
-import android.widget.Toolbar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
@@ -25,10 +24,7 @@ import me.bgregos.foreground.filter.FiltersFragment
 import me.bgregos.foreground.model.Task
 import me.bgregos.foreground.network.RemoteTasks
 import me.bgregos.foreground.settings.SettingsActivity
-import me.bgregos.foreground.util.NotificationService
-import me.bgregos.foreground.util.ShowErrorDetail
-import me.bgregos.foreground.util.phoneDetailAnimations
-import me.bgregos.foreground.util.tabletDetailAnimations
+import me.bgregos.foreground.util.*
 import java.io.File
 import java.net.URL
 
@@ -50,13 +46,12 @@ class TaskListFragment : Fragment() {
     }
 
     override fun onAttach(context: Context) {
-        LocalTasks.load(context)
+        LocalTasksRepository.load(context)
         NotificationService.load(context)
         NotificationService.createNotificationChannel(context)
 
         PROPERTIES_TASKWARRIOR = File(context.filesDir, "taskwarrior.properties").toURI().toURL()
 
-        LocalTasks.updateVisibleTasks()
         super.onAttach(context)
     }
 
@@ -83,7 +78,8 @@ class TaskListFragment : Fragment() {
         task_list?.let { setupRecyclerView(it) }
         fab.setOnClickListener { view ->
             val newTask = Task("")
-            LocalTasks.items.add(newTask)
+            LocalTasksRepository.tasks.value.add(newTask)
+            LocalTasksRepository.tasks.contentsChanged()
             openTask(newTask, view, newTask.name)
         }
         super.onViewCreated(view, savedInstanceState)
@@ -92,8 +88,7 @@ class TaskListFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         CoroutineScope(Dispatchers.Main).launch {
-            LocalTasks.load(context ?: return@launch, true)
-            LocalTasks.updateVisibleTasks()
+            LocalTasksRepository.load(context ?: return@launch, true)
             updatePendingNotifications()
         }
     }
@@ -105,7 +100,7 @@ class TaskListFragment : Fragment() {
     }
 
     private fun updatePendingNotifications() {
-        NotificationService.scheduleNotificationForTasks(LocalTasks.visibleTasks, requireContext())
+        NotificationService.scheduleNotificationForTasks(LocalTasksRepository.tasks.value, requireContext())
     }
 
     fun onSyncClick(item: MenuItem): Boolean {
@@ -122,7 +117,7 @@ class TaskListFragment : Fragment() {
             bar.view.setBackgroundColor(Color.parseColor("#34309f"))
             bar.show()
             CoroutineScope(Dispatchers.Main).launch {
-                LocalTasks.save(requireContext(), true)
+                LocalTasksRepository.save(requireContext(), true)
                 var syncResult: RemoteTasks.SyncResult = RemoteTasks(requireContext()).taskwarriorSync()
                 if(syncResult.success){
                     val bar2 = Snackbar.make(task_list_parent, "Sync Successful", Snackbar.LENGTH_SHORT)
@@ -171,7 +166,11 @@ class TaskListFragment : Fragment() {
     }
 
     private fun setupRecyclerView(recyclerView: RecyclerView) {
-        recyclerView.adapter = TaskListAdapter(this, LocalTasks.visibleTasks)
+        LocalTasksRepository.init()
+        recyclerView.adapter = TaskListAdapter(this, LocalTasksRepository.visibleTasks.value)
+        LocalTasksRepository.visibleTasks.observe(viewLifecycleOwner, {
+            recyclerView.adapter?.notifyDataSetChanged()
+        })
     }
 
     companion object {
@@ -189,7 +188,6 @@ class TaskListFragment : Fragment() {
 
     fun openTask(task: Task, v: View, name: String){
         val fragment = TaskDetailFragment.newInstance(task.uuid, twoPane)
-        LocalTasks.updateVisibleTasks()
         task_list.adapter?.notifyDataSetChanged()
         if (twoPane) {
             // Tablet layouts get the task detail fragment opened on the side

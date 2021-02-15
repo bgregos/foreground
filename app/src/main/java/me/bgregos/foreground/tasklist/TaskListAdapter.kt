@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.task_list_content.view.*
 import me.bgregos.foreground.R
 import me.bgregos.foreground.model.Task
+import me.bgregos.foreground.util.contentsChanged
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -87,10 +88,17 @@ class TaskListAdapter(private val parentFragment: TaskListFragment,
             //notifyItemRangeChanged(pos, values.size)
             item.modifiedDate=Date() //update modified date
             item.status = "completed"
-            if (!LocalTasks.localChanges.contains(item)){
-                LocalTasks.localChanges.add(item)
+            if (!LocalTasksRepository.localChanges.value.contains(item)){
+
+                LocalTasksRepository.localChanges.apply{
+                    value.add(item)
+                    contentsChanged()
+                }
             }
-            LocalTasks.items.remove(item)
+            LocalTasksRepository.tasks.apply {
+                value.remove(item)
+                contentsChanged()
+            }
         }
     }
 

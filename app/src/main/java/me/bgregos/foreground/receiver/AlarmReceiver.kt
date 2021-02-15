@@ -4,7 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import me.bgregos.foreground.tasklist.LocalTasks
+import me.bgregos.foreground.tasklist.LocalTasksRepository
 import me.bgregos.foreground.util.NotificationService
 import java.util.*
 
@@ -21,8 +21,8 @@ class AlarmReceiver : BroadcastReceiver() {
                 if (context == null){
                     Log.e("notif", "Couldn't show notification - null context")
                 }else{
-                    LocalTasks.load(context, true)
-                    val task = LocalTasks.getTaskByUUID(UUID.fromString(uuid))
+                    LocalTasksRepository.load(context, true)
+                    val task = LocalTasksRepository.getTaskByUUID(UUID.fromString(uuid))
                     if (task != null) {
                         NotificationService.showDueNotification(task, context)
                     } else {

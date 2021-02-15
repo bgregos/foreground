@@ -18,11 +18,10 @@ import me.bgregos.foreground.*
 import me.bgregos.foreground.model.Task
 import me.bgregos.foreground.receiver.AlarmReceiver
 import me.bgregos.foreground.receiver.TaskBroadcastReceiver
-import me.bgregos.foreground.tasklist.LocalTasks
 import me.bgregos.foreground.tasklist.MainActivity
 
 
-object NotificationService {
+class NotificationService() {
 
     val ACTION = "me.bgregos.brighttask.SEND_NOTIFICATION"
 
@@ -67,7 +66,7 @@ object NotificationService {
     }
 
     fun save(context: Context) {
-        LocalTasks.updateVisibleTasks()
+        //TODO: replace json serialization with Room
         val prefs = context.getSharedPreferences("me.bgregos.BrightTask", Context.MODE_PRIVATE)
         val editor = prefs.edit()
         editor.putString("NotificationService", Gson().toJson(this))
@@ -76,9 +75,10 @@ object NotificationService {
     }
 
     fun load(context: Context) {
+        //TODO: replace json serialization with Room
         val prefs = context.getSharedPreferences("me.bgregos.BrightTask", Context.MODE_PRIVATE)
         val taskType = object : TypeToken<ArrayList<Task>>() {}.type
-        val notificationService: NotificationService? = Gson().fromJson(prefs.getString("NotificationService", ""), NotificationService.javaClass)
+        val notificationService: NotificationService? = Gson().fromJson(prefs.getString("NotificationService", ""), NotificationService::class.java)
         scheduledNotifications = scheduledNotifications ?: ArrayList()
         lastAssignedNotificationId = lastAssignedNotificationId ?: 0
         Log.d("notif", "restored notification service state")

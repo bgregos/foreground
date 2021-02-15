@@ -18,9 +18,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import me.bgregos.foreground.R
-import me.bgregos.foreground.tasklist.LocalTasks
+import me.bgregos.foreground.tasklist.LocalTasksRepository
 import me.bgregos.foreground.network.RemoteTasks
 import me.bgregos.foreground.util.ShowErrorDetail
+import me.bgregos.foreground.util.contentsChanged
 import java.io.File
 import java.io.FileOutputStream
 import java.lang.Exception
@@ -54,11 +55,17 @@ class SettingsActivity : AppCompatActivity() {
         settings_cert_private.setText(prefs.getString("settings_cert_private", ""))
 
         fun onResetSync(){
-            LocalTasks.items.clear()
-            LocalTasks.localChanges.clear()
-            LocalTasks.syncKey = ""
-            LocalTasks.initSync = true
-            LocalTasks.save(applicationContext)
+            LocalTasksRepository.tasks.apply {
+                value.clear()
+                contentsChanged()
+            }
+            LocalTasksRepository.localChanges.apply{
+                value.clear()
+                contentsChanged()
+            }
+            LocalTasksRepository.syncKey = ""
+            LocalTasksRepository.initSync = true
+            LocalTasksRepository.save(applicationContext)
             val bar = Snackbar.make(settings_parent, "Sync has been reset to its original status.", Snackbar.LENGTH_SHORT)
             bar.view.setBackgroundColor(Color.parseColor("#34309f"))
             bar.show()

@@ -15,6 +15,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.task_list.*
 import me.bgregos.foreground.R
 import me.bgregos.foreground.util.NotificationService
+import javax.inject.Inject
 
 class MainActivity : AppCompatActivity() {
 
@@ -24,6 +25,9 @@ class MainActivity : AppCompatActivity() {
      */
     private var twoPane: Boolean = false
     private lateinit var fragment: TaskListFragment
+
+    @Inject lateinit var localTasksRepository: LocalTasksRepository
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,7 +64,7 @@ class MainActivity : AppCompatActivity() {
                 .unregisterReceiver(broadcastReceiver)
         Log.d("broadcast", "Broadcast receiver unregistered")
         NotificationService.save(this)
-        LocalTasks.save(this, true)
+        localTasksRepository.save(true)
         super.onPause()
     }
 
@@ -71,16 +75,14 @@ class MainActivity : AppCompatActivity() {
                     val syncRotateAnimation = RotateAnimation(360f, 0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f)
                     syncRotateAnimation.duration = 1000
                     syncRotateAnimation.repeatCount = 0
-                    LocalTasks.load(context, true)
-                    LocalTasks.updateVisibleTasks()
+                    localTasksRepository.load(true)
                     fragment.task_list?.adapter?.notifyDataSetChanged()
                     Log.i("auto_sync", "Task List received auto-update")
                 }
 
                 "BRIGHTTASK_TABLET_LOCAL_TASK_UPDATE" -> {
                     if (twoPane) {
-                        LocalTasks.load(context, true)
-                        LocalTasks.updateVisibleTasks()
+                        localTasksRepository.load(true)
                         fragment.task_list?.adapter?.notifyDataSetChanged()
                         Log.i("task_list", "Task list updated by detail")
                     }
