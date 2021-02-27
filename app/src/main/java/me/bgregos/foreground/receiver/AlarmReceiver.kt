@@ -5,13 +5,21 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import me.bgregos.foreground.tasklist.LocalTasksRepository
-import me.bgregos.foreground.util.NotificationService
+import me.bgregos.foreground.util.NotificationRepository
 import java.util.*
+import javax.inject.Inject
 
 class AlarmReceiver : BroadcastReceiver() {
+
+    @Inject
+    lateinit var notificationRepository: NotificationRepository
+
+    @Inject
+    lateinit var localTasksRepository: LocalTasksRepository
+
     override fun onReceive(context: Context?, intent: Intent?) {
         when (intent?.action) {
-            NotificationService.ACTION -> {
+            notificationRepository.ACTION -> {
                 Log.i("notif", "Received notification intent")
                 val uuid: String? = intent.extras?.get("uuid") as String?
                 if (uuid == null) {
@@ -21,10 +29,10 @@ class AlarmReceiver : BroadcastReceiver() {
                 if (context == null){
                     Log.e("notif", "Couldn't show notification - null context")
                 }else{
-                    LocalTasksRepository.load(context, true)
-                    val task = LocalTasksRepository.getTaskByUUID(UUID.fromString(uuid))
+                    localTasksRepository.load(true)
+                    val task = localTasksRepository.getTaskByUUID(UUID.fromString(uuid))
                     if (task != null) {
-                        NotificationService.showDueNotification(task, context)
+                        notificationRepository.showDueNotification(task)
                     } else {
                         Log.e("notif", "Couldn't show notification - null task")
                     }

@@ -8,16 +8,19 @@ import android.view.View.*
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.task_list_content.view.*
 import me.bgregos.foreground.R
 import me.bgregos.foreground.model.Task
+import me.bgregos.foreground.util.NonNullableLiveData
+import me.bgregos.foreground.util.NonNullableMutableLiveData
 import me.bgregos.foreground.util.contentsChanged
 import java.text.SimpleDateFormat
 import java.util.*
 
 class TaskListAdapter(private val parentFragment: TaskListFragment,
-                      private var values: ArrayList<Task>) :
+                      private var tasks: LiveData<ArrayList<Task>>) :
         RecyclerView.Adapter<TaskListAdapter.ViewHolder>() {
 
     private val onClickListener: View.OnClickListener
@@ -38,7 +41,7 @@ class TaskListAdapter(private val parentFragment: TaskListFragment,
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val format = SimpleDateFormat("MMM d, yyyy 'at' h:mm aaa", Locale.getDefault())
-        val item = values[position]
+        val item = tasks.value?.get(position) ?: return
         holder.title.text = item.name
         if(item.dueDate != null) {
             holder.due.visibility = VISIBLE
@@ -83,26 +86,26 @@ class TaskListAdapter(private val parentFragment: TaskListFragment,
 
         holder.complete.setOnClickListener {
             val pos = holder.layoutPosition
-            values.removeAt(pos)
+            tasks.value?.removeAt(pos)
             notifyItemRemoved(pos)
             //notifyItemRangeChanged(pos, values.size)
             item.modifiedDate=Date() //update modified date
             item.status = "completed"
-            if (!LocalTasksRepository.localChanges.value.contains(item)){
+            if (parentFragment.localTasksRepository.localChanges.value.contains(item)){
 
-                LocalTasksRepository.localChanges.apply{
+                parentFragment.localTasksRepository.localChanges.apply{
                     value.add(item)
                     contentsChanged()
                 }
             }
-            LocalTasksRepository.tasks.apply {
+            parentFragment.localTasksRepository.tasks.apply {
                 value.remove(item)
                 contentsChanged()
             }
         }
     }
 
-    override fun getItemCount() = values.size
+    override fun getItemCount() = tasks.value?.size ?: 0
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val title: TextView = view.title

@@ -13,7 +13,7 @@ import javax.inject.Singleton
 import kotlin.reflect.KClass
 
 @Module
-abstract class ViewModelModule {
+abstract class ViewModelBindingModule {
     @Binds
     @IntoMap
     @ViewModelKey(FiltersViewModel::class)

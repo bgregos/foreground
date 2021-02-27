@@ -19,7 +19,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import me.bgregos.foreground.R
 import me.bgregos.foreground.tasklist.LocalTasksRepository
-import me.bgregos.foreground.network.RemoteTasks
+import me.bgregos.foreground.network.RemoteTasksRepository
+import me.bgregos.foreground.network.TaskwarriorSyncWorker
 import me.bgregos.foreground.util.ShowErrorDetail
 import me.bgregos.foreground.util.contentsChanged
 import java.io.File
@@ -27,9 +28,15 @@ import java.io.FileOutputStream
 import java.lang.Exception
 import java.util.*
 import java.util.concurrent.TimeUnit
-
+import javax.inject.Inject
 
 class SettingsActivity : AppCompatActivity() {
+
+    @Inject
+    lateinit var localTasksRepository: LocalTasksRepository
+
+    @Inject
+    lateinit var remoteTasksRepository: RemoteTasksRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,17 +62,17 @@ class SettingsActivity : AppCompatActivity() {
         settings_cert_private.setText(prefs.getString("settings_cert_private", ""))
 
         fun onResetSync(){
-            LocalTasksRepository.tasks.apply {
+            localTasksRepository.tasks.apply {
                 value.clear()
                 contentsChanged()
             }
-            LocalTasksRepository.localChanges.apply{
+            localTasksRepository.localChanges.apply{
                 value.clear()
                 contentsChanged()
             }
-            LocalTasksRepository.syncKey = ""
-            LocalTasksRepository.initSync = true
-            LocalTasksRepository.save(applicationContext)
+            localTasksRepository.syncKey = ""
+            localTasksRepository.initSync = true
+            localTasksRepository.save()
             val bar = Snackbar.make(settings_parent, "Sync has been reset to its original status.", Snackbar.LENGTH_SHORT)
             bar.view.setBackgroundColor(Color.parseColor("#34309f"))
             bar.show()
@@ -80,14 +87,14 @@ class SettingsActivity : AppCompatActivity() {
                 save()
                 settings_syncprogress.visibility = View.VISIBLE
                 CoroutineScope(Dispatchers.Main).launch {
-                    var response: RemoteTasks.SyncResult
+                    var response: RemoteTasksRepository.SyncResult
                     var exception: Exception? = null
                     try {
-                        response = RemoteTasks(this@SettingsActivity).taskwarriorTestSync()
+                        response = remoteTasksRepository.taskwarriorInitSync()
                     }catch (e: Exception){
                         exception = e
                         Log.e("test sync error", e.toString())
-                        response = RemoteTasks.SyncResult(false, "Invalid or incomplete configuration.")
+                        response = RemoteTasksRepository.SyncResult(false, "Invalid or incomplete configuration.")
                     }
                     Log.i(this.javaClass.toString(), response.message)
                     settings_sync.visibility = View.VISIBLE
@@ -135,12 +142,12 @@ class SettingsActivity : AppCompatActivity() {
                 settings_auto_sync_interval.setText("15")
             }
             val syncRequest =
-                    PeriodicWorkRequest.Builder(RemoteTasks.TaskwarriorSyncWorker::class.java, interval, TimeUnit.MINUTES)
+                    PeriodicWorkRequest.Builder(TaskwarriorSyncWorker::class.java, interval, TimeUnit.MINUTES)
                             .build()
-            WorkManager.getInstance().enqueueUniquePeriodicWork("foreground_sync", ExistingPeriodicWorkPolicy.REPLACE, syncRequest)
+            WorkManager.getInstance(this).enqueueUniquePeriodicWork("foreground_sync", ExistingPeriodicWorkPolicy.REPLACE, syncRequest)
 
         }else{
-            WorkManager.getInstance().cancelAllWork()
+            WorkManager.getInstance(this).cancelAllWork()
         }
     }
 

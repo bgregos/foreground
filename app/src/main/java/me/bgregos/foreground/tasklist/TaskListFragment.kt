@@ -19,14 +19,17 @@ import kotlinx.android.synthetic.main.task_list.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import me.bgregos.foreground.ForegroundApplication
 import me.bgregos.foreground.R
 import me.bgregos.foreground.filter.FiltersFragment
+import me.bgregos.foreground.getApplicationComponent
 import me.bgregos.foreground.model.Task
-import me.bgregos.foreground.network.RemoteTasks
+import me.bgregos.foreground.network.RemoteTasksRepository
 import me.bgregos.foreground.settings.SettingsActivity
 import me.bgregos.foreground.util.*
 import java.io.File
 import java.net.URL
+import javax.inject.Inject
 
 
 class TaskListFragment : Fragment() {
@@ -39,6 +42,15 @@ class TaskListFragment : Fragment() {
     private var PROPERTIES_TASKWARRIOR : URL? = null
     private var syncButton: View? = null
 
+    @Inject
+    lateinit var localTasksRepository: LocalTasksRepository
+
+    @Inject
+    lateinit var remoteTasksRepository: RemoteTasksRepository
+
+    @Inject
+    lateinit var notificationRepository: NotificationRepository
+
     override fun onCreate(savedInstanceState: Bundle?) {
         setHasOptionsMenu(true)
         twoPane = arguments?.getBoolean(TWO_PANE_ARG) ?: savedInstanceState?.getBoolean(TWO_PANE_ARG) ?: false
@@ -46,9 +58,10 @@ class TaskListFragment : Fragment() {
     }
 
     override fun onAttach(context: Context) {
-        LocalTasksRepository.load(context)
-        NotificationService.load(context)
-        NotificationService.createNotificationChannel(context)
+        context.getApplicationComponent().inject(this)
+        localTasksRepository.load()
+        notificationRepository.load()
+        notificationRepository.createNotificationChannel()
 
         PROPERTIES_TASKWARRIOR = File(context.filesDir, "taskwarrior.properties").toURI().toURL()
 
@@ -78,8 +91,8 @@ class TaskListFragment : Fragment() {
         task_list?.let { setupRecyclerView(it) }
         fab.setOnClickListener { view ->
             val newTask = Task("")
-            LocalTasksRepository.tasks.value.add(newTask)
-            LocalTasksRepository.tasks.contentsChanged()
+            localTasksRepository.tasks.value.add(newTask)
+            localTasksRepository.tasks.contentsChanged()
             openTask(newTask, view, newTask.name)
         }
         super.onViewCreated(view, savedInstanceState)
@@ -88,7 +101,7 @@ class TaskListFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         CoroutineScope(Dispatchers.Main).launch {
-            LocalTasksRepository.load(context ?: return@launch, true)
+            localTasksRepository.load(true)
             updatePendingNotifications()
         }
     }
@@ -100,7 +113,7 @@ class TaskListFragment : Fragment() {
     }
 
     private fun updatePendingNotifications() {
-        NotificationService.scheduleNotificationForTasks(LocalTasksRepository.tasks.value, requireContext())
+        notificationRepository.scheduleNotificationForTasks(localTasksRepository.tasks.value)
     }
 
     fun onSyncClick(item: MenuItem): Boolean {
@@ -117,8 +130,8 @@ class TaskListFragment : Fragment() {
             bar.view.setBackgroundColor(Color.parseColor("#34309f"))
             bar.show()
             CoroutineScope(Dispatchers.Main).launch {
-                LocalTasksRepository.save(requireContext(), true)
-                var syncResult: RemoteTasks.SyncResult = RemoteTasks(requireContext()).taskwarriorSync()
+                localTasksRepository.save(true)
+                var syncResult: RemoteTasksRepository.SyncResult = remoteTasksRepository.taskwarriorSync()
                 if(syncResult.success){
                     val bar2 = Snackbar.make(task_list_parent, "Sync Successful", Snackbar.LENGTH_SHORT)
                     bar2.view.setBackgroundColor(Color.parseColor("#34309f"))
@@ -166,9 +179,8 @@ class TaskListFragment : Fragment() {
     }
 
     private fun setupRecyclerView(recyclerView: RecyclerView) {
-        LocalTasksRepository.init()
-        recyclerView.adapter = TaskListAdapter(this, LocalTasksRepository.visibleTasks.value)
-        LocalTasksRepository.visibleTasks.observe(viewLifecycleOwner, {
+        recyclerView.adapter = TaskListAdapter(this, localTasksRepository.visibleTasks)
+        localTasksRepository.visibleTasks.observe(viewLifecycleOwner, {
             recyclerView.adapter?.notifyDataSetChanged()
         })
     }

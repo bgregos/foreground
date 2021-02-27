@@ -27,10 +27,15 @@ class NonNullableLiveData<T>(value: T) : LiveData<T>(value) {
  */
 @Suppress("UNCHECKED_CAST")
 class NonNullableMediatorLiveData<T>(initalValue: T) : MediatorLiveData<T>() {
-    init{
-        this.value = initalValue
+    var default: T = initalValue
+
+    override fun getValue(): T {
+        return super.getValue() ?: default
     }
-    override fun getValue(): T = super.getValue() as T
+
+    override fun setValue(value: T) {
+        super.setValue(value)
+    }
 }
 
 /**

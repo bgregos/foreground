@@ -1,9 +1,7 @@
 package me.bgregos.foreground.util
 
-import android.app.AlarmManager
-import android.app.NotificationChannel
+import android.app.*
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.app.PendingIntent.FLAG_CANCEL_CURRENT
 import android.app.PendingIntent.getBroadcast
 import android.content.Context
@@ -19,17 +17,17 @@ import me.bgregos.foreground.model.Task
 import me.bgregos.foreground.receiver.AlarmReceiver
 import me.bgregos.foreground.receiver.TaskBroadcastReceiver
 import me.bgregos.foreground.tasklist.MainActivity
+import javax.inject.Inject
 
 
-class NotificationService() {
+class NotificationRepository @Inject constructor(private val mgr: AlarmManager, private val context: Context) {
 
     val ACTION = "me.bgregos.brighttask.SEND_NOTIFICATION"
 
     var lastAssignedNotificationId: Int = 0
     var scheduledNotifications = ArrayList<Pair<Task, PendingIntent>>()
 
-    private fun clearNotifications(context: Context) {
-        val mgr = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+    private fun clearNotifications() {
         scheduledNotifications.forEach {
             mgr.cancel(it.second)
         }
@@ -38,12 +36,12 @@ class NotificationService() {
         Log.d("notif", "cleared scheduled alarms")
     }
 
-    fun scheduleNotificationForTasks(tasks: List<Task>, context: Context) {
-        clearNotifications(context)
-        tasks.forEach { scheduleNotificationForTask(it, context) }
+    fun scheduleNotificationForTasks(tasks: List<Task>) {
+        clearNotifications()
+        tasks.forEach { scheduleNotificationForTask(it) }
     }
 
-    private fun scheduleNotificationForTask(task: Task, context: Context) {
+    private fun scheduleNotificationForTask(task: Task) {
         val due = task.dueDate
         if (due != null) {
             if (due.time < System.currentTimeMillis()) {
@@ -53,7 +51,6 @@ class NotificationService() {
                 setClass(context, AlarmReceiver::class.java)
                 putExtra("uuid", task.uuid.toString())
             }
-            val mgr = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             val pi = getBroadcast(context, task.hashCode(), sendIntent, 0)
             scheduledNotifications.add(Pair(task, pi))
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
@@ -65,26 +62,41 @@ class NotificationService() {
         }
     }
 
-    fun save(context: Context) {
-        //TODO: replace json serialization with Room
+    fun save() {
+        //TODO: replace json serialization/sharedprefs with Room
         val prefs = context.getSharedPreferences("me.bgregos.BrightTask", Context.MODE_PRIVATE)
         val editor = prefs.edit()
-        editor.putString("NotificationService", Gson().toJson(this))
+        editor.putInt("TaskNotification.lastAssignedNotificationId", lastAssignedNotificationId)
+        editor.putString("TaskNotification.scheduledNotifications", Gson().toJson(scheduledNotifications))
+        editor.putInt("TaskNotification.version", 2)
         editor.apply()
         Log.d("notif", "saved notification service state")
     }
 
-    fun load(context: Context) {
-        //TODO: replace json serialization with Room
+    fun load() {
+        //TODO: replace json serialization/sharedprefs with Room
         val prefs = context.getSharedPreferences("me.bgregos.BrightTask", Context.MODE_PRIVATE)
         val taskType = object : TypeToken<ArrayList<Task>>() {}.type
-        val notificationService: NotificationService? = Gson().fromJson(prefs.getString("NotificationService", ""), NotificationService::class.java)
-        scheduledNotifications = scheduledNotifications ?: ArrayList()
-        lastAssignedNotificationId = lastAssignedNotificationId ?: 0
+        val notificationDataVersion: Int = prefs.getInt("TaskNotification.version", 1)
+        if(notificationDataVersion == 1) {
+            val notificationService: NotificationRepository? = Gson().fromJson(prefs.getString("NotificationService", ""), NotificationRepository::class.java)
+            scheduledNotifications = notificationService?.scheduledNotifications ?: ArrayList()
+            lastAssignedNotificationId =notificationService?.lastAssignedNotificationId ?: 0
+            val editor = prefs.edit()
+            editor.putInt("TaskNotification.lastAssignedNotificationId", lastAssignedNotificationId)
+            editor.putString("TaskNotification.scheduledNotifications", Gson().toJson(scheduledNotifications))
+            editor.putInt("TaskNotification.version", 2)
+            editor.apply()
+        } else {
+            val typeToken = object: TypeToken<ArrayList<Pair<Task, PendingIntent>>>(){}.type
+            lastAssignedNotificationId = prefs.getInt("TaskNotification.lastAssignedNotificationId", 0)
+            scheduledNotifications = Gson().fromJson(prefs.getString("TaskNotification.scheduledNotifications", ""), typeToken)
+        }
+
         Log.d("notif", "restored notification service state")
     }
 
-    fun showDueNotification(task: Task, context: Context) {
+    fun showDueNotification(task: Task) {
         Log.d("notif", "attempting to show notification for: ${task.name}")
 
         lastAssignedNotificationId += 1
@@ -121,7 +133,7 @@ class NotificationService() {
 
     }
 
-    fun createNotificationChannel(context: Context) {
+    fun createNotificationChannel() {
         // Create the NotificationChannel, but only on API 26+ because
         // the NotificationChannel class is new and not in the support library
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

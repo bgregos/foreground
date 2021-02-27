@@ -14,7 +14,8 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.task_list.*
 import me.bgregos.foreground.R
-import me.bgregos.foreground.util.NotificationService
+import me.bgregos.foreground.getApplicationComponent
+import me.bgregos.foreground.util.NotificationRepository
 import javax.inject.Inject
 
 class MainActivity : AppCompatActivity() {
@@ -28,9 +29,12 @@ class MainActivity : AppCompatActivity() {
 
     @Inject lateinit var localTasksRepository: LocalTasksRepository
 
+    @Inject lateinit var notificationRepository: NotificationRepository
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        getApplicationComponent().inject(this)
         setContentView(R.layout.activity_main)
         if (task_detail_container != null) {
             // The detail container view will be present only in the
@@ -63,7 +67,7 @@ class MainActivity : AppCompatActivity() {
         LocalBroadcastManager.getInstance(this)
                 .unregisterReceiver(broadcastReceiver)
         Log.d("broadcast", "Broadcast receiver unregistered")
-        NotificationService.save(this)
+        notificationRepository.save()
         localTasksRepository.save(true)
         super.onPause()
     }
@@ -78,14 +82,6 @@ class MainActivity : AppCompatActivity() {
                     localTasksRepository.load(true)
                     fragment.task_list?.adapter?.notifyDataSetChanged()
                     Log.i("auto_sync", "Task List received auto-update")
-                }
-
-                "BRIGHTTASK_TABLET_LOCAL_TASK_UPDATE" -> {
-                    if (twoPane) {
-                        localTasksRepository.load(true)
-                        fragment.task_list?.adapter?.notifyDataSetChanged()
-                        Log.i("task_list", "Task list updated by detail")
-                    }
                 }
             }
         }

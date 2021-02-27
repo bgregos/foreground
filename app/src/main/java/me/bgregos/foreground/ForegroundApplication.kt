@@ -2,18 +2,20 @@ package me.bgregos.foreground
 
 import android.app.Application
 import android.content.Context
+import androidx.work.Configuration
+import androidx.work.WorkManager
 import me.bgregos.foreground.di.ApplicationComponent
 import me.bgregos.foreground.di.DaggerApplicationComponent
-import me.bgregos.foreground.di.DaggerApplicationComponent.builder
 
 
 class ForegroundApplication: Application() {
-    val appComponent = DaggerApplicationComponent.builder().application(this).build()
+    val applicationComponent = DaggerApplicationComponent.builder().bindContext(this).build()
 
     override fun onCreate() {
         super.onCreate()
-        appComponent.localTasksRepository.init()
+        WorkManager.initialize(this, Configuration.Builder().setWorkerFactory(applicationComponent.workerFactory).build())
     }
-
-    fun Context.getApplicationComponent(): ApplicationComponent = appComponent
 }
+
+fun Context.getApplicationComponent(): ApplicationComponent = (this.applicationContext as ForegroundApplication).applicationComponent
+

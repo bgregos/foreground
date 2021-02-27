@@ -2,6 +2,7 @@ package me.bgregos.foreground.tasklist
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -17,11 +18,13 @@ import kotlinx.android.synthetic.main.fragment_task_detail.*
 import kotlinx.android.synthetic.main.fragment_task_detail.view.*
 import kotlinx.android.synthetic.main.fragment_task_list.*
 import me.bgregos.foreground.R
+import me.bgregos.foreground.getApplicationComponent
 import me.bgregos.foreground.model.Task
 import me.bgregos.foreground.util.contentsChanged
 import java.text.DateFormatSymbols
 import java.text.SimpleDateFormat
 import java.util.*
+import javax.inject.Inject
 
 
 /**
@@ -35,6 +38,9 @@ class TaskDetailFragment : Fragment() {
     private var item: Task = Task("error")
     private var twoPane: Boolean = false
 
+    @Inject
+    lateinit var localTasksRepository: LocalTasksRepository
+
     companion object {
         fun newInstance(uuid: UUID, twoPane: Boolean): TaskDetailFragment{
             return TaskDetailFragment().apply {
@@ -46,13 +52,17 @@ class TaskDetailFragment : Fragment() {
         }
     }
 
+    override fun onAttach(context: Context) {
+        context.getApplicationComponent().inject(this)
+        super.onAttach(context)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         val bundle = this.arguments
         //load Task from bundle args
         if (bundle?.getString("uuid") != null) {
-            item = LocalTasksRepository.getTaskByUUID(UUID.fromString(bundle.getString("uuid")))?: run { close(); Task("") }
+            item = localTasksRepository.getTaskByUUID(UUID.fromString(bundle.getString("uuid")))?: run { close(); Task("") }
         }
         else {
             Log.e(this.javaClass.toString(), "No key found.")
@@ -249,15 +259,15 @@ class TaskDetailFragment : Fragment() {
         //remove this task if it's blank - taskwarrior disallows tasks with no name
         if (detail_name.text?.isBlank() != false) {
             Log.d(this.javaClass.toString(), "Removing task w/ no name")
-            LocalTasksRepository.tasks.apply {
+            localTasksRepository.tasks.apply {
                 value.remove(item)
                 contentsChanged()
             }
-            LocalTasksRepository.localChanges.apply {
+            localTasksRepository.localChanges.apply {
                 value.remove(item)
                 contentsChanged()
             }
-            LocalTasksRepository.save(requireActivity().applicationContext)
+            localTasksRepository.save()
         }else{
             save()
         }
@@ -267,7 +277,7 @@ class TaskDetailFragment : Fragment() {
     private fun save(){
         val format = SimpleDateFormat("MMM dd, yyyy hh:mm a", Locale.getDefault())
         format.timeZone= TimeZone.getDefault()
-        val toModify: Task = LocalTasksRepository.getTaskByUUID(item.uuid) ?: return
+        val toModify: Task = localTasksRepository.getTaskByUUID(item.uuid) ?: return
         toModify.name=detail_name.text.toString()
         toModify.tags=detail_tags.text?.split(", ",",") as ArrayList<String>
         toModify.tags.removeAll { tag -> tag.isBlank() }
@@ -287,13 +297,13 @@ class TaskDetailFragment : Fragment() {
         if(waitdate != null && waitdate.after(Date())) {
             toModify.status ="waiting"
         }
-        if (!LocalTasksRepository.localChanges.value.contains(toModify)){
-            LocalTasksRepository.localChanges.apply {
+        if (!localTasksRepository.localChanges.value.contains(toModify)){
+            localTasksRepository.localChanges.apply {
                 value.add(toModify)
                 contentsChanged()
             }
         }
-        LocalTasksRepository.save(requireActivity().applicationContext, true)
+        localTasksRepository.save(true)
         Log.d(this.javaClass.toString(), "Saved task")
         super.onPause()
     }

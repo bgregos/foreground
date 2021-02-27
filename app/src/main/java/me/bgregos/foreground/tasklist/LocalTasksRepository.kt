@@ -2,12 +2,17 @@ package me.bgregos.foreground.tasklist
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.provider.MediaStore
 import com.google.gson.Gson
 import java.util.*
 import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
+import androidx.lifecycle.Transformations
 import com.google.gson.reflect.TypeToken
 import me.bgregos.foreground.model.Task
 import me.bgregos.foreground.model.TaskFilter
+import me.bgregos.foreground.util.NonNullableLiveData
 import me.bgregos.foreground.util.NonNullableMediatorLiveData
 import me.bgregos.foreground.util.NonNullableMutableLiveData
 import java.text.SimpleDateFormat
@@ -22,7 +27,7 @@ class LocalTasksRepository @Inject constructor(preferences: SharedPreferences) {
     @Volatile
     var filters: NonNullableMutableLiveData<ArrayList<TaskFilter>> = NonNullableMutableLiveData(ArrayList())
     @Volatile
-    var visibleTasks: NonNullableMediatorLiveData<ArrayList<Task>> = NonNullableMediatorLiveData(tasks.value)
+    var visibleTasks: LiveData<ArrayList<Task>> = Transformations.map(tasks) { updateVisibleTasks(it) }
 
     var showWaiting:Boolean = false
     var initSync:Boolean = true
@@ -31,14 +36,6 @@ class LocalTasksRepository @Inject constructor(preferences: SharedPreferences) {
 
     @Volatile
     var syncKey:String = ""
-
-    fun init() {
-        visibleTasks.addSource(tasks) {
-            visibleTasks.value = updateVisibleTasks(it)
-        }
-        visibleTasks.value = updateVisibleTasks(tasks.value)
-    }
-
 
     @Synchronized
     fun save(synchronous: Boolean = false) {
@@ -62,7 +59,6 @@ class LocalTasksRepository @Inject constructor(preferences: SharedPreferences) {
         syncKey = prefs.getString("LocalTasks.syncKey", syncKey)?: syncKey
         val lastSeenVersion = prefs.getInt("lastSeenVersion", 1)
         runMigrationsIfRequired(lastSeenVersion, synchronous)
-        init()
     }
 
     @Synchronized
