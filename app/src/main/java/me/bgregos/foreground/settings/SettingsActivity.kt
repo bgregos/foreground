@@ -63,11 +63,11 @@ class SettingsActivity : AppCompatActivity() {
 
         fun onResetSync(){
             localTasksRepository.tasks.apply {
-                value.clear()
+                value?.clear()
                 contentsChanged()
             }
             localTasksRepository.localChanges.apply{
-                value.clear()
+                value?.clear()
                 contentsChanged()
             }
             localTasksRepository.syncKey = ""

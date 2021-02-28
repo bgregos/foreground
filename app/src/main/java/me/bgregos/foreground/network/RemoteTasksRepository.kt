@@ -80,7 +80,7 @@ class RemoteTasksRepository @Inject constructor(private val filesDir: File, priv
                 if (!tasksRepository.initSync) { //do not upload on first-round initial sync
                     val sb = StringBuilder()
                     sb.appendLine(tasksRepository.syncKey) //uuid goes first
-                    for (task in tasksRepository.localChanges.value) {
+                    for (task in tasksRepository.localChanges.value ?: ArrayList()) {
                         sb.appendLine(Task.toJson(task))
                     }
                     outPayload = sb.toString()
@@ -109,7 +109,7 @@ class RemoteTasksRepository @Inject constructor(private val filesDir: File, priv
                     return@launch SyncResult(false, responseString);
 
                 } else { //success
-                    tasksRepository.localChanges.value.clear()
+                    tasksRepository.localChanges.value?.clear()
                     val jsonObjStrArr: ArrayList<String> = rcvdmessage.payload.toString().replaceFirst("Optional[", "").split("\n") as ArrayList<String>
                     jsonObjStrArr.removeAt(jsonObjStrArr.lastIndex)
                     for (str in jsonObjStrArr) {
@@ -142,14 +142,14 @@ class RemoteTasksRepository @Inject constructor(private val filesDir: File, priv
                                 //check if stored task is older and not null
                                 if (storedTask?.modifiedDate?.before(task.modifiedDate) == true) {
                                     //stored task is older or has no timestamp, replace
-                                    tasksRepository.tasks.value.remove(storedTask)
+                                    tasksRepository.tasks.value?.remove(storedTask)
                                     if (!(task.status == "completed" || task.status == "deleted" || task.status == "recurring")) {
-                                        tasksRepository.tasks.value.add(task)
+                                        tasksRepository.tasks.value?.add(task)
                                     }
                                 } else if (storedTask == null) {
                                     //add new task
                                     if (!(task.status == "completed" || task.status == "deleted" || task.status == "recurring")) {
-                                        tasksRepository.tasks.value.add(task)
+                                        tasksRepository.tasks.value?.add(task)
                                     }
                                 } else {
                                     //task is older than current, do nothing.
@@ -188,7 +188,7 @@ class TaskwarriorSyncWorker(val ctx: Context, workerParams: WorkerParameters, pr
             Log.i("taskwarrior_sync", "Automatic Sync Complete")
             //TODO: Remove this broadcast - it should be handled by livedata
             var localIntent: Intent = Intent("BRIGHTTASK_REMOTE_TASK_UPDATE") //Send local broadcast
-            notificationRepository.scheduleNotificationForTasks(tasksRepository.tasks.value)
+            notificationRepository.scheduleNotificationForTasks(tasksRepository.tasks.value as List<Task>)
             LocalBroadcastManager.getInstance(ctx).sendBroadcast(localIntent)
         }
         job.await()

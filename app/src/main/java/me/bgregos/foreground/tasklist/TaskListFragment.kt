@@ -91,7 +91,7 @@ class TaskListFragment : Fragment() {
         task_list?.let { setupRecyclerView(it) }
         fab.setOnClickListener { view ->
             val newTask = Task("")
-            localTasksRepository.tasks.value.add(newTask)
+            localTasksRepository.tasks.value?.add(newTask)
             localTasksRepository.tasks.contentsChanged()
             openTask(newTask, view, newTask.name)
         }
@@ -113,7 +113,7 @@ class TaskListFragment : Fragment() {
     }
 
     private fun updatePendingNotifications() {
-        notificationRepository.scheduleNotificationForTasks(localTasksRepository.tasks.value)
+        notificationRepository.scheduleNotificationForTasks(localTasksRepository.tasks.value ?: ArrayList())
     }
 
     fun onSyncClick(item: MenuItem): Boolean {

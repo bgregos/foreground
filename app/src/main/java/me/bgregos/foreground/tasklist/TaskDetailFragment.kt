@@ -260,11 +260,11 @@ class TaskDetailFragment : Fragment() {
         if (detail_name.text?.isBlank() != false) {
             Log.d(this.javaClass.toString(), "Removing task w/ no name")
             localTasksRepository.tasks.apply {
-                value.remove(item)
+                value?.remove(item)
                 contentsChanged()
             }
             localTasksRepository.localChanges.apply {
-                value.remove(item)
+                value?.remove(item)
                 contentsChanged()
             }
             localTasksRepository.save()
@@ -297,9 +297,9 @@ class TaskDetailFragment : Fragment() {
         if(waitdate != null && waitdate.after(Date())) {
             toModify.status ="waiting"
         }
-        if (!localTasksRepository.localChanges.value.contains(toModify)){
+        if (localTasksRepository.localChanges.value?.contains(toModify) == false){
             localTasksRepository.localChanges.apply {
-                value.add(toModify)
+                value?.add(toModify)
                 contentsChanged()
             }
         }

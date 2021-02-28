@@ -38,9 +38,9 @@ class TaskBroadcastReceiver: BroadcastReceiver() {
                     }
                     item.modifiedDate=Date() //update modified date
                     item.status = "completed"
-                    if (!localTasksRepository.localChanges.value.contains(item)){
+                    if (localTasksRepository.localChanges.value?.contains(item) == false){
                         localTasksRepository.localChanges.apply{
-                            value.add(item)
+                            value?.add(item)
                             contentsChanged()
                         }
                     }

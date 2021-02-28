@@ -7,6 +7,7 @@ import dagger.MapKey
 import dagger.Module
 import dagger.multibindings.IntoMap
 import me.bgregos.foreground.filter.FiltersViewModel
+import me.bgregos.foreground.tasklist.TaskDetailViewModel
 import javax.inject.Inject
 import javax.inject.Provider
 import javax.inject.Singleton
@@ -18,6 +19,11 @@ abstract class ViewModelBindingModule {
     @IntoMap
     @ViewModelKey(FiltersViewModel::class)
     abstract fun bindFiltersViewModel(view: FiltersViewModel): ViewModel
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(TaskDetailViewModel::class)
+    abstract fun bindTaskDetailViewModel(view: TaskDetailViewModel): ViewModel
 
     @Binds
     abstract fun bindViewModelFactory(factory: ViewModelFactory): ViewModelProvider.Factory

@@ -10,11 +10,9 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.task_list_content.view.*
+import kotlinx.android.synthetic.main.task_list_content_standard.view.*
 import me.bgregos.foreground.R
 import me.bgregos.foreground.model.Task
-import me.bgregos.foreground.util.NonNullableLiveData
-import me.bgregos.foreground.util.NonNullableMutableLiveData
 import me.bgregos.foreground.util.contentsChanged
 import java.text.SimpleDateFormat
 import java.util.*
@@ -35,7 +33,7 @@ class TaskListAdapter(private val parentFragment: TaskListFragment,
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.task_list_content, parent, false)
+                .inflate(R.layout.task_list_content_standard, parent, false)
         return ViewHolder(view)
     }
 
@@ -91,15 +89,15 @@ class TaskListAdapter(private val parentFragment: TaskListFragment,
             //notifyItemRangeChanged(pos, values.size)
             item.modifiedDate=Date() //update modified date
             item.status = "completed"
-            if (parentFragment.localTasksRepository.localChanges.value.contains(item)){
+            if (parentFragment.localTasksRepository.localChanges.value?.contains(item) == false){
 
                 parentFragment.localTasksRepository.localChanges.apply{
-                    value.add(item)
+                    value?.add(item)
                     contentsChanged()
                 }
             }
             parentFragment.localTasksRepository.tasks.apply {
-                value.remove(item)
+                value?.remove(item)
                 contentsChanged()
             }
         }

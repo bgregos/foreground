@@ -1,38 +1,34 @@
 package me.bgregos.foreground.tasklist
 
-import android.content.Context
+import android.annotation.SuppressLint
 import android.content.SharedPreferences
-import android.provider.MediaStore
 import com.google.gson.Gson
 import java.util.*
 import android.util.Log
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MediatorLiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import com.google.gson.reflect.TypeToken
 import me.bgregos.foreground.model.Task
 import me.bgregos.foreground.model.TaskFilter
-import me.bgregos.foreground.util.NonNullableLiveData
-import me.bgregos.foreground.util.NonNullableMediatorLiveData
-import me.bgregos.foreground.util.NonNullableMutableLiveData
 import java.text.SimpleDateFormat
 import javax.inject.Inject
 import kotlin.collections.ArrayList
 
 class LocalTasksRepository @Inject constructor(preferences: SharedPreferences) {
     @Volatile
-    var tasks: NonNullableMutableLiveData<ArrayList<Task>> = NonNullableMutableLiveData(ArrayList())
+    var tasks: MutableLiveData<ArrayList<Task>> = MutableLiveData(ArrayList())
     @Volatile
-    var localChanges: NonNullableMutableLiveData<ArrayList<Task>> = NonNullableMutableLiveData(ArrayList())
+    var localChanges: MutableLiveData<ArrayList<Task>> = MutableLiveData(ArrayList())
     @Volatile
-    var filters: NonNullableMutableLiveData<ArrayList<TaskFilter>> = NonNullableMutableLiveData(ArrayList())
+    var filters: MutableLiveData<ArrayList<TaskFilter>> = MutableLiveData(ArrayList())
     @Volatile
     var visibleTasks: LiveData<ArrayList<Task>> = Transformations.map(tasks) { updateVisibleTasks(it) }
 
-    var showWaiting:Boolean = false
-    var initSync:Boolean = true
+    var useCompactTaskView = false
 
-    val prefs: SharedPreferences = preferences
+    var initSync: Boolean = true
+    private val prefs: SharedPreferences = preferences
 
     @Volatile
     var syncKey:String = ""
@@ -44,7 +40,6 @@ class LocalTasksRepository @Inject constructor(preferences: SharedPreferences) {
         editor.putString("LocalTasks.localChanges", Gson().toJson(localChanges.value))
         editor.putString("LocalTasks.initSync", initSync.toString())
         editor.putString("LocalTasks.syncKey", syncKey)
-        editor.putString("LocalTasks.showWaiting", showWaiting.toString())
         if(synchronous) editor.apply() else editor.commit()
     }
 
@@ -55,16 +50,18 @@ class LocalTasksRepository @Inject constructor(preferences: SharedPreferences) {
         tasks.value = Gson().fromJson(prefs.getString("LocalTasks", ""), taskType) ?: tasks.value
         localChanges.value = Gson().fromJson(prefs.getString("LocalTasks.localChanges", ""), taskType) ?: localChanges.value
         initSync =  prefs.getString("LocalTasks.initSync", "true")?.toBoolean()?:true
-        showWaiting =  prefs.getString("LocalTasks.showWaiting", "true")?.toBoolean()?:false
         syncKey = prefs.getString("LocalTasks.syncKey", syncKey)?: syncKey
+        useCompactTaskView = prefs.getBoolean("settings_compact_tasks", false)
         val lastSeenVersion = prefs.getInt("lastSeenVersion", 1)
         runMigrationsIfRequired(lastSeenVersion, synchronous)
     }
 
+    @SuppressLint("SimpleDateFormat")
     @Synchronized
     fun runMigrationsIfRequired(lastSeenVersion: Int, synchronous: Boolean){
         //migration - breaking changes are versioned here
         var itemsModified = false
+        val taskList = tasks.value ?: ArrayList()
         if (lastSeenVersion<2){
             val editor = prefs.edit()
             itemsModified = true
@@ -72,11 +69,9 @@ class LocalTasksRepository @Inject constructor(preferences: SharedPreferences) {
             dfLocal.setTimeZone(TimeZone.getDefault())
             val dfUtc = SimpleDateFormat()
             dfUtc.setTimeZone(TimeZone.getTimeZone("UTC"))
-            for (i in tasks.value) {
+            for (i in taskList) {
                 //convert all Dates from local time to GMT
-                if (i.createdDate != null){
-                    i.createdDate=dfUtc.parse(dfLocal.format(i.createdDate))
-                }
+                i.createdDate=dfUtc.parse(dfLocal.format(i.createdDate))
                 if (i.modifiedDate != null){
                     i.modifiedDate=dfUtc.parse(dfLocal.format(i.modifiedDate))
                 }
@@ -90,7 +85,7 @@ class LocalTasksRepository @Inject constructor(preferences: SharedPreferences) {
         if (lastSeenVersion<3){
             val editor = prefs.edit()
             itemsModified = true
-            for (i in tasks.value) {
+            for (i in taskList) {
                 //convert all Dates from local time to GMT
                 if (i.others["wait"] != null) {
                     i.waitDate = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").parse(i.others["wait"])
@@ -109,7 +104,7 @@ class LocalTasksRepository @Inject constructor(preferences: SharedPreferences) {
             //normalize tags
             val editor = prefs.edit()
             itemsModified = true
-            tasks.value.forEach{
+            taskList?.forEach{
                 it.tags.removeAll { tag -> tag.isBlank() }
                 it.tags = it.tags.map{ tag -> tag.trim() } as ArrayList<String>
             }
@@ -121,7 +116,7 @@ class LocalTasksRepository @Inject constructor(preferences: SharedPreferences) {
             val editor = prefs.edit()
             itemsModified = true
             val now = Date()
-            tasks.value.forEach {
+            taskList.forEach {
                 it.waitDate = it.waitDate?.toLocal()
                 it.dueDate = it.dueDate?.toLocal()
                 it.modifiedDate = now
@@ -130,6 +125,7 @@ class LocalTasksRepository @Inject constructor(preferences: SharedPreferences) {
             if(synchronous) editor.apply() else editor.commit()
         }
         if (itemsModified) {
+            tasks.value = taskList
             save(synchronous)
         }
     }
@@ -137,7 +133,7 @@ class LocalTasksRepository @Inject constructor(preferences: SharedPreferences) {
     @Synchronized
     fun updateVisibleTasks(tasks: ArrayList<Task>): ArrayList<Task>{
         var out: ArrayList<Task> = arrayListOf<Task>().apply { addAll(tasks) }
-        filters.value.forEach {
+        filters.value?.forEach {
             if (it.enabled) out = out.filter { task -> it.type.filter(task, it.parameter) } as ArrayList<Task>
         }
         //visibleTasks = visibleTasks.filter { it.name.isNotBlank() } as ArrayList<Task>
@@ -146,7 +142,8 @@ class LocalTasksRepository @Inject constructor(preferences: SharedPreferences) {
     }
 
     fun getTaskByUUID(uuid: UUID): Task?{
-        for(task in tasks.value){
+        val tasklist = tasks.value ?: return null
+        for(task in tasklist){
             if(task.uuid == uuid){
                 return task
             }
