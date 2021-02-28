@@ -18,6 +18,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import me.bgregos.foreground.R
+import me.bgregos.foreground.getApplicationComponent
 import me.bgregos.foreground.tasklist.LocalTasksRepository
 import me.bgregos.foreground.network.RemoteTasksRepository
 import me.bgregos.foreground.network.TaskwarriorSyncWorker
@@ -40,6 +41,7 @@ class SettingsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        getApplicationComponent().inject(this)
         setContentView(R.layout.activity_settings)
         settings_syncprogress.visibility = View.INVISIBLE
         settings_sync.visibility = View.VISIBLE

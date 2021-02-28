@@ -2,6 +2,7 @@ package me.bgregos.foreground.network
 
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.util.Log
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.work.CoroutineWorker
@@ -27,9 +28,8 @@ import javax.inject.Inject
 import javax.inject.Provider
 import kotlin.collections.ArrayList
 
-class RemoteTasksRepository @Inject constructor(private val filesDir: File, private val notificationRepository: NotificationRepository, private val tasksRepository: LocalTasksRepository) {
-    var syncInitialized: Boolean = false
-        private set
+class RemoteTasksRepository @Inject constructor(private val filesDir: File, private val notificationRepository: NotificationRepository, private val tasksRepository: LocalTasksRepository, private val sharedPreferences: SharedPreferences) {
+    var syncInitialized: Boolean = sharedPreferences.getBoolean("settings_sync", false)
 
     // These are set prior to sync
     private lateinit var taskwarriorPropertiesURL: URL
@@ -69,6 +69,12 @@ class RemoteTasksRepository @Inject constructor(private val filesDir: File, priv
 
     suspend fun taskwarriorSync(): SyncResult = withContext(Dispatchers.IO) launch@{
         if(syncInitialized){
+
+            //instantiate a TaskwarriorClient with the latest sync settings
+            taskwarriorPropertiesURL = File(filesDir, "taskwarrior.properties").toURI().toURL()
+            config = TaskwarriorPropertiesConfiguration(taskwarriorPropertiesURL)
+            client = TaskwarriorClient(config)
+
             mutex.withLock {
                 var receivedMessage : TaskwarriorMessage? = null
                 var outPayload : String? = null
@@ -115,7 +121,6 @@ class RemoteTasksRepository @Inject constructor(private val filesDir: File, priv
                     for (str in jsonObjStrArr) {
                         Log.d("full message recieved", str)
                     }
-                    val jArray: ArrayList<JSONObject> = ArrayList()
                     try {
                         UUID.fromString(jsonObjStrArr.get(0))
                         //sync key is at top
@@ -158,7 +163,7 @@ class RemoteTasksRepository @Inject constructor(private val filesDir: File, priv
 
                         }
                     }
-                    tasksRepository.tasks.contentsChanged()
+                    tasksRepository.tasks.postValue(tasksRepository.tasks.value) //send livedata update
                     tasksRepository.save(true)
 
                     if (tasksRepository.initSync) { //immediately after initial sync, start another to upload tasks.

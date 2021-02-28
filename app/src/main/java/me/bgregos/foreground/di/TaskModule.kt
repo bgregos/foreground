@@ -2,6 +2,7 @@ package me.bgregos.foreground.di
 
 import android.app.AlarmManager
 import android.content.Context
+import android.content.SharedPreferences
 import dagger.Module
 import dagger.Provides
 import me.bgregos.foreground.network.RemoteTasksRepository
@@ -12,10 +13,17 @@ import javax.inject.Singleton
 @Module
 abstract class TaskModule {
     companion object {
+
         @Singleton
         @Provides
-        fun provideLocalTasksRepository(context: Context): LocalTasksRepository {
-            return LocalTasksRepository(context.getSharedPreferences("me.bgregos.BrightTask", Context.MODE_PRIVATE))
+        fun provideSharedPreferences(context: Context): SharedPreferences {
+            return context.getSharedPreferences("me.bgregos.BrightTask", Context.MODE_PRIVATE)
+        }
+
+        @Singleton
+        @Provides
+        fun provideLocalTasksRepository(sharedPreferences: SharedPreferences): LocalTasksRepository {
+            return LocalTasksRepository(sharedPreferences)
         }
 
         @Singleton
@@ -26,8 +34,8 @@ abstract class TaskModule {
 
         @Singleton
         @Provides
-        fun provideRemoteTasksRepository(context: Context, notificationRepository: NotificationRepository, localTasksRepository: LocalTasksRepository): RemoteTasksRepository {
-            return RemoteTasksRepository(context.filesDir, notificationRepository, localTasksRepository)
+        fun provideRemoteTasksRepository(context: Context, notificationRepository: NotificationRepository, localTasksRepository: LocalTasksRepository, sharedPreferences: SharedPreferences): RemoteTasksRepository {
+            return RemoteTasksRepository(context.filesDir, notificationRepository, localTasksRepository, sharedPreferences)
         }
     }
 }
