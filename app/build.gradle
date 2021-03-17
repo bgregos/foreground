@@ -26,6 +26,9 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+    buildFeatures {
+        viewBinding true
+    }
 }
 
 def room_version = "2.2.6"

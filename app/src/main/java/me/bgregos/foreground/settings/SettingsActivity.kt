@@ -19,11 +19,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import me.bgregos.foreground.R
 import me.bgregos.foreground.getApplicationComponent
-import me.bgregos.foreground.tasklist.LocalTasksRepository
-import me.bgregos.foreground.network.RemoteTasksRepository
+import me.bgregos.foreground.model.SyncResult
+import me.bgregos.foreground.tasklist.TaskRepository
+import me.bgregos.foreground.network.RemoteTaskSource
 import me.bgregos.foreground.network.TaskwarriorSyncWorker
 import me.bgregos.foreground.util.ShowErrorDetail
-import me.bgregos.foreground.util.contentsChanged
 import java.io.File
 import java.io.FileOutputStream
 import java.lang.Exception
@@ -34,10 +34,10 @@ import javax.inject.Inject
 class SettingsActivity : AppCompatActivity() {
 
     @Inject
-    lateinit var localTasksRepository: LocalTasksRepository
+    lateinit var localTasksRepository: TaskRepository
 
     @Inject
-    lateinit var remoteTasksRepository: RemoteTasksRepository
+    lateinit var remoteTaskSource: RemoteTaskSource
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,23 +63,6 @@ class SettingsActivity : AppCompatActivity() {
         settings_private_key.setText(prefs.getString("settings_cert_key", ""))
         settings_cert_private.setText(prefs.getString("settings_cert_private", ""))
 
-        fun onResetSync(){
-            localTasksRepository.tasks.apply {
-                value?.clear()
-                contentsChanged()
-            }
-            localTasksRepository.localChanges.apply{
-                value?.clear()
-                contentsChanged()
-            }
-            localTasksRepository.syncKey = ""
-            localTasksRepository.initSync = true
-            localTasksRepository.save()
-            val bar = Snackbar.make(settings_parent, "Sync has been reset to its original status.", Snackbar.LENGTH_SHORT)
-            bar.view.setBackgroundColor(Color.parseColor("#34309f"))
-            bar.show()
-        }
-
         settings_sync.setOnClickListener {
 
             if (settings_sync.isChecked) {
@@ -89,14 +72,14 @@ class SettingsActivity : AppCompatActivity() {
                 save()
                 settings_syncprogress.visibility = View.VISIBLE
                 CoroutineScope(Dispatchers.Main).launch {
-                    var response: RemoteTasksRepository.SyncResult
+                    var response: SyncResult
                     var exception: Exception? = null
                     try {
-                        response = remoteTasksRepository.taskwarriorInitSync()
+                        response = remoteTaskSource.taskwarriorInitSync()
                     }catch (e: Exception){
                         exception = e
                         Log.e("test sync error", e.toString())
-                        response = RemoteTasksRepository.SyncResult(false, "Invalid or incomplete configuration.")
+                        response = SyncResult(false, "Invalid or incomplete configuration.")
                     }
                     Log.i(this.javaClass.toString(), response.message)
                     settings_sync.visibility = View.VISIBLE
@@ -123,7 +106,6 @@ class SettingsActivity : AppCompatActivity() {
         settings_cert_ca_button.setOnClickListener { performCertFileSearch(CertType.CERT_CA) }
         settings_private_key_button.setOnClickListener { performCertFileSearch(CertType.CERT_KEY) }
         settings_cert_private_button.setOnClickListener { performCertFileSearch(CertType.CERT_PRIVATE) }
-        settings_reset_sync.setOnClickListener { onResetSync() }
         settings_auto_sync.setOnClickListener { onAutoSyncClicked() }
         settings_auto_sync.setOnFocusChangeListener { _, focused -> if(!focused) onAutoSyncIntervalChanged() }
     }

@@ -4,64 +4,61 @@ import android.annotation.SuppressLint
 import android.content.SharedPreferences
 import com.google.gson.Gson
 import java.util.*
-import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Transformations
 import com.google.gson.reflect.TypeToken
+import me.bgregos.foreground.model.SyncResult
 import me.bgregos.foreground.model.Task
 import me.bgregos.foreground.model.TaskFilter
+import me.bgregos.foreground.network.RemoteTaskSource
 import java.text.SimpleDateFormat
 import javax.inject.Inject
 import kotlin.collections.ArrayList
 
-class LocalTasksRepository @Inject constructor(preferences: SharedPreferences) {
-    @Volatile
-    var tasks: MutableLiveData<ArrayList<Task>> = MutableLiveData(ArrayList())
-    @Volatile
-    var localChanges: MutableLiveData<ArrayList<Task>> = MutableLiveData(ArrayList())
-    @Volatile
-    var filters: MutableLiveData<ArrayList<TaskFilter>> = MutableLiveData(ArrayList())
-    @Volatile
-    var visibleTasks: LiveData<ArrayList<Task>> = Transformations.map(tasks) { updateVisibleTasks(it) }
+class TaskRepository @Inject constructor(val prefs: SharedPreferences, val remoteTaskSource: RemoteTaskSource) {
+    var tasks: List<Task> = listOf()
+    var localChanges: List<Task> = listOf()
+    var filters: List<TaskFilter> = listOf()
 
-    var useCompactTaskView = false
-
-    var initSync: Boolean = true
-    private val prefs: SharedPreferences = preferences
-
-    @Volatile
-    var syncKey:String = ""
-
-    @Synchronized
-    fun save(synchronous: Boolean = false) {
-        val editor = prefs.edit()
-        editor.putString("LocalTasks", Gson().toJson(tasks.value))
-        editor.putString("LocalTasks.localChanges", Gson().toJson(localChanges.value))
-        editor.putString("LocalTasks.initSync", initSync.toString())
-        editor.putString("LocalTasks.syncKey", syncKey)
-        if(synchronous) editor.apply() else editor.commit()
+    suspend fun taskwarriorSync(): SyncResult {
+        remoteTaskSource.tasks = tasks.toMutableList()
+        remoteTaskSource.localChanges = localChanges.toMutableList()
+        val result = remoteTaskSource.taskwarriorSync()
+        tasks = remoteTaskSource.tasks
+        localChanges = remoteTaskSource.localChanges
+        return result
     }
 
-    @Synchronized
-    fun load(synchronous: Boolean = false) {
+    suspend fun testSync(): SyncResult {
+        return remoteTaskSource.taskwarriorInitSync()
+    }
+
+    fun resetSync() {
+        remoteTaskSource.resetSync()
+        localChanges = remoteTaskSource.localChanges
+    }
+
+    suspend fun save() {
+        remoteTaskSource.save()
+        val editor = prefs.edit()
+        editor.putString("LocalTasks", Gson().toJson(tasks))
+        editor.putString("LocalTasks.localChanges", Gson().toJson(localChanges))
+        editor.apply()
+    }
+
+    suspend fun load() {
+        remoteTaskSource.load()
         val taskType = object : TypeToken<ArrayList<Task>>() {}.type
-        Log.i("LocalTasks", prefs.getString("LocalTasks", "") ?: "")
-        tasks.value = Gson().fromJson(prefs.getString("LocalTasks", ""), taskType) ?: tasks.value
-        localChanges.value = Gson().fromJson(prefs.getString("LocalTasks.localChanges", ""), taskType) ?: localChanges.value
-        initSync =  prefs.getString("LocalTasks.initSync", "true")?.toBoolean()?:true
-        syncKey = prefs.getString("LocalTasks.syncKey", syncKey)?: syncKey
-        useCompactTaskView = prefs.getBoolean("settings_compact_tasks", false)
+        tasks = Gson().fromJson(prefs.getString("LocalTasks", ""), taskType) ?: tasks
+        localChanges = Gson().fromJson(prefs.getString("LocalTasks.localChanges", ""), taskType) ?: localChanges
         val lastSeenVersion = prefs.getInt("lastSeenVersion", 1)
-        runMigrationsIfRequired(lastSeenVersion, synchronous)
+        runMigrationsIfRequired(lastSeenVersion)
     }
 
     @SuppressLint("SimpleDateFormat")
     @Synchronized
-    fun runMigrationsIfRequired(lastSeenVersion: Int, synchronous: Boolean){
+    suspend fun runMigrationsIfRequired(lastSeenVersion: Int){
         //migration - breaking changes are versioned here
         var itemsModified = false
-        val taskList = tasks.value ?: ArrayList()
+        val taskList = tasks
         if (lastSeenVersion<2){
             val editor = prefs.edit()
             itemsModified = true
@@ -80,7 +77,7 @@ class LocalTasksRepository @Inject constructor(preferences: SharedPreferences) {
                 }
             }
             editor.putInt("lastSeenVersion", 2)
-            if(synchronous) editor.apply() else editor.commit()
+            editor.apply()
         }
         if (lastSeenVersion<3){
             val editor = prefs.edit()
@@ -98,7 +95,7 @@ class LocalTasksRepository @Inject constructor(preferences: SharedPreferences) {
                 }
             }
             editor.putInt("lastSeenVersion", 3)
-            if(synchronous) editor.apply() else editor.commit()
+            editor.apply()
         }
         if(lastSeenVersion<4){
             //normalize tags
@@ -109,7 +106,7 @@ class LocalTasksRepository @Inject constructor(preferences: SharedPreferences) {
                 it.tags = it.tags.map{ tag -> tag.trim() } as ArrayList<String>
             }
             editor.putInt("lastSeenVersion", 4)
-            if(synchronous) editor.apply() else editor.commit()
+            editor.apply()
         }
         if(lastSeenVersion<5){
             //time normalization
@@ -122,18 +119,17 @@ class LocalTasksRepository @Inject constructor(preferences: SharedPreferences) {
                 it.modifiedDate = now
             }
             editor.putInt("lastSeenVersion", 5)
-            if(synchronous) editor.apply() else editor.commit()
+            editor.apply()
         }
         if (itemsModified) {
-            tasks.value = taskList
-            save(synchronous)
+            tasks = taskList
+            save()
         }
     }
 
-    @Synchronized
-    fun updateVisibleTasks(tasks: ArrayList<Task>): ArrayList<Task>{
+    fun visibleTasks(tasks: List<Task>): ArrayList<Task>{
         var out: ArrayList<Task> = arrayListOf<Task>().apply { addAll(tasks) }
-        filters.value?.forEach {
+        filters.forEach {
             if (it.enabled) out = out.filter { task -> it.type.filter(task, it.parameter) } as ArrayList<Task>
         }
         //visibleTasks = visibleTasks.filter { it.name.isNotBlank() } as ArrayList<Task>
@@ -142,7 +138,7 @@ class LocalTasksRepository @Inject constructor(preferences: SharedPreferences) {
     }
 
     fun getTaskByUUID(uuid: UUID): Task?{
-        val tasklist = tasks.value ?: return null
+        val tasklist = tasks
         for(task in tasklist){
             if(task.uuid == uuid){
                 return task

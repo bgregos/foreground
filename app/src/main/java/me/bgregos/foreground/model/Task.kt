@@ -20,6 +20,7 @@ data class Task(var name:String) : Serializable {
     var priority: String? = ""
     var status: String = "pending"
     var waitDate:Date? = null
+    var endDate:Date? = null
     var others = mutableMapOf<String, String>() //unaccounted-for fields. (User Defined Attributes)
     //List of all possible Task Statuses at https://taskwarrior.org/docs/design/task.html#attr_status
 
@@ -85,7 +86,10 @@ data class Task(var name:String) : Serializable {
             if (task.modifiedDate!=null) {
                 out.putOpt("modified", SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").format(task.modifiedDate))
             }
-            out.putOpt("created", SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").format(task.createdDate))
+            if (task.endDate!=null) {
+                out.putOpt("end", SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").format(task.endDate))
+            }
+            out.putOpt("entry", SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").format(task.createdDate))
             out.putOpt("tags", JSONArray(task.tags))
 
             for(extra in task.others){
@@ -122,13 +126,21 @@ data class Task(var name:String) : Serializable {
             if (!convDate.isNullOrBlank()) {
                 out.modifiedDate = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").parse(convDate)
             }
+            // "created" is changed to "entry" since 1.4 for better sync compatibility
             convDate = obj.optString("created")?:""
+            if (convDate.isNullOrBlank()){
+                convDate = obj.optString("entry")?:""
+            }
             if (!convDate.isNullOrBlank()) {
                 out.createdDate = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").parse(convDate)
             }
             convDate = obj.optString("wait")?:""
             if (!convDate.isNullOrBlank()) {
                 out.waitDate = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").parse(convDate)
+            }
+            convDate = obj.optString("end")?:""
+            if (!convDate.isNullOrBlank()) {
+                out.endDate = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").parse(convDate)
             }
             val jsontags = obj.optJSONArray("tags")?: JSONArray()
 
@@ -146,6 +158,7 @@ data class Task(var name:String) : Serializable {
             obj.remove("created")
             obj.remove("tags")
             obj.remove("wait")
+            obj.remove("end")
             //add all others to the others map
             for (key in obj.keys()){
                 out.others[key] = unescape(obj.getString(key))

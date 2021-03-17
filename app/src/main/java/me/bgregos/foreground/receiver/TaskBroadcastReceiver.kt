@@ -6,15 +6,17 @@ import android.content.Context
 import android.content.Intent
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import android.util.Log
-import me.bgregos.foreground.tasklist.LocalTasksRepository
-import me.bgregos.foreground.util.contentsChanged
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import me.bgregos.foreground.tasklist.TaskRepository
 import java.util.*
 import javax.inject.Inject
 
 class TaskBroadcastReceiver: BroadcastReceiver() {
 
     @Inject
-    lateinit var localTasksRepository: LocalTasksRepository
+    lateinit var tasksRepository: TaskRepository
 
     override fun onReceive(context: Context?, intent: Intent?) {
         when(intent?.action) {
@@ -30,23 +32,24 @@ class TaskBroadcastReceiver: BroadcastReceiver() {
                     Log.e("notif", "Failed to mark task done- no UUID")
                 }
                 if(context != null){
-                    localTasksRepository.load()
-                    val item = localTasksRepository.getTaskByUUID(UUID.fromString(uuid))
-                    if(item == null) {
-                        Log.e("LocalTasks", "Failed to find a task with the given UUID")
-                        return
-                    }
-                    item.modifiedDate=Date() //update modified date
-                    item.status = "completed"
-                    if (localTasksRepository.localChanges.value?.contains(item) == false){
-                        localTasksRepository.localChanges.apply{
-                            value?.add(item)
-                            contentsChanged()
+                    CoroutineScope(Dispatchers.Main).launch {
+                        tasksRepository.load()
+                        val item = tasksRepository.getTaskByUUID(UUID.fromString(uuid))
+                        if(item == null) {
+                            Log.e("LocalTasks", "Failed to find a task with the given UUID")
+                            return@launch
                         }
+                        item.modifiedDate=Date() //update modified date
+                        item.status = "completed"
+                        if (!tasksRepository.localChanges.contains(item)){
+                            tasksRepository.localChanges.plus(item)
+
+                        }
+                        tasksRepository.tasks.minus(item)
+                        tasksRepository.save()
+                        val localIntent: Intent = Intent("BRIGHTTASK_REMOTE_TASK_UPDATE") //Send local broadcast
+                        LocalBroadcastManager.getInstance(context).sendBroadcast(localIntent)
                     }
-                    localTasksRepository.save()
-                    val localIntent: Intent = Intent("BRIGHTTASK_REMOTE_TASK_UPDATE") //Send local broadcast
-                    LocalBroadcastManager.getInstance(context).sendBroadcast(localIntent)
                 } else {
                     Log.e("notif", "Failed to save task marked done- null context")
                 }

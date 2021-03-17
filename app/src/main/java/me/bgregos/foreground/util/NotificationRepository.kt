@@ -29,7 +29,10 @@ class NotificationRepository @Inject constructor(private val mgr: AlarmManager, 
 
     private fun clearNotifications() {
         scheduledNotifications.forEach {
-            mgr.cancel(it.second)
+            if ( it.second.creatorPackage != null) {
+                // The pendingIntent will sometimes have null data - ignore these
+                mgr.cancel(it.second)
+            }
         }
         scheduledNotifications.clear()
 

@@ -1,14 +1,13 @@
 package me.bgregos.foreground.di
 
-import android.content.BroadcastReceiver
 import android.content.Context
 import androidx.work.WorkerFactory
 import dagger.BindsInstance
 import dagger.Component
-import me.bgregos.foreground.network.RemoteTasksRepository
+import me.bgregos.foreground.network.RemoteTaskSource
 import me.bgregos.foreground.receiver.AlarmReceiver
 import me.bgregos.foreground.settings.SettingsActivity
-import me.bgregos.foreground.tasklist.LocalTasksRepository
+import me.bgregos.foreground.tasklist.TaskRepository
 import me.bgregos.foreground.tasklist.MainActivity
 import me.bgregos.foreground.tasklist.TaskDetailFragment
 import me.bgregos.foreground.tasklist.TaskListFragment
@@ -23,8 +22,8 @@ import javax.inject.Singleton
 ] )
 interface ApplicationComponent {
 
-    var localTasksRepository: LocalTasksRepository
-    var remoteTasksRepository: RemoteTasksRepository
+    var localTasksRepository: TaskRepository
+    var remoteTaskSource: RemoteTaskSource
     var notificationRepository: NotificationRepository
     var workerFactory: WorkerFactory
 

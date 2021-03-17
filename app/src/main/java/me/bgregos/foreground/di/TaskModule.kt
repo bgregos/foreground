@@ -3,10 +3,12 @@ package me.bgregos.foreground.di
 import android.app.AlarmManager
 import android.content.Context
 import android.content.SharedPreferences
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
-import me.bgregos.foreground.network.RemoteTasksRepository
-import me.bgregos.foreground.tasklist.LocalTasksRepository
+import me.bgregos.foreground.network.RemoteTaskSource
+import me.bgregos.foreground.network.RemoteTaskSourceImpl
+import me.bgregos.foreground.tasklist.TaskRepository
 import me.bgregos.foreground.util.NotificationRepository
 import javax.inject.Singleton
 
@@ -22,8 +24,8 @@ abstract class TaskModule {
 
         @Singleton
         @Provides
-        fun provideLocalTasksRepository(sharedPreferences: SharedPreferences): LocalTasksRepository {
-            return LocalTasksRepository(sharedPreferences)
+        fun provideTaskRepository(sharedPreferences: SharedPreferences, remoteTaskSource: RemoteTaskSource): TaskRepository {
+            return TaskRepository(sharedPreferences, remoteTaskSource)
         }
 
         @Singleton
@@ -34,8 +36,8 @@ abstract class TaskModule {
 
         @Singleton
         @Provides
-        fun provideRemoteTasksRepository(context: Context, notificationRepository: NotificationRepository, localTasksRepository: LocalTasksRepository, sharedPreferences: SharedPreferences): RemoteTasksRepository {
-            return RemoteTasksRepository(context.filesDir, notificationRepository, localTasksRepository, sharedPreferences)
+        fun provideRemoteTaskSource(context: Context, sharedPreferences: SharedPreferences): RemoteTaskSource {
+            return RemoteTaskSourceImpl(context.filesDir, sharedPreferences)
         }
     }
 }

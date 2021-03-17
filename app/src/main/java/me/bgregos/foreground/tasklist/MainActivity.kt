@@ -27,7 +27,7 @@ class MainActivity : AppCompatActivity() {
     private var twoPane: Boolean = false
     private lateinit var fragment: TaskListFragment
 
-    @Inject lateinit var localTasksRepository: LocalTasksRepository
+    @Inject lateinit var localTasksRepository: TaskRepository
 
     @Inject lateinit var notificationRepository: NotificationRepository
 
@@ -51,40 +51,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        val intentFilter = IntentFilter().apply {
-            addAction("BRIGHTTASK_REMOTE_TASK_UPDATE")
-            addAction("BRIGHTTASK_TABLET_LOCAL_TASK_UPDATE")
-        }
-        val lbm = LocalBroadcastManager.getInstance(this)
-        lbm.registerReceiver(broadcastReceiver, intentFilter)
-        Log.d("broadcast", "Broadcast receiver registered")
-
-    }
-
     override fun onPause() {
-        LocalBroadcastManager.getInstance(this)
-                .unregisterReceiver(broadcastReceiver)
-        Log.d("broadcast", "Broadcast receiver unregistered")
         notificationRepository.save()
-        localTasksRepository.save(true)
         super.onPause()
     }
-
-    private val broadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent?) {
-            when (intent?.action) {
-                "BRIGHTTASK_REMOTE_TASK_UPDATE" -> {
-                    val syncRotateAnimation = RotateAnimation(360f, 0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f)
-                    syncRotateAnimation.duration = 1000
-                    syncRotateAnimation.repeatCount = 0
-                    localTasksRepository.load(true)
-                    fragment.task_list?.adapter?.notifyDataSetChanged()
-                    Log.i("auto_sync", "Task List received auto-update")
-                }
-            }
-        }
-    }
-
 }

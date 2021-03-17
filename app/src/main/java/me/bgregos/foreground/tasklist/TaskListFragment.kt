@@ -10,21 +10,21 @@ import android.view.animation.RotateAnimation
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.activity_main.view.*
 import kotlinx.android.synthetic.main.fragment_task_list.*
 import kotlinx.android.synthetic.main.task_list.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import me.bgregos.foreground.ForegroundApplication
 import me.bgregos.foreground.R
 import me.bgregos.foreground.filter.FiltersFragment
 import me.bgregos.foreground.getApplicationComponent
+import me.bgregos.foreground.model.SyncResult
 import me.bgregos.foreground.model.Task
-import me.bgregos.foreground.network.RemoteTasksRepository
+import me.bgregos.foreground.network.RemoteTaskSource
 import me.bgregos.foreground.settings.SettingsActivity
 import me.bgregos.foreground.util.*
 import java.io.File
@@ -39,17 +39,12 @@ class TaskListFragment : Fragment() {
      * device.
      */
     private var twoPane: Boolean = false
-    private var PROPERTIES_TASKWARRIOR : URL? = null
     private var syncButton: View? = null
 
     @Inject
-    lateinit var localTasksRepository: LocalTasksRepository
+    lateinit var viewModelFactory: ViewModelProvider.Factory
 
-    @Inject
-    lateinit var remoteTasksRepository: RemoteTasksRepository
-
-    @Inject
-    lateinit var notificationRepository: NotificationRepository
+    private val viewModel by viewModels<TaskViewModel> { viewModelFactory }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setHasOptionsMenu(true)
@@ -59,12 +54,6 @@ class TaskListFragment : Fragment() {
 
     override fun onAttach(context: Context) {
         context.getApplicationComponent().inject(this)
-        localTasksRepository.load()
-        notificationRepository.load()
-        notificationRepository.createNotificationChannel()
-
-        PROPERTIES_TASKWARRIOR = File(context.filesDir, "taskwarrior.properties").toURI().toURL()
-
         super.onAttach(context)
     }
 
@@ -90,9 +79,7 @@ class TaskListFragment : Fragment() {
         }
         task_list?.let { setupRecyclerView(it) }
         fab.setOnClickListener { view ->
-            val newTask = Task("")
-            localTasksRepository.tasks.value?.add(newTask)
-            localTasksRepository.tasks.contentsChanged()
+            val newTask = viewModel.addTask()
             openTask(newTask, view, newTask.name)
         }
         super.onViewCreated(view, savedInstanceState)
@@ -101,8 +88,8 @@ class TaskListFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         CoroutineScope(Dispatchers.Main).launch {
-            localTasksRepository.load(true)
-            updatePendingNotifications()
+            viewModel.load()
+            viewModel.updatePendingNotifications()
         }
     }
 
@@ -110,10 +97,6 @@ class TaskListFragment : Fragment() {
         // Inflate the menu; this adds items to the action bar if it is present.
         inflater.inflate(R.menu.menu_main, menu)
         super.onCreateOptionsMenu(menu, inflater);
-    }
-
-    private fun updatePendingNotifications() {
-        notificationRepository.scheduleNotificationForTasks(localTasksRepository.tasks.value ?: ArrayList())
     }
 
     fun onSyncClick(item: MenuItem): Boolean {
@@ -127,8 +110,7 @@ class TaskListFragment : Fragment() {
         val prefs = activity?.getSharedPreferences("me.bgregos.BrightTask", Context.MODE_PRIVATE) ?: return true
         if (prefs.getBoolean("settings_sync", false)){
             CoroutineScope(Dispatchers.Main).launch {
-                localTasksRepository.save(true)
-                var syncResult: RemoteTasksRepository.SyncResult = remoteTasksRepository.taskwarriorSync()
+                val syncResult: SyncResult = viewModel.sync()
                 if(syncResult.success){
                     val bar2 = Snackbar.make(task_list_parent, "Sync Successful", Snackbar.LENGTH_SHORT)
                     bar2.view.setBackgroundColor(Color.parseColor("#34309f"))
@@ -176,9 +158,9 @@ class TaskListFragment : Fragment() {
     }
 
     private fun setupRecyclerView(recyclerView: RecyclerView) {
-        recyclerView.adapter = TaskListAdapter(this, localTasksRepository.visibleTasks)
-        localTasksRepository.visibleTasks.observe(viewLifecycleOwner, {
-            recyclerView.adapter?.notifyDataSetChanged()
+        recyclerView.adapter = TaskListAdapter(this, viewModel.visibleTasks, viewModel)
+        viewModel.tasks.observe(viewLifecycleOwner, {
+            recyclerView.adapter = TaskListAdapter(this, viewModel.visibleTasks, viewModel)
         })
     }
 
