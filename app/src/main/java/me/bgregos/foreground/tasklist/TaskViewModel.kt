@@ -24,17 +24,17 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
     private val displayTimeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
 
 
-    lateinit var currentUUID: UUID
+    var currentUUID: UUID? = null
         private set
 
-    var currentTask: Task = Task("Loading...")
+    var currentTask: Task? = null
         set(value) {
             field = value
             tasks.sendUpdate()
         }
 
         get() {
-            return tasks.value?.firstOrNull() { it.uuid == currentUUID } ?: throw NoSuchElementException("Could not find task to open.")
+            return tasks.value?.firstOrNull() { it.uuid == currentUUID }
         }
 
     val visibleTasks: List<Task>
@@ -90,17 +90,25 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
         }
     }
 
-    private fun taskUpdated(task: Task){
-        if(!taskRepository.localChanges.contains(task)){
-            taskRepository.localChanges.plus(task)
+    private fun taskUpdated(task: Task?){
+        if (task != null){
+            task.modifiedDate = Date()
+            if(!taskRepository.localChanges.contains(task)){
+                taskRepository.localChanges = taskRepository.localChanges.plus(task)
+            }
+            tasks.sendUpdate()
         }
-        tasks.sendUpdate()
     }
 
     suspend fun sync(): SyncResult{
         save()
         removeUnnamedTasks()
-        return taskRepository.taskwarriorSync()
+        val syncResult = taskRepository.taskwarriorSync()
+        tasks.value = taskRepository.tasks
+//        if(tasks.value?.contains(currentTask) != true) {
+//            //TODO: Close the fragment
+//        }
+        return syncResult
     }
 
     fun setTask(uuid: UUID) {
@@ -108,42 +116,42 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
     }
 
     fun setTaskName(name: String) {
-        currentTask.name = name
+        currentTask?.name = name
         taskUpdated(currentTask)
     }
 
     fun setTaskTags(enteredTags: String) {
-        currentTask.tags = enteredTags.split(", ",",") as ArrayList<String>
+        currentTask?.tags = enteredTags.split(", ",",") as ArrayList<String>
         taskUpdated(currentTask)
     }
 
     fun setTaskProject(project: String) {
-        currentTask.project = project
+        currentTask?.project = project
         taskUpdated(currentTask)
     }
 
     fun setTaskPriority(priority: String) {
-        currentTask.priority = priority
+        currentTask?.priority = priority
         taskUpdated(currentTask)
     }
 
     fun setTaskDueDate(date: String) {
-        currentTask.dueDate = writeFormat.parse("$date ${displayTimeFormat.format(currentTask.dueDate ?: Date())}")
+        currentTask?.dueDate = writeFormat.parse("$date ${displayTimeFormat.format(currentTask?.dueDate ?: Date())}")
         taskUpdated(currentTask)
     }
 
     fun setTaskDueTime(time: String) {
-        currentTask.dueDate = writeFormat.parse("${displayDateFormat.format(currentTask.dueDate ?: Date())} $time")
+        currentTask?.dueDate = writeFormat.parse("${displayDateFormat.format(currentTask?.dueDate ?: Date())} $time")
         taskUpdated(currentTask)
     }
 
     fun setTaskWaitDate(date: String) {
-        currentTask.waitDate = writeFormat.parse("$date ${displayTimeFormat.format(currentTask.waitDate ?: Date())}")
+        currentTask?.waitDate = writeFormat.parse("$date ${displayTimeFormat.format(currentTask?.waitDate ?: Date())}")
         taskUpdated(currentTask)
     }
 
     fun setTaskWaitTime(time: String){
-        currentTask.waitDate = writeFormat.parse("${displayDateFormat.format(currentTask.waitDate ?: Date())} $time")
+        currentTask?.waitDate = writeFormat.parse("${displayDateFormat.format(currentTask?.waitDate ?: Date())} $time")
         taskUpdated(currentTask)
     }
 }

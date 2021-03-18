@@ -84,7 +84,7 @@ class RemoteTaskSourceImpl @Inject constructor(private val filesDir: File, priva
                 headers[TaskwarriorMessage.HEADER_PROTOCOL] = "v1"
                 headers[TaskwarriorMessage.HEADER_CLIENT] = "foreground ${BuildConfig.VERSION_NAME}"
 
-                if (!firstSyncRan) { //do not upload on first-round initial sync, need to download first
+                if (firstSyncRan) { //do not upload on first-round initial sync, need to download first
                     val sb = StringBuilder()
                     sb.appendLine(syncKey) //uuid goes first
                     for (task in localChanges) {
@@ -124,12 +124,12 @@ class RemoteTaskSourceImpl @Inject constructor(private val filesDir: File, priva
                         UUID.fromString(jsonObjStrArr.get(0))
                         //sync key is at top
                         syncKey = jsonObjStrArr.removeAt(0)
-                    } catch (e: IllegalArgumentException) {
+                    } catch (e: java.lang.Exception) {
                         try {
                             UUID.fromString(jsonObjStrArr.get(jsonObjStrArr.lastIndex - 1))
                             //sync key is at bottom
                             syncKey = jsonObjStrArr.removeAt(jsonObjStrArr.lastIndex - 1)
-                        } catch (e: IllegalArgumentException) {
+                        } catch (e: java.lang.Exception) {
                             //no sync key!
                             Log.e(this.javaClass.toString(), "Error parsing sync data, no sync key.", e)
                             return@launch SyncResult(false, "Error parsing sync data, no sync key.")
@@ -165,7 +165,7 @@ class RemoteTaskSourceImpl @Inject constructor(private val filesDir: File, priva
 
                     if (!firstSyncRan) { //immediately after initial sync, start another to upload tasks.
                         firstSyncRan = true
-                        sharedPreferences.edit().putBoolean("settings_sync_first", true).apply()
+                        sharedPreferences.edit().putBoolean("RemoteTaskSource.firstSyncRan", true).apply()
                         Log.i("taskwarriorSync", "Initial sync finished, uploading tasks...")
                         var result = taskwarriorSync()
                         return@launch result

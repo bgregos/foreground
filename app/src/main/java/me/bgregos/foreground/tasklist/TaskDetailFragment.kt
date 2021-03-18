@@ -90,7 +90,7 @@ class TaskDetailFragment : Fragment() {
         _binding = FragmentTaskDetailBinding.inflate(inflater, container, false)
         val rootView = binding.root
 
-        rootView.detail_toolbar.title = if(viewModel.currentTask.name.isBlank()) "New Task" else viewModel.currentTask.name
+        rootView.detail_toolbar.title = if(viewModel.currentTask?.name?.isBlank() == true) "New Task" else viewModel.currentTask?.name
         val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
         dateFormat.timeZone= TimeZone.getDefault()
         val timeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
@@ -112,7 +112,7 @@ class TaskDetailFragment : Fragment() {
         rootView.detail_priority.adapter = adapter
 
         //load from Task into input fields
-        viewModel.currentTask.let {
+        viewModel.currentTask?.let {
             rootView.detail_name.setText(it.name)
             if (it.priority != null) {
                 rootView.detail_priority.setSelection(adapter.getPosition(it.priority))
@@ -252,7 +252,7 @@ class TaskDetailFragment : Fragment() {
         //some strange issue requires this to be done or the view doesn't adjust
         //to match the content height
         //TODO: replace this spinner with a different ui element
-        if (item.priority == null || item.priority == "No Priority Assigned"){
+        if (item?.priority == null || item.priority == "No Priority Assigned"){
             rootView.detail_priority.setSelection(0)
             rootView.detail_priority.setSelection(1)
             rootView.detail_priority.setSelection(0)
