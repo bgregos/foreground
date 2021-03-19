@@ -14,7 +14,9 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.task_list.*
 import me.bgregos.foreground.R
-import me.bgregos.foreground.util.NotificationService
+import me.bgregos.foreground.getApplicationComponent
+import me.bgregos.foreground.util.NotificationRepository
+import javax.inject.Inject
 
 class MainActivity : AppCompatActivity() {
 
@@ -25,8 +27,14 @@ class MainActivity : AppCompatActivity() {
     private var twoPane: Boolean = false
     private lateinit var fragment: TaskListFragment
 
+    @Inject lateinit var localTasksRepository: TaskRepository
+
+    @Inject lateinit var notificationRepository: NotificationRepository
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        getApplicationComponent().inject(this)
         setContentView(R.layout.activity_main)
         if (task_detail_container != null) {
             // The detail container view will be present only in the
@@ -43,50 +51,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        val intentFilter = IntentFilter().apply {
-            addAction("BRIGHTTASK_REMOTE_TASK_UPDATE")
-            addAction("BRIGHTTASK_TABLET_LOCAL_TASK_UPDATE")
-        }
-        val lbm = LocalBroadcastManager.getInstance(this)
-        lbm.registerReceiver(broadcastReceiver, intentFilter)
-        Log.d("broadcast", "Broadcast receiver registered")
-
-    }
-
     override fun onPause() {
-        LocalBroadcastManager.getInstance(this)
-                .unregisterReceiver(broadcastReceiver)
-        Log.d("broadcast", "Broadcast receiver unregistered")
-        NotificationService.save(this)
-        LocalTasks.save(this, true)
+        notificationRepository.save()
         super.onPause()
     }
-
-    private val broadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent?) {
-            when (intent?.action) {
-                "BRIGHTTASK_REMOTE_TASK_UPDATE" -> {
-                    val syncRotateAnimation = RotateAnimation(360f, 0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f)
-                    syncRotateAnimation.duration = 1000
-                    syncRotateAnimation.repeatCount = 0
-                    LocalTasks.load(context, true)
-                    LocalTasks.updateVisibleTasks()
-                    fragment.task_list?.adapter?.notifyDataSetChanged()
-                    Log.i("auto_sync", "Task List received auto-update")
-                }
-
-                "BRIGHTTASK_TABLET_LOCAL_TASK_UPDATE" -> {
-                    if (twoPane) {
-                        LocalTasks.load(context, true)
-                        LocalTasks.updateVisibleTasks()
-                        fragment.task_list?.adapter?.notifyDataSetChanged()
-                        Log.i("task_list", "Task list updated by detail")
-                    }
-                }
-            }
-        }
-    }
-
 }

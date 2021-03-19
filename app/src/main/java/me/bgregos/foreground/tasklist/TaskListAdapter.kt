@@ -8,15 +8,17 @@ import android.view.View.*
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.task_list_content.view.*
+import kotlinx.android.synthetic.main.task_list_content_standard.view.*
 import me.bgregos.foreground.R
 import me.bgregos.foreground.model.Task
 import java.text.SimpleDateFormat
 import java.util.*
 
 class TaskListAdapter(private val parentFragment: TaskListFragment,
-                      private var values: ArrayList<Task>) :
+                      private var tasks: List<Task>,
+                        private val viewModel: TaskViewModel) :
         RecyclerView.Adapter<TaskListAdapter.ViewHolder>() {
 
     private val onClickListener: View.OnClickListener
@@ -31,13 +33,13 @@ class TaskListAdapter(private val parentFragment: TaskListFragment,
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.task_list_content, parent, false)
+                .inflate(R.layout.task_list_content_standard, parent, false)
         return ViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val format = SimpleDateFormat("MMM d, yyyy 'at' h:mm aaa", Locale.getDefault())
-        val item = values[position]
+        val item = tasks.get(position)
         holder.title.text = item.name
         if(item.dueDate != null) {
             holder.due.visibility = VISIBLE
@@ -82,19 +84,13 @@ class TaskListAdapter(private val parentFragment: TaskListFragment,
 
         holder.complete.setOnClickListener {
             val pos = holder.layoutPosition
-            values.removeAt(pos)
             notifyItemRemoved(pos)
             //notifyItemRangeChanged(pos, values.size)
-            item.modifiedDate=Date() //update modified date
-            item.status = "completed"
-            if (!LocalTasks.localChanges.contains(item)){
-                LocalTasks.localChanges.add(item)
-            }
-            LocalTasks.items.remove(item)
+            viewModel.markTaskComplete(item)
         }
     }
 
-    override fun getItemCount() = values.size
+    override fun getItemCount() = tasks.size
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val title: TextView = view.title

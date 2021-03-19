@@ -4,14 +4,26 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import me.bgregos.foreground.tasklist.LocalTasks
-import me.bgregos.foreground.util.NotificationService
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import me.bgregos.foreground.tasklist.TaskRepository
+import me.bgregos.foreground.util.NotificationRepository
 import java.util.*
+import javax.inject.Inject
 
 class AlarmReceiver : BroadcastReceiver() {
+
+    @Inject
+    lateinit var notificationRepository: NotificationRepository
+
+    @Inject
+    lateinit var taskRepository: TaskRepository
+
     override fun onReceive(context: Context?, intent: Intent?) {
         when (intent?.action) {
-            NotificationService.ACTION -> {
+            notificationRepository.ACTION -> {
                 Log.i("notif", "Received notification intent")
                 val uuid: String? = intent.extras?.get("uuid") as String?
                 if (uuid == null) {
@@ -21,12 +33,14 @@ class AlarmReceiver : BroadcastReceiver() {
                 if (context == null){
                     Log.e("notif", "Couldn't show notification - null context")
                 }else{
-                    LocalTasks.load(context, true)
-                    val task = LocalTasks.getTaskByUUID(UUID.fromString(uuid))
-                    if (task != null) {
-                        NotificationService.showDueNotification(task, context)
-                    } else {
-                        Log.e("notif", "Couldn't show notification - null task")
+                    CoroutineScope(Dispatchers.Main).launch {
+                        taskRepository.load()
+                        val task = taskRepository.getTaskByUUID(UUID.fromString(uuid))
+                        if (task != null) {
+                            notificationRepository.showDueNotification(task)
+                        } else {
+                            Log.e("notif", "Couldn't show notification - null task")
+                        }
                     }
                 }
             }

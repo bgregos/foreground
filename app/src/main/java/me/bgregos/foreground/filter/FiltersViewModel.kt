@@ -4,8 +4,9 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import me.bgregos.foreground.model.TaskFilter
+import javax.inject.Inject
 
-class FiltersViewModel : ViewModel() {
+class FiltersViewModel @Inject constructor(): ViewModel() {
 
     val filters: LiveData<ArrayList<TaskFilter>> = MutableLiveData(arrayListOf())
 

@@ -2,6 +2,7 @@ package me.bgregos.foreground.tasklist
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -9,18 +10,29 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.Spinner
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.widget.doOnTextChanged
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import kotlinx.android.synthetic.main.date_layout.*
 import kotlinx.android.synthetic.main.date_layout.view.*
 import kotlinx.android.synthetic.main.fragment_task_detail.*
 import kotlinx.android.synthetic.main.fragment_task_detail.view.*
-import kotlinx.android.synthetic.main.fragment_task_list.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import me.bgregos.foreground.R
+import me.bgregos.foreground.databinding.FragmentTaskDetailBinding
+import me.bgregos.foreground.getApplicationComponent
 import me.bgregos.foreground.model.Task
 import java.text.DateFormatSymbols
 import java.text.SimpleDateFormat
 import java.util.*
+import javax.inject.Inject
 
 
 /**
@@ -31,8 +43,17 @@ import java.util.*
  */
 class TaskDetailFragment : Fragment() {
 
-    private var item: Task = Task("error")
     private var twoPane: Boolean = false
+
+    private var _binding: FragmentTaskDetailBinding? = null
+    // This property is only valid between onCreateView and onDestroyView.
+    private val binding get() = _binding!!
+
+
+    @Inject
+    lateinit var viewModelFactory: ViewModelProvider.Factory
+
+    private val viewModel by viewModels<TaskViewModel> { viewModelFactory }
 
     companion object {
         fun newInstance(uuid: UUID, twoPane: Boolean): TaskDetailFragment{
@@ -45,13 +66,17 @@ class TaskDetailFragment : Fragment() {
         }
     }
 
+    override fun onAttach(context: Context) {
+        context.getApplicationComponent().inject(this)
+        super.onAttach(context)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         val bundle = this.arguments
         //load Task from bundle args
         if (bundle?.getString("uuid") != null) {
-            item = LocalTasks.getTaskByUUID(UUID.fromString(bundle.getString("uuid")))?: run { close(); Task("") }
+            viewModel.setTask(UUID.fromString(bundle.getString("uuid")) ?: run {close(); UUID.randomUUID ()})
         }
         else {
             Log.e(this.javaClass.toString(), "No key found.")
@@ -62,8 +87,10 @@ class TaskDetailFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
 
-        val rootView = inflater.inflate(R.layout.fragment_task_detail, container, false)
-        rootView.detail_toolbar.title = if(item.name.isBlank()) "New Task" else item.name
+        _binding = FragmentTaskDetailBinding.inflate(inflater, container, false)
+        val rootView = binding.root
+
+        rootView.detail_toolbar.title = if(viewModel.currentTask?.name?.isBlank() == true) "New Task" else viewModel.currentTask?.name
         val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
         dateFormat.timeZone= TimeZone.getDefault()
         val timeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
@@ -85,7 +112,7 @@ class TaskDetailFragment : Fragment() {
         rootView.detail_priority.adapter = adapter
 
         //load from Task into input fields
-        item.let {
+        viewModel.currentTask?.let {
             rootView.detail_name.setText(it.name)
             if (it.priority != null) {
                 rootView.detail_priority.setSelection(adapter.getPosition(it.priority))
@@ -117,25 +144,30 @@ class TaskDetailFragment : Fragment() {
             }
         }
 
-        // trigger task list update on focus change
-        rootView.detail_name.setOnFocusChangeListener{ _, _ ->
-            saveAndUpdateTaskListIfTablet()
+        // update viewmodel on all form changes
+        rootView.detail_name.doOnTextChanged { text, _, _, _ -> viewModel.setTaskName(text.toString()) }
+        rootView.detail_tags.doOnTextChanged { text, _, _, _ -> viewModel.setTaskTags(text.toString()) }
+        rootView.detail_project.doOnTextChanged{ text, _, _, _ -> viewModel.setTaskProject(text.toString()) }
+        rootView.detail_priority.onItemSelectedListener  = object : AdapterView.OnItemSelectedListener {
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                //no-op
+            }
+
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val selected: String = rootView.detail_priority.getItemAtPosition(position).toString()
+                viewModel.setTaskPriority(selected)
+            }
         }
-        rootView.detail_tags.setOnFocusChangeListener{ _, _ ->
-            saveAndUpdateTaskListIfTablet()
-        }
-        rootView.detail_project.setOnFocusChangeListener{ _, _ ->
-            saveAndUpdateTaskListIfTablet()
-        }
-        rootView.detail_priority.setOnTouchListener { view, _ ->
-            saveAndUpdateTaskListIfTablet()
-            view.performClick()
-            true
-        }
-        rootView.detail_priority.setOnKeyListener { _, _, _ ->
-            saveAndUpdateTaskListIfTablet()
-            false
-        }
+//        rootView.detail_priority.setOnTouchListener { view, _ ->
+//            view.performClick()
+//            viewModel.setTaskPriority(rootView.detail_priority.selectedItem.toString())
+//            true
+//        }
+//        rootView.detail_priority.setOnKeyListener { view, _, _ ->
+//            view.performClick()
+//            viewModel.setTaskPriority(rootView.detail_priority.selectedItem.toString())
+//            true
+//        }
 
         rootView.detail_waitDate.dateInputLayout.hint = "Wait Until Date"
         rootView.detail_waitDate.date.setOnClickListener {
@@ -143,13 +175,13 @@ class TaskDetailFragment : Fragment() {
             val year = c.get(Calendar.YEAR)
             val month = c.get(Calendar.MONTH)
             val day = c.get(Calendar.DAY_OF_MONTH)
-            val dpd = DatePickerDialog(this.requireContext(), DatePickerDialog.OnDateSetListener { view, year, monthOfYear, dayOfMonth ->
+            val dpd = DatePickerDialog(this.requireContext(), { _, year, monthOfYear, dayOfMonth ->
                 // Display Selected date in textbox
                 detail_waitDate.date.setText(DateFormatSymbols().getMonths()[monthOfYear] + " " + dayOfMonth + ", " + year)
                 if(detail_waitDate.time.text.isNullOrBlank()){
                     detail_waitDate.time.setText("12:00 AM")
                 }
-                saveAndUpdateTaskListIfTablet()
+                viewModel.setTaskWaitDate(detail_waitDate.date.text.toString(), detail_waitDate.time.text.toString())
             }, year, month, day)
             dpd.show()
         }
@@ -158,18 +190,19 @@ class TaskDetailFragment : Fragment() {
             val c = Calendar.getInstance()
             val hour:Int = c.get(Calendar.HOUR_OF_DAY)
             val minute:Int = c.get(Calendar.MINUTE)
-            val dpd = TimePickerDialog(this.requireContext(), TimePickerDialog.OnTimeSetListener { view, hour, minute ->
+            val dpd = TimePickerDialog(this.requireContext(), { _, hour, minute ->
                 // Display Selected date in textbox
                 val inputFormat = SimpleDateFormat("KK:mm", Locale.getDefault())
                 val outputFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
-                detail_waitDate.time.setText(outputFormat.format(inputFormat.parse(""+hour+":"+minute)))
+                val timeText = outputFormat.format(inputFormat.parse(""+hour+":"+minute))
+                detail_waitDate.time.setText(timeText)
                 if(detail_waitDate.date.text.isNullOrBlank()){
                     val year = c.get(Calendar.YEAR)
                     val month = c.get(Calendar.MONTH)
                     val day = c.get(Calendar.DAY_OF_MONTH)
                     detail_waitDate.date.setText(DateFormatSymbols().shortMonths[month] + " " + day + ", " + year)
                 }
-                saveAndUpdateTaskListIfTablet()
+                viewModel.setTaskWaitDate(detail_waitDate.date.text.toString(), detail_waitDate.time.text.toString())
             }, hour, minute, false)
             dpd.show()
         }
@@ -182,11 +215,12 @@ class TaskDetailFragment : Fragment() {
             val day = c.get(Calendar.DAY_OF_MONTH)
             val dpd = DatePickerDialog(this.requireContext(), { _, year, monthOfYear, dayOfMonth ->
                 // Display Selected date in textbox
-                detail_dueDate.date.setText("${DateFormatSymbols().months[monthOfYear]} $dayOfMonth, $year")
+                val dateText = "${DateFormatSymbols().months[monthOfYear]} $dayOfMonth, $year"
+                detail_dueDate.date.setText(dateText)
                 if(detail_dueDate.time.text.isNullOrBlank()){
                     detail_dueDate.time.setText("12:00 AM")
                 }
-                saveAndUpdateTaskListIfTablet()
+                viewModel.setTaskDueDate(detail_dueDate.date.text.toString(), detail_dueDate.time.text.toString())
             }, year, month, day)
             dpd.show()
         }
@@ -195,26 +229,29 @@ class TaskDetailFragment : Fragment() {
             val c = Calendar.getInstance()
             val hour:Int = c.get(Calendar.HOUR_OF_DAY)
             val minute:Int = c.get(Calendar.MINUTE)
-            val dpd = TimePickerDialog(this.requireContext(), TimePickerDialog.OnTimeSetListener { _, hour, minute ->
+            val dpd = TimePickerDialog(this.requireContext(), { _, hour, minute ->
                 // Display Selected date in textbox
                 val inputFormat = SimpleDateFormat("KK:mm", Locale.getDefault())
                 val outputFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
-                detail_dueDate.time.setText(outputFormat.format(inputFormat.parse(""+hour+":"+minute)))
+                val timeText = outputFormat.format(inputFormat.parse(""+hour+":"+minute))
+                detail_dueDate.time.setText(timeText)
                 if(detail_dueDate.date.text.isNullOrBlank()){
                     val year = c.get(Calendar.YEAR)
                     val month = c.get(Calendar.MONTH)
                     val day = c.get(Calendar.DAY_OF_MONTH)
                     detail_dueDate.date.setText("${DateFormatSymbols().shortMonths[month]} $day, $year")
                 }
-                saveAndUpdateTaskListIfTablet()
+                viewModel.setTaskDueDate(detail_dueDate.date.text.toString(), detail_dueDate.time.text.toString())
             }, hour, minute, false)
             dpd.show()
         }
 
+        val item = viewModel.currentTask
+
         //some strange issue requires this to be done or the view doesn't adjust
         //to match the content height
         //TODO: replace this spinner with a different ui element
-        if (item.priority == null || item.priority == "No Priority Assigned"){
+        if (item?.priority == null || item.priority == "No Priority Assigned"){
             rootView.detail_priority.setSelection(0)
             rootView.detail_priority.setSelection(1)
             rootView.detail_priority.setSelection(0)
@@ -225,69 +262,18 @@ class TaskDetailFragment : Fragment() {
         return rootView
     }
 
-    // This triggers updates in the task list if it is showing alongside the edit screen
-    private fun saveAndUpdateTaskListIfTablet(){
-        updateToolbar(item.name)
-        save()
-        updateTaskList()
-    }
-
     private fun updateToolbar(name: String?){
         detail_toolbar.title = if(name.isNullOrEmpty()) "New Task" else name
     }
 
-    private fun updateTaskList() {
-        //TODO: replace broadcasts with livedata
-        val localIntent: Intent = Intent("BRIGHTTASK_TABLET_LOCAL_TASK_UPDATE") //Send local broadcast
-        context?.let { LocalBroadcastManager.getInstance(it).sendBroadcast(localIntent) }
-        Log.d("detail", "sent update broadcast")
-    }
-
     override fun onPause() {
         //remove this task if it's blank - taskwarrior disallows tasks with no name
-        if (detail_name.text?.isBlank() != false) {
-            Log.d(this.javaClass.toString(), "Removing task w/ no name")
-            LocalTasks.items.remove(item)
-            LocalTasks.localChanges.remove(item)
-            LocalTasks.save(requireActivity().applicationContext)
-            updateTaskList()
-        }else{
-            save()
+        viewModel.removeUnnamedTasks()
+        CoroutineScope(Dispatchers.Main).launch {
+            viewModel.save()
         }
         super.onPause()
     }
-
-    private fun save(){
-        val format = SimpleDateFormat("MMM dd, yyyy hh:mm a", Locale.getDefault())
-        format.timeZone= TimeZone.getDefault()
-        val toModify: Task = LocalTasks.getTaskByUUID(item.uuid) ?: return
-        toModify.name=detail_name.text.toString()
-        toModify.tags=detail_tags.text?.split(", ",",") as ArrayList<String>
-        toModify.tags.removeAll { tag -> tag.isBlank() }
-        toModify.project=detail_project.text?.toString()
-        toModify.priority=detail_priority.selectedItem.toString()
-        if (detail_priority.selectedItem.toString() == "No Priority Assigned") {
-            toModify.priority = null
-        }
-        toModify.modifiedDate=Date() //update modified date
-        if(!detail_dueDate.date.text.isNullOrBlank() && !detail_dueDate.time.text.isNullOrBlank()){
-            toModify.dueDate=format.parse("${detail_dueDate.date.text.toString()} ${detail_dueDate.time.text.toString()}")
-        }
-        if(!detail_waitDate.date.text.isNullOrBlank() && !detail_waitDate.time.text.isNullOrBlank()){
-            toModify.waitDate=format.parse("${detail_waitDate.date.text.toString()} ${detail_waitDate.time.text.toString()}")
-        }
-        val waitdate = toModify.waitDate
-        if(waitdate != null && waitdate.after(Date())) {
-            toModify.status ="waiting"
-        }
-        if (!LocalTasks.localChanges.contains(toModify)){
-            LocalTasks.localChanges.add(toModify)
-        }
-        LocalTasks.save(requireActivity().applicationContext, true)
-        Log.d(this.javaClass.toString(), "Saved task")
-        super.onPause()
-    }
-
     private fun close(){
         activity?.supportFragmentManager?.beginTransaction()?.remove(this)?.commit()
     }

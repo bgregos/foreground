@@ -18,20 +18,30 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import me.bgregos.foreground.R
-import me.bgregos.foreground.tasklist.LocalTasks
-import me.bgregos.foreground.network.RemoteTasks
+import me.bgregos.foreground.getApplicationComponent
+import me.bgregos.foreground.model.SyncResult
+import me.bgregos.foreground.tasklist.TaskRepository
+import me.bgregos.foreground.network.RemoteTaskSource
+import me.bgregos.foreground.network.TaskwarriorSyncWorker
 import me.bgregos.foreground.util.ShowErrorDetail
 import java.io.File
 import java.io.FileOutputStream
 import java.lang.Exception
 import java.util.*
 import java.util.concurrent.TimeUnit
-
+import javax.inject.Inject
 
 class SettingsActivity : AppCompatActivity() {
 
+    @Inject
+    lateinit var localTasksRepository: TaskRepository
+
+    @Inject
+    lateinit var remoteTaskSource: RemoteTaskSource
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        getApplicationComponent().inject(this)
         setContentView(R.layout.activity_settings)
         settings_syncprogress.visibility = View.INVISIBLE
         settings_sync.visibility = View.VISIBLE
@@ -53,17 +63,6 @@ class SettingsActivity : AppCompatActivity() {
         settings_private_key.setText(prefs.getString("settings_cert_key", ""))
         settings_cert_private.setText(prefs.getString("settings_cert_private", ""))
 
-        fun onResetSync(){
-            LocalTasks.items.clear()
-            LocalTasks.localChanges.clear()
-            LocalTasks.syncKey = ""
-            LocalTasks.initSync = true
-            LocalTasks.save(applicationContext)
-            val bar = Snackbar.make(settings_parent, "Sync has been reset to its original status.", Snackbar.LENGTH_SHORT)
-            bar.view.setBackgroundColor(Color.parseColor("#34309f"))
-            bar.show()
-        }
-
         settings_sync.setOnClickListener {
 
             if (settings_sync.isChecked) {
@@ -73,14 +72,14 @@ class SettingsActivity : AppCompatActivity() {
                 save()
                 settings_syncprogress.visibility = View.VISIBLE
                 CoroutineScope(Dispatchers.Main).launch {
-                    var response: RemoteTasks.SyncResult
+                    var response: SyncResult
                     var exception: Exception? = null
                     try {
-                        response = RemoteTasks(this@SettingsActivity).taskwarriorTestSync()
+                        response = remoteTaskSource.taskwarriorInitSync()
                     }catch (e: Exception){
                         exception = e
                         Log.e("test sync error", e.toString())
-                        response = RemoteTasks.SyncResult(false, "Invalid or incomplete configuration.")
+                        response = SyncResult(false, "Invalid or incomplete configuration.")
                     }
                     Log.i(this.javaClass.toString(), response.message)
                     settings_sync.visibility = View.VISIBLE
@@ -107,7 +106,6 @@ class SettingsActivity : AppCompatActivity() {
         settings_cert_ca_button.setOnClickListener { performCertFileSearch(CertType.CERT_CA) }
         settings_private_key_button.setOnClickListener { performCertFileSearch(CertType.CERT_KEY) }
         settings_cert_private_button.setOnClickListener { performCertFileSearch(CertType.CERT_PRIVATE) }
-        settings_reset_sync.setOnClickListener { onResetSync() }
         settings_auto_sync.setOnClickListener { onAutoSyncClicked() }
         settings_auto_sync.setOnFocusChangeListener { _, focused -> if(!focused) onAutoSyncIntervalChanged() }
     }
@@ -128,12 +126,12 @@ class SettingsActivity : AppCompatActivity() {
                 settings_auto_sync_interval.setText("15")
             }
             val syncRequest =
-                    PeriodicWorkRequest.Builder(RemoteTasks.TaskwarriorSyncWorker::class.java, interval, TimeUnit.MINUTES)
+                    PeriodicWorkRequest.Builder(TaskwarriorSyncWorker::class.java, interval, TimeUnit.MINUTES)
                             .build()
-            WorkManager.getInstance().enqueueUniquePeriodicWork("foreground_sync", ExistingPeriodicWorkPolicy.REPLACE, syncRequest)
+            WorkManager.getInstance(this).enqueueUniquePeriodicWork("foreground_sync", ExistingPeriodicWorkPolicy.REPLACE, syncRequest)
 
         }else{
-            WorkManager.getInstance().cancelAllWork()
+            WorkManager.getInstance(this).cancelAllWork()
         }
     }
 

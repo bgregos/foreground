@@ -7,17 +7,25 @@ import dagger.MapKey
 import dagger.Module
 import dagger.multibindings.IntoMap
 import me.bgregos.foreground.filter.FiltersViewModel
+import me.bgregos.foreground.tasklist.TaskViewModel
 import javax.inject.Inject
 import javax.inject.Provider
 import javax.inject.Singleton
 import kotlin.reflect.KClass
 
 @Module
-abstract class ViewModelModule {
+abstract class ViewModelBindingModule {
     @Binds
     @IntoMap
+    @Singleton
     @ViewModelKey(FiltersViewModel::class)
     abstract fun bindFiltersViewModel(view: FiltersViewModel): ViewModel
+
+    @Binds
+    @IntoMap
+    @Singleton
+    @ViewModelKey(TaskViewModel::class)
+    abstract fun bindTaskViewModel(view: TaskViewModel): ViewModel
 
     @Binds
     abstract fun bindViewModelFactory(factory: ViewModelFactory): ViewModelProvider.Factory
