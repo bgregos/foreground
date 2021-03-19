@@ -177,12 +177,11 @@ class TaskDetailFragment : Fragment() {
             val day = c.get(Calendar.DAY_OF_MONTH)
             val dpd = DatePickerDialog(this.requireContext(), { _, year, monthOfYear, dayOfMonth ->
                 // Display Selected date in textbox
-                val dateText = DateFormatSymbols().getMonths()[monthOfYear] + " " + dayOfMonth + ", " + year
-                detail_waitDate.date.setText(dateText)
+                detail_waitDate.date.setText(DateFormatSymbols().getMonths()[monthOfYear] + " " + dayOfMonth + ", " + year)
                 if(detail_waitDate.time.text.isNullOrBlank()){
                     detail_waitDate.time.setText("12:00 AM")
                 }
-                viewModel.setTaskWaitDate(dateText)
+                viewModel.setTaskWaitDate(detail_waitDate.date.text.toString(), detail_waitDate.time.text.toString())
             }, year, month, day)
             dpd.show()
         }
@@ -203,7 +202,7 @@ class TaskDetailFragment : Fragment() {
                     val day = c.get(Calendar.DAY_OF_MONTH)
                     detail_waitDate.date.setText(DateFormatSymbols().shortMonths[month] + " " + day + ", " + year)
                 }
-                viewModel.setTaskWaitTime(timeText)
+                viewModel.setTaskWaitDate(detail_waitDate.date.text.toString(), detail_waitDate.time.text.toString())
             }, hour, minute, false)
             dpd.show()
         }
@@ -221,7 +220,7 @@ class TaskDetailFragment : Fragment() {
                 if(detail_dueDate.time.text.isNullOrBlank()){
                     detail_dueDate.time.setText("12:00 AM")
                 }
-                viewModel.setTaskDueDate(dateText)
+                viewModel.setTaskDueDate(detail_dueDate.date.text.toString(), detail_dueDate.time.text.toString())
             }, year, month, day)
             dpd.show()
         }
@@ -242,7 +241,7 @@ class TaskDetailFragment : Fragment() {
                     val day = c.get(Calendar.DAY_OF_MONTH)
                     detail_dueDate.date.setText("${DateFormatSymbols().shortMonths[month]} $day, $year")
                 }
-                viewModel.setTaskDueTime(timeText)
+                viewModel.setTaskDueDate(detail_dueDate.date.text.toString(), detail_dueDate.time.text.toString())
             }, hour, minute, false)
             dpd.show()
         }

@@ -20,8 +20,6 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
     var tasks: MutableLiveData<List<Task>> = MutableLiveData(taskRepository.tasks)
 
     private val writeFormat = SimpleDateFormat("MMM dd, yyyy hh:mm a", Locale.getDefault())
-    private val displayDateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-    private val displayTimeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
 
 
     var currentUUID: UUID? = null
@@ -44,8 +42,6 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
 
     init {
         writeFormat.timeZone= TimeZone.getDefault()
-        displayDateFormat.timeZone= TimeZone.getDefault()
-        displayTimeFormat.timeZone= TimeZone.getDefault()
         notificationRepository.load()
         notificationRepository.createNotificationChannel()
     }
@@ -135,23 +131,13 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
         taskUpdated(currentTask)
     }
 
-    fun setTaskDueDate(date: String) {
-        currentTask?.dueDate = writeFormat.parse("$date ${displayTimeFormat.format(currentTask?.dueDate ?: Date())}")
+    fun setTaskDueDate(date: String, time: String) {
+        currentTask?.dueDate = writeFormat.parse("$date $time")
         taskUpdated(currentTask)
     }
 
-    fun setTaskDueTime(time: String) {
-        currentTask?.dueDate = writeFormat.parse("${displayDateFormat.format(currentTask?.dueDate ?: Date())} $time")
-        taskUpdated(currentTask)
-    }
-
-    fun setTaskWaitDate(date: String) {
-        currentTask?.waitDate = writeFormat.parse("$date ${displayTimeFormat.format(currentTask?.waitDate ?: Date())}")
-        taskUpdated(currentTask)
-    }
-
-    fun setTaskWaitTime(time: String){
-        currentTask?.waitDate = writeFormat.parse("${displayDateFormat.format(currentTask?.waitDate ?: Date())} $time")
+    fun setTaskWaitDate(date: String, time: String) {
+        currentTask?.waitDate = writeFormat.parse("$date $time")
         taskUpdated(currentTask)
     }
 }

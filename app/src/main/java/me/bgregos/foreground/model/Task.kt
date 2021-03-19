@@ -70,6 +70,8 @@ data class Task(var name:String) : Serializable {
         }
 
         fun toJson(task: Task):String{
+            val timeFormatter = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'")
+            timeFormatter.timeZone = TimeZone.getTimeZone("UTC")
             Log.v("brighttask", "tojsoning: "+task.name)
             val out = JSONObject()
             out.putOpt("description", task.name)
@@ -78,18 +80,18 @@ data class Task(var name:String) : Serializable {
             out.putOpt("status", task.status)
             out.putOpt("priority", task.priority)
             if (task.dueDate!=null) {
-                out.putOpt("due", SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").format(task.dueDate))
+                out.putOpt("due", timeFormatter.format(task.dueDate))
             }
             if (task.waitDate!=null) {
-                out.putOpt("wait", SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").format(task.waitDate))
+                out.putOpt("wait", timeFormatter.format(task.waitDate))
             }
             if (task.modifiedDate!=null) {
-                out.putOpt("modified", SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").format(task.modifiedDate))
+                out.putOpt("modified", timeFormatter.format(task.modifiedDate))
             }
             if (task.endDate!=null) {
-                out.putOpt("end", SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").format(task.endDate))
+                out.putOpt("end", timeFormatter.format(task.endDate))
             }
-            out.putOpt("entry", SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").format(task.createdDate))
+            out.putOpt("entry", timeFormatter.format(task.createdDate))
             out.putOpt("tags", JSONArray(task.tags))
 
             for(extra in task.others){
