@@ -29,6 +29,7 @@ import me.bgregos.foreground.R
 import me.bgregos.foreground.databinding.FragmentTaskDetailBinding
 import me.bgregos.foreground.getApplicationComponent
 import me.bgregos.foreground.model.Task
+import me.bgregos.foreground.util.isSideBySide
 import java.text.DateFormatSymbols
 import java.text.SimpleDateFormat
 import java.util.*
@@ -60,7 +61,6 @@ class TaskDetailFragment : Fragment() {
             return TaskDetailFragment().apply {
                 arguments = Bundle().apply {
                     putString("uuid", uuid.toString())
-                    putBoolean("twoPane", twoPane)
                 }
             }
         }
@@ -68,6 +68,7 @@ class TaskDetailFragment : Fragment() {
 
     override fun onAttach(context: Context) {
         context.getApplicationComponent().inject(this)
+        twoPane = context.isSideBySide()
         super.onAttach(context)
     }
 
@@ -81,7 +82,6 @@ class TaskDetailFragment : Fragment() {
         else {
             Log.e(this.javaClass.toString(), "No key found.")
         }
-        twoPane = bundle?.getBoolean("twoPane") ?: false
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,

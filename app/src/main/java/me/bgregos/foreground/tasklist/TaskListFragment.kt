@@ -48,12 +48,12 @@ class TaskListFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setHasOptionsMenu(true)
-        twoPane = arguments?.getBoolean(TWO_PANE_ARG) ?: savedInstanceState?.getBoolean(TWO_PANE_ARG) ?: false
         super.onCreate(savedInstanceState)
     }
 
     override fun onAttach(context: Context) {
         context.getApplicationComponent().inject(this)
+        twoPane = context.isSideBySide()
         super.onAttach(context)
     }
 
@@ -169,16 +169,8 @@ class TaskListFragment : Fragment() {
     }
 
     companion object {
-
-        val TWO_PANE_ARG = "twoPane"
-
         @JvmStatic
-        fun newInstance(twoPane: Boolean) =
-                TaskListFragment().apply {
-                    arguments = Bundle().apply {
-                        putBoolean("twoPane", twoPane)
-                    }
-                }
+        fun newInstance() = TaskListFragment()
     }
 
     fun openTask(task: Task, v: View, name: String){
