@@ -8,6 +8,8 @@
     android:layout_height="match_parent"
     android:layout_marginLeft="16dp"
     android:layout_marginRight="16dp"
+    android:clipToPadding="false"
+    android:paddingBottom="80dp"
     app:layoutManager="LinearLayoutManager"
     tools:context=".tasklist.MainActivity"
     tools:listitem="@layout/task_list_content_standard" />
