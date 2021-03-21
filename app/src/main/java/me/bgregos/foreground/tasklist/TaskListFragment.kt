@@ -107,6 +107,10 @@ class TaskListFragment : Fragment() {
         syncButton.clearAnimation()
         syncButton.startAnimation(syncRotateAnimation)
 
+        val bar1 = Snackbar.make(task_list_parent, "Syncing...", Snackbar.LENGTH_SHORT)
+        bar1.view.setBackgroundColor(Color.parseColor("#34309f"))
+        bar1.show()
+
         val prefs = activity?.getSharedPreferences("me.bgregos.BrightTask", Context.MODE_PRIVATE) ?: return true
         if (prefs.getBoolean("settings_sync", false)){
             CoroutineScope(Dispatchers.Main).launch {
