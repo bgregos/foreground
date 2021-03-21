@@ -174,7 +174,7 @@ class TaskListFragment : Fragment() {
     }
 
     fun openTask(task: Task, v: View, name: String){
-        val fragment = TaskDetailFragment.newInstance(task.uuid, twoPane)
+        val fragment = TaskDetailFragment.newInstance(task.uuid)
         task_list.adapter?.notifyDataSetChanged()
         if (twoPane) {
             // Tablet layouts get the task detail fragment opened on the side
@@ -186,7 +186,7 @@ class TaskListFragment : Fragment() {
             //phones get the task detail fragment replacing this one
             activity?.supportFragmentManager?.commit {
                 phoneDetailAnimations()
-                replace(R.id.task_list_container, fragment)
+                replace(R.id.task_list_container, fragment, "task_detail")
                 addToBackStack("task_detail")
             }
         }

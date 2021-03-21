@@ -47,6 +47,10 @@ data class Task(var name:String) : Serializable {
 
     }
 
+    override fun equals(other: Any?): Boolean {
+        return other is Task && other.uuid == uuid
+    }
+
     companion object {
 
         fun shouldDisplay(task: Task):Boolean{

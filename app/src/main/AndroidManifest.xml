@@ -15,7 +15,9 @@
         <activity
             android:name=".tasklist.MainActivity"
             android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustPan"
+            android:isScrollContainer="true" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <action android:name="me.bgregos.brighttask.SEND_NOTIFICATION" />

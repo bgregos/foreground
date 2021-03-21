@@ -1,23 +1,23 @@
 package me.bgregos.foreground.tasklist
 
+import android.app.Activity
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Context
-import android.content.Intent
+import android.content.Context.INPUT_METHOD_SERVICE
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
+import android.view.inputmethod.InputMethodManager
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import android.widget.Spinner
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.widget.doOnTextChanged
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import androidx.lifecycle.lifecycleScope
 import kotlinx.android.synthetic.main.date_layout.*
 import kotlinx.android.synthetic.main.date_layout.view.*
 import kotlinx.android.synthetic.main.fragment_task_detail.*
@@ -28,8 +28,8 @@ import kotlinx.coroutines.launch
 import me.bgregos.foreground.R
 import me.bgregos.foreground.databinding.FragmentTaskDetailBinding
 import me.bgregos.foreground.getApplicationComponent
-import me.bgregos.foreground.model.Task
 import me.bgregos.foreground.util.isSideBySide
+import me.bgregos.foreground.util.tabletDetailAnimations
 import java.text.DateFormatSymbols
 import java.text.SimpleDateFormat
 import java.util.*
@@ -57,7 +57,7 @@ class TaskDetailFragment : Fragment() {
     private val viewModel by viewModels<TaskViewModel> { viewModelFactory }
 
     companion object {
-        fun newInstance(uuid: UUID, twoPane: Boolean): TaskDetailFragment{
+        fun newInstance(uuid: UUID): TaskDetailFragment{
             return TaskDetailFragment().apply {
                 arguments = Bundle().apply {
                     putString("uuid", uuid.toString())
@@ -69,6 +69,7 @@ class TaskDetailFragment : Fragment() {
     override fun onAttach(context: Context) {
         context.getApplicationComponent().inject(this)
         twoPane = context.isSideBySide()
+
         super.onAttach(context)
     }
 
@@ -77,11 +78,18 @@ class TaskDetailFragment : Fragment() {
         val bundle = this.arguments
         //load Task from bundle args
         if (bundle?.getString("uuid") != null) {
-            viewModel.setTask(UUID.fromString(bundle.getString("uuid")) ?: run {close(); UUID.randomUUID ()})
+            viewModel.setTask(UUID.fromString(bundle.getString("uuid"))
+                    ?: run { close(); UUID.randomUUID() })
         }
         else {
             Log.e(this.javaClass.toString(), "No key found.")
         }
+        setHasOptionsMenu(true)
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+            inflater.inflate(R.menu.menu_task_detail, menu)
+            super.onCreateOptionsMenu(menu, inflater)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -91,6 +99,8 @@ class TaskDetailFragment : Fragment() {
         val rootView = binding.root
 
         rootView.detail_toolbar.title = if(viewModel.currentTask?.name?.isBlank() == true) "New Task" else viewModel.currentTask?.name
+        setHasOptionsMenu(true)
+
         val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
         dateFormat.timeZone= TimeZone.getDefault()
         val timeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
@@ -104,7 +114,8 @@ class TaskDetailFragment : Fragment() {
         }
 
         // Create an ArrayAdapter using the string array and a default spinner layout
-        val adapter: ArrayAdapter<CharSequence> = ArrayAdapter.createFromResource(this.context ?: requireActivity().baseContext,
+        val adapter: ArrayAdapter<CharSequence> = ArrayAdapter.createFromResource(this.context
+                ?: requireActivity().baseContext,
                 R.array.priority_spinner, android.R.layout.simple_spinner_item);
         // Specify the layout to use when the list of choices appears
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -178,7 +189,7 @@ class TaskDetailFragment : Fragment() {
             val dpd = DatePickerDialog(this.requireContext(), { _, year, monthOfYear, dayOfMonth ->
                 // Display Selected date in textbox
                 detail_waitDate.date.setText(DateFormatSymbols().getMonths()[monthOfYear] + " " + dayOfMonth + ", " + year)
-                if(detail_waitDate.time.text.isNullOrBlank()){
+                if (detail_waitDate.time.text.isNullOrBlank()) {
                     detail_waitDate.time.setText("12:00 AM")
                 }
                 viewModel.setTaskWaitDate(detail_waitDate.date.text.toString(), detail_waitDate.time.text.toString())
@@ -194,9 +205,9 @@ class TaskDetailFragment : Fragment() {
                 // Display Selected date in textbox
                 val inputFormat = SimpleDateFormat("KK:mm", Locale.getDefault())
                 val outputFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
-                val timeText = outputFormat.format(inputFormat.parse(""+hour+":"+minute))
+                val timeText = outputFormat.format(inputFormat.parse("" + hour + ":" + minute))
                 detail_waitDate.time.setText(timeText)
-                if(detail_waitDate.date.text.isNullOrBlank()){
+                if (detail_waitDate.date.text.isNullOrBlank()) {
                     val year = c.get(Calendar.YEAR)
                     val month = c.get(Calendar.MONTH)
                     val day = c.get(Calendar.DAY_OF_MONTH)
@@ -217,7 +228,7 @@ class TaskDetailFragment : Fragment() {
                 // Display Selected date in textbox
                 val dateText = "${DateFormatSymbols().months[monthOfYear]} $dayOfMonth, $year"
                 detail_dueDate.date.setText(dateText)
-                if(detail_dueDate.time.text.isNullOrBlank()){
+                if (detail_dueDate.time.text.isNullOrBlank()) {
                     detail_dueDate.time.setText("12:00 AM")
                 }
                 viewModel.setTaskDueDate(detail_dueDate.date.text.toString(), detail_dueDate.time.text.toString())
@@ -233,9 +244,9 @@ class TaskDetailFragment : Fragment() {
                 // Display Selected date in textbox
                 val inputFormat = SimpleDateFormat("KK:mm", Locale.getDefault())
                 val outputFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
-                val timeText = outputFormat.format(inputFormat.parse(""+hour+":"+minute))
+                val timeText = outputFormat.format(inputFormat.parse("" + hour + ":" + minute))
                 detail_dueDate.time.setText(timeText)
-                if(detail_dueDate.date.text.isNullOrBlank()){
+                if (detail_dueDate.date.text.isNullOrBlank()) {
                     val year = c.get(Calendar.YEAR)
                     val month = c.get(Calendar.MONTH)
                     val day = c.get(Calendar.DAY_OF_MONTH)
@@ -247,6 +258,18 @@ class TaskDetailFragment : Fragment() {
         }
 
         val item = viewModel.currentTask
+
+        // Subscribe to the task detail close channel
+        lifecycleScope.launchWhenStarted {
+            viewModel.closeDetailChannel.receive()
+            Log.d("test", "closing detail view")
+            if(twoPane){
+                activity?.supportFragmentManager?.beginTransaction()?.tabletDetailAnimations()?.remove(this@TaskDetailFragment)?.commit()
+            } else {
+                activity?.supportFragmentManager?.popBackStack()
+            }
+
+        }
 
         //some strange issue requires this to be done or the view doesn't adjust
         //to match the content height
@@ -264,6 +287,17 @@ class TaskDetailFragment : Fragment() {
 
     private fun updateToolbar(name: String?){
         detail_toolbar.title = if(name.isNullOrEmpty()) "New Task" else name
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        // Handle item selection
+        return when (item.itemId) {
+            R.id.action_delete -> {
+                viewModel.currentTask?.let { viewModel.delete(it) }
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 
     override fun onPause() {
