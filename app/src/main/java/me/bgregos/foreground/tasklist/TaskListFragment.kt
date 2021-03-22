@@ -48,12 +48,12 @@ class TaskListFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setHasOptionsMenu(true)
-        twoPane = arguments?.getBoolean(TWO_PANE_ARG) ?: savedInstanceState?.getBoolean(TWO_PANE_ARG) ?: false
         super.onCreate(savedInstanceState)
     }
 
     override fun onAttach(context: Context) {
         context.getApplicationComponent().inject(this)
+        twoPane = context.isSideBySide()
         super.onAttach(context)
     }
 
@@ -106,6 +106,10 @@ class TaskListFragment : Fragment() {
         val syncButton = view?.findViewById<View>(R.id.action_sync) ?:  return true
         syncButton.clearAnimation()
         syncButton.startAnimation(syncRotateAnimation)
+
+        val bar1 = Snackbar.make(task_list_parent, "Syncing...", Snackbar.LENGTH_SHORT)
+        bar1.view.setBackgroundColor(Color.parseColor("#34309f"))
+        bar1.show()
 
         val prefs = activity?.getSharedPreferences("me.bgregos.BrightTask", Context.MODE_PRIVATE) ?: return true
         if (prefs.getBoolean("settings_sync", false)){
@@ -165,20 +169,12 @@ class TaskListFragment : Fragment() {
     }
 
     companion object {
-
-        val TWO_PANE_ARG = "twoPane"
-
         @JvmStatic
-        fun newInstance(twoPane: Boolean) =
-                TaskListFragment().apply {
-                    arguments = Bundle().apply {
-                        putBoolean("twoPane", twoPane)
-                    }
-                }
+        fun newInstance() = TaskListFragment()
     }
 
     fun openTask(task: Task, v: View, name: String){
-        val fragment = TaskDetailFragment.newInstance(task.uuid, twoPane)
+        val fragment = TaskDetailFragment.newInstance(task.uuid)
         task_list.adapter?.notifyDataSetChanged()
         if (twoPane) {
             // Tablet layouts get the task detail fragment opened on the side
@@ -190,7 +186,7 @@ class TaskListFragment : Fragment() {
             //phones get the task detail fragment replacing this one
             activity?.supportFragmentManager?.commit {
                 phoneDetailAnimations()
-                replace(R.id.task_list_container, fragment)
+                replace(R.id.task_list_container, fragment, "task_detail")
                 addToBackStack("task_detail")
             }
         }

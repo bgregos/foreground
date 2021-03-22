@@ -2,6 +2,7 @@ package me.bgregos.foreground.tasklist
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.channels.Channel
 import me.bgregos.foreground.model.SyncResult
 import me.bgregos.foreground.model.Task
 import me.bgregos.foreground.util.NotificationRepository
@@ -19,8 +20,10 @@ import kotlin.NoSuchElementException
 class TaskViewModel @Inject constructor(private val taskRepository: TaskRepository, private val notificationRepository: NotificationRepository): ViewModel() {
     var tasks: MutableLiveData<List<Task>> = MutableLiveData(taskRepository.tasks)
 
-    private val writeFormat = SimpleDateFormat("MMM dd, yyyy hh:mm a", Locale.getDefault())
+    //The detail fragment will listen to this and close when it receives an emission
+    val closeDetailChannel: Channel<Unit> = Channel(Channel.RENDEZVOUS)
 
+    private val writeFormat = SimpleDateFormat("MMM dd, yyyy hh:mm a", Locale.getDefault())
 
     var currentUUID: UUID? = null
         private set
@@ -28,10 +31,13 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
     var currentTask: Task? = null
         set(value) {
             field = value
+            currentUUID = value?.uuid
             tasks.sendUpdate()
         }
-
         get() {
+            if (currentUUID == null){
+                return null
+            }
             return tasks.value?.firstOrNull() { it.uuid == currentUUID }
         }
 
@@ -70,6 +76,9 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
     }
 
     fun markTaskComplete(toComplete: Task) {
+        if(toComplete == currentTask){
+            closeDetailChannel.offer(Unit)
+        }
         toComplete.status = "completed"
         toComplete.modifiedDate = Date() //update modified date
         toComplete.endDate = Date()
@@ -77,11 +86,23 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
         taskUpdated(toComplete)
     }
 
+    fun delete(toDelete: Task) {
+        if(toDelete == currentTask){
+            closeDetailChannel.offer(Unit)
+            currentTask = null
+        }
+        toDelete.status = "deleted"
+        toDelete.modifiedDate = Date()
+        toDelete.endDate = Date()
+        tasks.value = tasks.value?.minus(toDelete)
+        taskUpdated(toDelete)
+    }
+
     fun removeUnnamedTasks() {
         tasks.value?.map {
             if (it != currentTask && it.name.isBlank()){
                 tasks.value = tasks.value?.minus(it)
-                taskUpdated(currentTask)
+                tasks.sendUpdate()
             }
         }
     }
@@ -101,9 +122,10 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
         removeUnnamedTasks()
         val syncResult = taskRepository.taskwarriorSync()
         tasks.value = taskRepository.tasks
-//        if(tasks.value?.contains(currentTask) != true) {
-//            //TODO: Close the fragment
-//        }
+        if(tasks.value?.contains(currentTask) != true) {
+            //close the detail fragment
+            closeDetailChannel.offer(Unit)
+        }
         return syncResult
     }
 
@@ -139,5 +161,9 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
     fun setTaskWaitDate(date: String, time: String) {
         currentTask?.waitDate = writeFormat.parse("$date $time")
         taskUpdated(currentTask)
+    }
+
+    fun detailClosed() {
+        currentUUID = null
     }
 }
