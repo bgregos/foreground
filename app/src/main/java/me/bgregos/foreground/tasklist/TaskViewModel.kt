@@ -105,6 +105,11 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
                 tasks.sendUpdate()
             }
         }
+        taskRepository.localChanges.map {
+            if (it.name.isBlank()){
+                taskRepository.localChanges = taskRepository.localChanges.minus(it)
+            }
+        }
     }
 
     private fun taskUpdated(task: Task?){
