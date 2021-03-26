@@ -13,8 +13,12 @@ class FiltersViewModel @Inject constructor(): ViewModel() {
 
     val filters: MutableStateFlow<List<TaskFilter>> = MutableStateFlow(listOf())
 
-    fun addFilter(taskFilter: TaskFilter) {
+    fun addFilter(taskFilter: TaskFilter): Boolean {
+        if (filters.value.contains(taskFilter)){
+            return false
+        }
         filters.value += taskFilter
+        return true
     }
 
     fun removeFilter(taskFilter: TaskFilter) {

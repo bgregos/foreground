@@ -85,4 +85,5 @@
     <string name="add_a_filter">Add a filter</string>
     <string name="filter_parameter">Filter Parameter</string>
     <string name="filter_add_warning">Please fill out all fields before adding.</string>
+    <string name="filter_warning_already_added">This filter is already present.</string>
 </resources>

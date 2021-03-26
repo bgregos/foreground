@@ -3,8 +3,9 @@ package me.bgregos.foreground.filter
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
-import android.text.Editable
+import android.text.InputType
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
@@ -68,8 +69,11 @@ class FiltersFragment : Fragment() {
         }
         listPopupView?.anchorView = binding.filterType
 
-        binding.filterType.setOnClickListener {
-            listPopupView?.show()
+        binding.filterType.apply {
+            setOnTouchListener { view, _ ->
+                listPopupView?.show(); view.performClick()
+            }
+            inputType = InputType.TYPE_NULL
         }
 
         binding.addFilterButton.setOnClickListener {
@@ -81,7 +85,12 @@ class FiltersFragment : Fragment() {
                         parameter = binding.filterParameter.text.toString(),
                         filterMatching = binding.filterInclusionButton.isChecked
                 )
-                viewModel.addFilter(newFilter)
+                val added = viewModel.addFilter(newFilter)
+                if (!added) {
+                    val bar1 = Snackbar.make(binding.root, getString(R.string.filter_warning_already_added), Snackbar.LENGTH_SHORT)
+                    bar1.view.setBackgroundColor(Color.parseColor("#34309f"))
+                    bar1.show()
+                }
                 binding.filterParameter.setText("")
             } else {
                 val bar1 = Snackbar.make(binding.root, getString(R.string.filter_add_warning), Snackbar.LENGTH_SHORT)

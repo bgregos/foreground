@@ -61,6 +61,7 @@
                 android:id="@+id/filter_type_container"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/filter_parameter_container"
                 app:layout_constraintTop_toBottomOf="@id/addFilterTextView">
@@ -70,8 +71,10 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="none"
+                    android:clickable="true"
                     android:layout_marginBottom="4dp"
-                    android:hint="@string/select_filter_type" />
+                    android:hint="@string/select_filter_type"
+                    android:focusable="true" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -79,8 +82,8 @@
                 android:id="@+id/filter_parameter_container"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
                 app:layout_constraintEnd_toEndOf="parent"
-
                 app:layout_constraintStart_toEndOf="@+id/filter_type_container"
                 app:layout_constraintTop_toBottomOf="@id/addFilterTextView">
 
@@ -97,8 +100,8 @@
                 android:id="@+id/filter_inclusion_button"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:textOff="Exclude Matching"
-                android:textOn="Include Matching"
+                android:textOff="Include Matching"
+                android:textOn="Exclude Matching"
                 app:layout_constraintEnd_toEndOf="@+id/filter_type_container"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/filter_type_container" />
