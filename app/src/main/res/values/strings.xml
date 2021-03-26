@@ -84,5 +84,5 @@
     <string name="select_filter_type">Select Filter Type</string>
     <string name="add_a_filter">Add a filter</string>
     <string name="filter_parameter">Filter Parameter</string>
-    <string name="delete">Delete</string>
+    <string name="filter_add_warning">Please fill out all fields before adding.</string>
 </resources>

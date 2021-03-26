@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.work.WorkerFactory
 import dagger.BindsInstance
 import dagger.Component
+import me.bgregos.foreground.filter.FiltersFragment
 import me.bgregos.foreground.network.RemoteTaskSource
 import me.bgregos.foreground.receiver.AlarmReceiver
 import me.bgregos.foreground.settings.SettingsActivity
@@ -43,7 +44,7 @@ interface ApplicationComponent {
 
     fun inject(fragment: TaskDetailFragment)
     fun inject(fragment: TaskListFragment)
+    fun inject(filtersFragment: FiltersFragment)
 
     fun inject(broadcastReceiver: AlarmReceiver)
-
 }

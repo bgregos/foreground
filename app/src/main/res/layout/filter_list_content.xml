@@ -27,15 +27,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/filter_enabled"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/barrier"
+        app:layout_constraintEnd_toStartOf="@id/filter_delete"
         tools:text="Include tasks with Tag &quot;foreground&quot; and it gets very long" />
-
-    <androidx.constraintlayout.widget.Barrier
-        android:id="@+id/barrier"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:barrierDirection="start"
-        app:constraint_referenced_ids="filter_delete" />
 
     <ImageView
         android:id="@+id/filter_delete"
