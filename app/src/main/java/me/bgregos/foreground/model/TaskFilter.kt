@@ -38,8 +38,8 @@ data class TaskFilterType (
 /**
  * Available filter types for the user to choose from.
  */
-class TaskFilterTypes() {
-    val filters = mutableListOf(
+class TaskFiltersAvailable {
+    val filters = listOf(
             TaskFilterType (
                     name = "Project",
                     id = "project",
