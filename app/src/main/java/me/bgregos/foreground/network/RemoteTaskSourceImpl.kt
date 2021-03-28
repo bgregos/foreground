@@ -18,7 +18,7 @@ import me.bgregos.foreground.BuildConfig
 import me.bgregos.foreground.di.CustomWorkerFactory
 import me.bgregos.foreground.model.SyncResult
 import me.bgregos.foreground.model.Task
-import me.bgregos.foreground.tasklist.TaskRepository
+import me.bgregos.foreground.data.tasks.TaskRepository
 import me.bgregos.foreground.util.NotificationRepository
 import java.io.File
 import java.net.URL

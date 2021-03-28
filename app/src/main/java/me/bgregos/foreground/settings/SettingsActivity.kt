@@ -20,7 +20,7 @@ import kotlinx.coroutines.launch
 import me.bgregos.foreground.R
 import me.bgregos.foreground.getApplicationComponent
 import me.bgregos.foreground.model.SyncResult
-import me.bgregos.foreground.tasklist.TaskRepository
+import me.bgregos.foreground.data.tasks.TaskRepository
 import me.bgregos.foreground.network.RemoteTaskSource
 import me.bgregos.foreground.network.TaskwarriorSyncWorker
 import me.bgregos.foreground.util.ShowErrorDetail

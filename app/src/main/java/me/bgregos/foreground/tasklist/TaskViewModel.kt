@@ -3,6 +3,7 @@ package me.bgregos.foreground.tasklist
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.channels.Channel
+import me.bgregos.foreground.data.tasks.TaskRepository
 import me.bgregos.foreground.model.SyncResult
 import me.bgregos.foreground.model.Task
 import me.bgregos.foreground.util.NotificationRepository
@@ -10,7 +11,6 @@ import me.bgregos.foreground.util.sendUpdate
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
-import kotlin.NoSuchElementException
 
 /**
  * This is the shared ViewModel for the task list and task detail screens.

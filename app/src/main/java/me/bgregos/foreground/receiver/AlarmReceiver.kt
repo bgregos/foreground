@@ -7,8 +7,7 @@ import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import me.bgregos.foreground.tasklist.TaskRepository
+import me.bgregos.foreground.data.tasks.TaskRepository
 import me.bgregos.foreground.util.NotificationRepository
 import java.util.*
 import javax.inject.Inject

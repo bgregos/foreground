@@ -118,6 +118,7 @@ class FiltersFragment : Fragment() {
         override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
             val filter = dataSet[position]
             viewHolder.enabled.isChecked = filter.enabled
+            viewHolder.enabled.setOnCheckedChangeListener { _, _ -> viewModel.toggleFilterEnable(filter) }
             viewHolder.text.text = viewModel.generateFriendlyString(filter)
             viewHolder.delete.setOnClickListener { viewModel.removeFilter(filter) }
         }

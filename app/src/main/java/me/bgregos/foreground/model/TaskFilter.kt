@@ -1,5 +1,6 @@
 package me.bgregos.foreground.model
 
+import me.bgregos.foreground.data.taskfilter.TaskFilterEntity
 import java.util.*
 
 /**
@@ -19,10 +20,19 @@ data class TaskFilter (
         var filterMatching: Boolean = false
 ) {
     override fun equals(other: Any?): Boolean {
-        return other is TaskFilter &&
-                this.type == other.type &&
-                this.parameter == other.parameter &&
-                this.filterMatching == other.filterMatching
+        if (other is TaskFilter) {
+            return this.filterMatching == other.filterMatching &&
+                    this.type == other.type &&
+                    this.parameter == other.parameter
+        }
+        return false
+    }
+
+    override fun hashCode(): Int {
+        var result = type.hashCode()
+        result = 31 * result + (parameter?.hashCode() ?: 0)
+        result = 31 * result + filterMatching.hashCode()
+        return result
     }
 }
 
@@ -40,7 +50,16 @@ data class TaskFilterType (
         val id: String,
         var parameterFormat: ParameterFormat,
         val filter: (Task, String?) -> Boolean
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        return other is TaskFilterType &&
+                this.id == other.id
+    }
+
+    override fun hashCode(): Int {
+        return id.hashCode()
+    }
+}
 
 /**
  * Available filter types for the user to choose from.

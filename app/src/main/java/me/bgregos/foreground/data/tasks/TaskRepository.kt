@@ -1,4 +1,4 @@
-package me.bgregos.foreground.tasklist
+package me.bgregos.foreground.data.tasks
 
 import android.annotation.SuppressLint
 import android.content.SharedPreferences
