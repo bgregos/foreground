@@ -10,40 +10,19 @@ import javax.inject.Singleton
 class TaskFilterRepository @Inject constructor(private val taskFilterDao: TaskFilterDao){
 
     suspend fun getAll(): List<TaskFilter> {
-        return taskFilterDao.getAll().map {
-            it.toTaskFilter()
-        }
+        return taskFilterDao.getAll()
     }
 
     suspend fun updateAll(vararg filters: TaskFilter) {
-        taskFilterDao.updateAll(*filters.map { it.toEntity() }.toTypedArray())
+        taskFilterDao.updateAll(*filters)
     }
 
     suspend fun insertAll(vararg filters: TaskFilter){
-        taskFilterDao.insertAll(*filters.map { it.toEntity() }.toTypedArray())
+        taskFilterDao.insertAll(*filters)
     }
 
     suspend fun delete(filter: TaskFilter){
-        Log.e("debug", getAll().toString())
-        taskFilterDao.delete(filter.toEntity())
+        taskFilterDao.delete(filter)
     }
-
-    private fun TaskFilter.toEntity(): TaskFilterEntity =
-            TaskFilterEntity(
-                0,
-                    this.type.id,
-                    this.parameter,
-                    this.enabled,
-                    this.filterMatching
-            )
-
-    private fun TaskFilterEntity.toTaskFilter(): TaskFilter =
-            TaskFilter(
-                    TaskFiltersAvailable.filters.first { it.id == this.type },
-                    this.parameter,
-                    this.enabled,
-                    this.filterMatching
-            )
-
 
 }

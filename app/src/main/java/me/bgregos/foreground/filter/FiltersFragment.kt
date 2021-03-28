@@ -81,6 +81,7 @@ class FiltersFragment : Fragment() {
                     !binding.filterParameter.text.isNullOrBlank()
             if (addFilterAllowed){
                 val newFilter = TaskFilter(
+                        id = 0,
                         type = TaskFiltersAvailable.filters.first { it.name == binding.filterType.text.toString() },
                         parameter = binding.filterParameter.text.toString(),
                         filterMatching = binding.filterInclusionButton.isChecked

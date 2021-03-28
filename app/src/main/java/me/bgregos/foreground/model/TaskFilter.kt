@@ -1,6 +1,7 @@
 package me.bgregos.foreground.model
 
-import me.bgregos.foreground.data.taskfilter.TaskFilterEntity
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import java.util.*
 
 /**
@@ -13,28 +14,14 @@ import java.util.*
  * @property enabled this filter is enabled. most filters should default to true since they are usually created explicitly by the user
  * @property filterMatching filter out tasks that do match this filter, instead of those that do not.
  */
+@Entity
 data class TaskFilter (
+        @PrimaryKey(autoGenerate = true) val id: Int,
         val type: TaskFilterType,
         var parameter: String?,
         var enabled: Boolean = true,
         var filterMatching: Boolean = false
-) {
-    override fun equals(other: Any?): Boolean {
-        if (other is TaskFilter) {
-            return this.filterMatching == other.filterMatching &&
-                    this.type == other.type &&
-                    this.parameter == other.parameter
-        }
-        return false
-    }
-
-    override fun hashCode(): Int {
-        var result = type.hashCode()
-        result = 31 * result + (parameter?.hashCode() ?: 0)
-        result = 31 * result + filterMatching.hashCode()
-        return result
-    }
-}
+)
 
 /**
  * Represents an available type of filter. These are fixed ahead of time. The user
