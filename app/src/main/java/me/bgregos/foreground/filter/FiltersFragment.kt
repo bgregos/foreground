@@ -23,8 +23,10 @@ import me.bgregos.foreground.R
 import me.bgregos.foreground.databinding.FilterListContentBinding
 import me.bgregos.foreground.databinding.FragmentFiltersBinding
 import me.bgregos.foreground.getApplicationComponent
+import me.bgregos.foreground.model.ParameterFormat
 import me.bgregos.foreground.model.TaskFilter
 import me.bgregos.foreground.model.TaskFiltersAvailable
+import me.bgregos.foreground.util.hideKeyboardFrom
 import javax.inject.Inject
 
 class FiltersFragment : Fragment() {
@@ -60,11 +62,20 @@ class FiltersFragment : Fragment() {
             }
         }
 
-        // Define popup
+        // Define filter type selector popup
         val dataList = TaskFiltersAvailable.filters.map { it.name }
         listPopupView?.setAdapter(context?.let { ArrayAdapter(it, android.R.layout.simple_list_item_1, dataList) })
         listPopupView?.setOnItemClickListener { _, _, position, _ ->
             binding.filterType.setText(dataList[position])
+            // if no parameter required by filter type, disable parameter entry
+            if (TaskFiltersAvailable.filters.first { it.name == dataList[position] }.parameterFormat == ParameterFormat.NONE) {
+                binding.filterParameter.setText("")
+                binding.filterParameterContainer.hint = getString(R.string.filter_parameter_hint_disabled)
+                binding.filterParameter.isEnabled = false
+            } else {
+                binding.filterParameterContainer.hint = getString(R.string.filter_parameter_hint_enabled)
+                binding.filterParameter.isEnabled = true
+            }
             listPopupView?.dismiss()
         }
         listPopupView?.anchorView = binding.filterType
@@ -78,7 +89,8 @@ class FiltersFragment : Fragment() {
 
         binding.addFilterButton.setOnClickListener {
             val addFilterAllowed = !binding.filterType.text.isNullOrBlank() &&
-                    !binding.filterParameter.text.isNullOrBlank()
+                    ( TaskFiltersAvailable.filters.first { it.name == binding.filterType.text.toString() }.parameterFormat == ParameterFormat.NONE ||
+                    !binding.filterParameter.text.isNullOrBlank() )
             if (addFilterAllowed){
                 val newFilter = TaskFilter(
                         id = 0,
@@ -88,12 +100,14 @@ class FiltersFragment : Fragment() {
                 )
                 val added = viewModel.addFilter(newFilter)
                 if (!added) {
+                    context?.let { ctx -> hideKeyboardFrom(ctx, binding.root) }
                     val bar1 = Snackbar.make(binding.root, getString(R.string.filter_warning_already_added), Snackbar.LENGTH_SHORT)
                     bar1.view.setBackgroundColor(Color.parseColor("#34309f"))
                     bar1.show()
                 }
                 binding.filterParameter.setText("")
             } else {
+                context?.let { ctx -> hideKeyboardFrom(ctx, binding.root) }
                 val bar1 = Snackbar.make(binding.root, getString(R.string.filter_add_warning), Snackbar.LENGTH_SHORT)
                 bar1.view.setBackgroundColor(Color.parseColor("#34309f"))
                 bar1.show()

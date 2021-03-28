@@ -21,7 +21,14 @@ data class TaskFilter (
         var parameter: String?,
         var enabled: Boolean = true,
         var filterMatching: Boolean = false
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        return other is TaskFilter &&
+                this.type == other.type &&
+                this.parameter == other.parameter &&
+                this.filterMatching == other.filterMatching
+    }
+}
 
 /**
  * Represents an available type of filter. These are fixed ahead of time. The user
