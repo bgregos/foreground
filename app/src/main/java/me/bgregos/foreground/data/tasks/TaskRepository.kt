@@ -7,16 +7,18 @@ import java.util.*
 import com.google.gson.reflect.TypeToken
 import me.bgregos.foreground.model.SyncResult
 import me.bgregos.foreground.model.Task
-import me.bgregos.foreground.model.TaskFilter
 import me.bgregos.foreground.network.RemoteTaskSource
+import me.bgregos.foreground.util.replace
 import java.text.SimpleDateFormat
 import javax.inject.Inject
 import kotlin.collections.ArrayList
 
-class TaskRepository @Inject constructor(val prefs: SharedPreferences, val remoteTaskSource: RemoteTaskSource) {
+class TaskRepository @Inject constructor(
+        private val prefs: SharedPreferences,
+        private val remoteTaskSource: RemoteTaskSource) {
+
     var tasks: List<Task> = listOf()
     var localChanges: List<Task> = listOf()
-    var filters: List<TaskFilter> = listOf()
 
     suspend fun taskwarriorSync(): SyncResult {
         remoteTaskSource.tasks = tasks.toMutableList()
@@ -36,6 +38,19 @@ class TaskRepository @Inject constructor(val prefs: SharedPreferences, val remot
         localChanges = remoteTaskSource.localChanges
     }
 
+    /**
+     *  Serializes the current task list and modified task list
+     *  to JSON and saves it to SharedPrefs.
+     *
+     *  TODO: Refactor
+     *  Refactor this save/load procedure into a new data source class
+     *  that persists this data to the app's Room database instead of serializing
+     *  to SharedPrefs. The current implementation is fragile and difficult to debug.
+     *  An example implementation of a data source is available at
+     *  [me.bgregos.foreground.network.RemoteTaskSourceImpl], and
+     *  [me.bgregos.foreground.data.taskfilter.TaskFilterRepository] already
+     *  makes use of Room.
+     */
     suspend fun save() {
         remoteTaskSource.save()
         val editor = prefs.edit()
@@ -44,6 +59,12 @@ class TaskRepository @Inject constructor(val prefs: SharedPreferences, val remot
         editor.apply()
     }
 
+    /**
+     * Fetches and deserializes the task list and modified task list
+     * from SharedPrefs.
+     *
+     * See the refactor note on [save] about planned changes.
+     */
     suspend fun load() {
         remoteTaskSource.load()
         val taskType = object : TypeToken<ArrayList<Task>>() {}.type
@@ -58,7 +79,7 @@ class TaskRepository @Inject constructor(val prefs: SharedPreferences, val remot
     suspend fun runMigrationsIfRequired(lastSeenVersion: Int){
         //migration - breaking changes are versioned here
         var itemsModified = false
-        val taskList = tasks
+        var taskList = tasks
         if (lastSeenVersion<2){
             val editor = prefs.edit()
             itemsModified = true
@@ -66,15 +87,23 @@ class TaskRepository @Inject constructor(val prefs: SharedPreferences, val remot
             dfLocal.setTimeZone(TimeZone.getDefault())
             val dfUtc = SimpleDateFormat()
             dfUtc.setTimeZone(TimeZone.getTimeZone("UTC"))
-            for (i in taskList) {
+            for (task in taskList) {
                 //convert all Dates from local time to GMT
-                i.createdDate=dfUtc.parse(dfLocal.format(i.createdDate))
-                if (i.modifiedDate != null){
-                    i.modifiedDate=dfUtc.parse(dfLocal.format(i.modifiedDate))
+                val entryDate = dfUtc.parse(dfLocal.format(task.createdDate))
+                var modifiedDate: Date? = null
+                var dueDate: Date? = null
+                if (task.modifiedDate != null){
+                    modifiedDate=dfUtc.parse(dfLocal.format(task.modifiedDate))
                 }
-                if (i.dueDate != null){
-                    i.dueDate=dfUtc.parse(dfLocal.format(i.dueDate))
+                if (task.dueDate != null){
+                    dueDate=dfUtc.parse(dfLocal.format(task.dueDate))
                 }
+                val newTask = task.copy(
+                        modifiedDate = modifiedDate,
+                        dueDate = dueDate,
+                        createdDate = entryDate!!
+                )
+                taskList = taskList.replace(newTask) {it === task}
             }
             editor.putInt("lastSeenVersion", 2)
             editor.apply()
@@ -82,16 +111,19 @@ class TaskRepository @Inject constructor(val prefs: SharedPreferences, val remot
         if (lastSeenVersion<3){
             val editor = prefs.edit()
             itemsModified = true
-            for (i in taskList) {
+            for (task in taskList) {
                 //convert all Dates from local time to GMT
-                if (i.others["wait"] != null) {
-                    i.waitDate = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").parse(i.others["wait"])
-                    i.others.remove("wait")
+                var newTask: Task = task
+                if (task.others["wait"] != null) {
+                    newTask = newTask.copy(waitDate = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").parse(task.others["wait"]), others = newTask.others.minus("wait"))
                 }
 
-                val waitdate = i.waitDate
+                val waitdate = task.waitDate
                 if(waitdate != null && waitdate.after(Date())) {
-                    i.status ="waiting"
+                    newTask = newTask.copy(status = "waiting")
+                }
+                if (newTask !== task){
+                    taskList = taskList.replace(newTask) {it === task}
                 }
             }
             editor.putInt("lastSeenVersion", 3)
@@ -101,9 +133,11 @@ class TaskRepository @Inject constructor(val prefs: SharedPreferences, val remot
             //normalize tags
             val editor = prefs.edit()
             itemsModified = true
-            taskList?.forEach{
-                it.tags.removeAll { tag -> tag.isBlank() }
-                it.tags = it.tags.map{ tag -> tag.trim() } as ArrayList<String>
+            taskList.forEach{
+                var tags = it.tags.filter { tag -> tag.isBlank() }
+                tags = tags.map{ tag -> tag.trim() }
+                val newTask = it.copy(tags = tags)
+                taskList = taskList.replace(newTask) { foundTask -> foundTask === it}
             }
             editor.putInt("lastSeenVersion", 4)
             editor.apply()
@@ -114,9 +148,11 @@ class TaskRepository @Inject constructor(val prefs: SharedPreferences, val remot
             itemsModified = true
             val now = Date()
             taskList.forEach {
-                it.waitDate = it.waitDate?.toLocal()
-                it.dueDate = it.dueDate?.toLocal()
-                it.modifiedDate = now
+                val waitDate = it.waitDate?.toLocal()
+                val dueDate = it.dueDate?.toLocal()
+                val modifiedDate = now
+                val newTask = it.copy(waitDate = waitDate, dueDate = dueDate, modifiedDate = modifiedDate)
+                taskList = taskList.replace(newTask) {foundTask -> foundTask === it}
             }
             editor.putInt("lastSeenVersion", 5)
             editor.apply()
@@ -125,16 +161,6 @@ class TaskRepository @Inject constructor(val prefs: SharedPreferences, val remot
             tasks = taskList
             save()
         }
-    }
-
-    fun visibleTasks(tasks: List<Task>): ArrayList<Task>{
-        var out: ArrayList<Task> = arrayListOf<Task>().apply { addAll(tasks) }
-        filters.forEach {
-            if (it.enabled) out = out.filter { task -> it.type.filter(task, it.parameter) } as ArrayList<Task>
-        }
-        //visibleTasks = visibleTasks.filter { it.name.isNotBlank() } as ArrayList<Task>
-        out.sortWith(Task.DateCompare())
-        return out
     }
 
     fun getTaskByUUID(uuid: UUID): Task?{

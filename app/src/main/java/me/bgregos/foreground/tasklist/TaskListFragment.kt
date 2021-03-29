@@ -12,12 +12,14 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_task_list.*
 import kotlinx.android.synthetic.main.task_list.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import me.bgregos.foreground.R
 import me.bgregos.foreground.filter.FiltersFragment
@@ -87,7 +89,7 @@ class TaskListFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        CoroutineScope(Dispatchers.Main).launch {
+        lifecycleScope.launchWhenStarted {
             viewModel.load()
             viewModel.updatePendingNotifications()
         }
@@ -162,10 +164,11 @@ class TaskListFragment : Fragment() {
     }
 
     private fun setupRecyclerView(recyclerView: RecyclerView) {
-        recyclerView.adapter = TaskListAdapter(this, viewModel.visibleTasks, viewModel)
-        viewModel.tasks.observe(viewLifecycleOwner, {
-            recyclerView.adapter = TaskListAdapter(this, viewModel.visibleTasks, viewModel)
-        })
+        lifecycleScope.launchWhenStarted {
+            viewModel.visibleTasks.collect {
+                recyclerView.adapter = TaskListAdapter(this@TaskListFragment, it, viewModel)
+            }
+        }
     }
 
     companion object {

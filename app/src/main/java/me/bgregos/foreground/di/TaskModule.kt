@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import dagger.Module
 import dagger.Provides
+import me.bgregos.foreground.data.taskfilter.TaskFilterRepository
 import me.bgregos.foreground.network.RemoteTaskSource
 import me.bgregos.foreground.network.RemoteTaskSourceImpl
 import me.bgregos.foreground.data.tasks.TaskRepository

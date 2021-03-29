@@ -10,6 +10,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import me.bgregos.foreground.data.tasks.TaskRepository
+import me.bgregos.foreground.util.replace
 import java.util.*
 import javax.inject.Inject
 
@@ -39,8 +40,8 @@ class TaskBroadcastReceiver: BroadcastReceiver() {
                             Log.e("LocalTasks", "Failed to find a task with the given UUID")
                             return@launch
                         }
-                        item.modifiedDate=Date() //update modified date
-                        item.status = "completed"
+                        val newTask = item.copy(modifiedDate = Date(), status = "completed")
+                        tasksRepository.tasks = tasksRepository.tasks.replace(newTask) { it === item }
                         if (!tasksRepository.localChanges.contains(item)){
                             tasksRepository.localChanges.plus(item)
 

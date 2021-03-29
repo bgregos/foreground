@@ -8,20 +8,21 @@ import java.lang.Exception
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.Comparator
-import kotlin.collections.ArrayList
 
-data class Task(var name:String) : Serializable {
-    var uuid:UUID = UUID.randomUUID()
-    var dueDate:Date? = null
-    var createdDate:Date = Date()
-    var project:String? = null
-    var tags:ArrayList<String> = ArrayList()
-    var modifiedDate:Date? = null
-    var priority: String? = ""
-    var status: String = "pending"
-    var waitDate:Date? = null
-    var endDate:Date? = null
-    var others = mutableMapOf<String, String>() //unaccounted-for fields. (User Defined Attributes)
+data class Task(
+        val name:String,
+        val uuid:UUID = UUID.randomUUID(),
+        val dueDate:Date? = null,
+        val createdDate:Date = Date(),
+        val project:String? = null,
+        val tags:List<String> = listOf(),
+        val modifiedDate:Date? = null,
+        val priority: String? = "",
+        val status: String = "pending",
+        val waitDate:Date? = null,
+        val endDate:Date? = null,
+        val others: Map<String, String> = mapOf() //unaccounted-for fields. (User Defined Attributes)
+) : Serializable {
     //List of all possible Task Statuses at https://taskwarrior.org/docs/design/task.html#attr_status
 
     class DateCompare : Comparator<Task>{
@@ -51,19 +52,17 @@ data class Task(var name:String) : Serializable {
         return other is Task && other.uuid == uuid
     }
 
+    override fun hashCode(): Int {
+        return uuid.hashCode()
+    }
+
     companion object {
 
         fun shouldDisplay(task: Task):Boolean{
             if (!(task.status=="completed" || task.status=="deleted" || task.status=="recurring" || task.status=="waiting"))
                 return true
             val date = task.waitDate
-            if(date != null) {
-                if (date.before(Date()) && task.status=="waiting"){
-                    task.status="pending"
-                    return true
-                }
-                return false
-            }
+
             return false
         }
 
@@ -73,6 +72,9 @@ data class Task(var name:String) : Serializable {
             return false
         }
 
+        /**
+         * Serializes this task to JSON for taskwarrior sync
+         */
         fun toJson(task: Task):String{
             val timeFormatter = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'")
             timeFormatter.timeZone = TimeZone.getTimeZone("UTC")
@@ -109,8 +111,11 @@ data class Task(var name:String) : Serializable {
             return str.replace("\\", "")
         }
 
+        /**
+         * Converts a taskwarrior-formatted task from JSON into a native Foreground task.
+         * Used during taskwarrior sync.
+         */
         fun fromJson(json:String): Task?{
-            val out = Task("")
             var obj = JSONObject()
             try {
                 obj = JSONObject(json)
@@ -118,41 +123,48 @@ data class Task(var name:String) : Serializable {
                 Log.e(this.javaClass.toString(), "Skipping task import: "+ex.toString())
                 return null
             }
-            out.name = obj.optString("description")?: ""
-            out.uuid = UUID.fromString(obj.getString("uuid"))
-            out.project = obj.optString("project") ?: null
-            out.status = obj.optString("status") ?: "pending"
-            out.priority = obj.optString("priority") ?: null
+            val name = obj.optString("description")?: ""
+            val uuid = UUID.fromString(obj.getString("uuid"))
+            val project = obj.optString("project") ?: null
+            val status = obj.optString("status") ?: "pending"
+            val priority = obj.optString("priority") ?: null
             var convDate : String? = null
+            var dueDate: Date? = null
             convDate = obj.optString("due")?:""
             if (!convDate.isNullOrBlank()) {
-                out.dueDate = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").parse(convDate)
+                dueDate = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").parse(convDate)
             }
+            var modifiedDate: Date? = null
             convDate = obj.optString("modified")?:""
             if (!convDate.isNullOrBlank()) {
-                out.modifiedDate = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").parse(convDate)
+                modifiedDate = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").parse(convDate)
             }
+            var entryDate = Date()
             // "created" is changed to "entry" since 1.4 for better sync compatibility
             convDate = obj.optString("created")?:""
             if (convDate.isNullOrBlank()){
                 convDate = obj.optString("entry")?:""
             }
             if (!convDate.isNullOrBlank()) {
-                out.createdDate = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").parse(convDate)
+                entryDate = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").parse(convDate)
             }
+            var waitDate: Date? = null
             convDate = obj.optString("wait")?:""
             if (!convDate.isNullOrBlank()) {
-                out.waitDate = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").parse(convDate)
+                waitDate = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").parse(convDate)
             }
+            var endDate: Date? = null
             convDate = obj.optString("end")?:""
             if (!convDate.isNullOrBlank()) {
-                out.endDate = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").parse(convDate)
+                endDate = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").parse(convDate)
             }
+            val tags = arrayListOf<String>()
             val jsontags = obj.optJSONArray("tags")?: JSONArray()
 
             for (j in 0 until jsontags.length()) {
-                out.tags.add(jsontags.getString(j))
+                tags.add(jsontags.getString(j))
             }
+            val others: MutableMap<String, String> = mutableMapOf()
             //remove what we have specific fields for
             obj.remove("description")
             obj.remove("uuid")
@@ -167,9 +179,22 @@ data class Task(var name:String) : Serializable {
             obj.remove("end")
             //add all others to the others map
             for (key in obj.keys()){
-                out.others[key] = unescape(obj.getString(key))
+                others[key] = unescape(obj.getString(key))
             }
-            return out
+            return Task(
+                    name = name,
+                    uuid = uuid,
+                    project = project,
+                    status = status,
+                    priority = priority,
+                    dueDate = dueDate,
+                    createdDate = entryDate,
+                    waitDate = waitDate,
+                    endDate = endDate,
+                    modifiedDate = modifiedDate,
+                    tags = tags,
+                    others = others
+            )
         }
     }
 

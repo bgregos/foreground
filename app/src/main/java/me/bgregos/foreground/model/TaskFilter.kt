@@ -62,6 +62,14 @@ class TaskFiltersAvailable {
     companion object{
         val filters = listOf(
                 TaskFilterType (
+                        name = "Name",
+                        id = "name",
+                        parameterFormat = ParameterFormat.STRING,
+                        filter = {
+                            task: Task, param: String? -> param?.let { task.project?.contains(it) } ?: false
+                        }
+                ),
+                TaskFilterType (
                         name = "Project",
                         id = "project",
                         parameterFormat = ParameterFormat.STRING,
