@@ -122,16 +122,16 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
     }
 
     fun removeUnnamedTasks() {
-//        tasks.value.map {
-//            if (it != currentTask && it.name.isBlank()){
-//                tasks.value = tasks.value.minus(it)
-//            }
-//        }
-//        taskRepository.localChanges.map {
-//            if (it.name.isBlank()){
-//                taskRepository.localChanges = taskRepository.localChanges.minus(it)
-//            }
-//        }
+        tasks.value.map {
+            if (it != currentTask && it.name.isBlank()){
+                tasks.value = tasks.value.minus(it)
+            }
+        }
+        taskRepository.localChanges.map {
+            if (it.name.isBlank()){
+                taskRepository.localChanges = taskRepository.localChanges.minus(it)
+            }
+        }
     }
 
     private fun postUpdatedTask(task: Task) {
