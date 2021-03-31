@@ -1,11 +1,9 @@
 package me.bgregos.foreground.tasklist
 
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import me.bgregos.foreground.data.taskfilter.TaskFilterRepository
 import me.bgregos.foreground.data.tasks.TaskRepository
@@ -13,7 +11,6 @@ import me.bgregos.foreground.model.SyncResult
 import me.bgregos.foreground.model.Task
 import me.bgregos.foreground.util.NotificationRepository
 import me.bgregos.foreground.util.replace
-import me.bgregos.foreground.util.sendUpdate
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
@@ -29,7 +26,7 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
             filtersRepository.taskFilters.combine(tasks) { filters, tasks ->
                 var out: ArrayList<Task> = arrayListOf<Task>().apply { addAll(tasks) }
                 filters.forEach {
-                    if (it.enabled) out = out.filter { task -> it.type.filter(task, it.parameter) } as ArrayList<Task>
+                    //if (it.enabled) out = out.filter { task -> it.type.filter(task, it.parameter) } as ArrayList<Task>
                 }
                 //visibleTasks = visibleTasks.filter { it.name.isNotBlank() } as ArrayList<Task>
                 out.sortWith(Task.DateCompare())
@@ -80,7 +77,7 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
                 if (task.waitDate.before(Date()) && task.status=="waiting"){
                     val newTask = task.copy(status = "pending")
                     tasks.value = tasks.value.replace(newTask) { it === task}
-                    taskUpdated(newTask)
+                    postUpdatedTask(newTask)
                 }
             }
         }
@@ -93,7 +90,7 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
     fun addTask(): Task {
         val newTask = Task("")
         tasks.value = tasks.value?.plus(newTask)
-        taskUpdated(newTask)
+        postUpdatedTask(newTask)
         return newTask
     }
 
@@ -107,7 +104,7 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
                 endDate = Date()
         )
         tasks.value = tasks.value?.minus(toComplete)
-        taskUpdated(completed)
+        postUpdatedTask(completed)
     }
 
     fun delete(toDelete: Task) {
@@ -121,31 +118,30 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
                 endDate = Date()
         )
         tasks.value = tasks.value?.minus(toDelete)
-        taskUpdated(deleted)
+        postUpdatedTask(deleted)
     }
 
     fun removeUnnamedTasks() {
-        tasks.value.map {
-            if (it != currentTask && it.name.isBlank()){
-                tasks.value = tasks.value.minus(it)
-            }
-        }
-        taskRepository.localChanges.map {
-            if (it.name.isBlank()){
-                taskRepository.localChanges = taskRepository.localChanges.minus(it)
-            }
-        }
+//        tasks.value.map {
+//            if (it != currentTask && it.name.isBlank()){
+//                tasks.value = tasks.value.minus(it)
+//            }
+//        }
+//        taskRepository.localChanges.map {
+//            if (it.name.isBlank()){
+//                taskRepository.localChanges = taskRepository.localChanges.minus(it)
+//            }
+//        }
     }
 
-    private fun taskUpdated(task: Task?){
-        if (task != null){
-            val updated = task.copy(modifiedDate = Date())
-            if(!taskRepository.localChanges.contains(updated)){
-                taskRepository.localChanges = taskRepository.localChanges.plus(task)
-            } else {
-                taskRepository.localChanges = taskRepository.localChanges.replace(updated) { it === task }
-            }
+    private fun postUpdatedTask(task: Task) {
+        val updated = task.copy(modifiedDate = Date())
+        if(!taskRepository.localChanges.contains(updated)){
+            taskRepository.localChanges = taskRepository.localChanges.plus(task)
+        } else {
+            taskRepository.localChanges = taskRepository.localChanges.replace(updated) { it === task }
         }
+        tasks.value = tasks.value.replace(updated) { it.uuid == task.uuid }
     }
 
     suspend fun sync(): SyncResult{
@@ -165,36 +161,42 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
     }
 
     fun setTaskName(name: String) {
-        currentTask = currentTask?.copy(name = name)
-        taskUpdated(currentTask)
+        currentTask?.let {
+            postUpdatedTask(it.copy(name = name))
+        }
     }
 
     fun setTaskTags(enteredTags: String) {
         var tags = enteredTags.split(", ",",") as ArrayList<String>
         tags.removeAll { tag -> tag.isBlank() }
         tags = tags.map{ tag -> tag.trim() } as ArrayList<String>
-        currentTask = currentTask?.copy(tags = tags)
-        taskUpdated(currentTask)
+        currentTask?.let {
+            postUpdatedTask(it.copy(tags = tags))
+        }
     }
 
     fun setTaskProject(project: String) {
-        currentTask = currentTask?.copy(project = project)
-        taskUpdated(currentTask)
+        currentTask?.let {
+            postUpdatedTask(it.copy(project = project))
+        }
     }
 
     fun setTaskPriority(priority: String) {
-        currentTask = currentTask?.copy(priority = priority)
-        taskUpdated(currentTask)
+        currentTask?.let {
+            postUpdatedTask(it.copy(priority = priority))
+        }
     }
 
     fun setTaskDueDate(date: String, time: String) {
-        currentTask = currentTask?.copy(dueDate = writeFormat.parse("$date $time") )
-        taskUpdated(currentTask)
+        currentTask?.let {
+            postUpdatedTask(it.copy(dueDate = writeFormat.parse("$date $time")))
+        }
     }
 
     fun setTaskWaitDate(date: String, time: String) {
-        currentTask = currentTask?.copy( waitDate = writeFormat.parse("$date $time") )
-        taskUpdated(currentTask)
+        currentTask?.let {
+            postUpdatedTask(it.copy(waitDate = writeFormat.parse("$date $time")))
+        }
     }
 
     fun detailClosed() {

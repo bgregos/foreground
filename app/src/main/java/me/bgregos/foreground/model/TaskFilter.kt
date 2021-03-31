@@ -66,7 +66,7 @@ class TaskFiltersAvailable {
                         id = "name",
                         parameterFormat = ParameterFormat.STRING,
                         filter = {
-                            task: Task, param: String? -> param?.let { task.project?.contains(it) } ?: false
+                            task: Task, param: String? -> param?.let { task.name.contains(it) } ?: false
                         }
                 ),
                 TaskFilterType (
@@ -98,7 +98,7 @@ class TaskFiltersAvailable {
                         id = "waiting",
                         parameterFormat = ParameterFormat.NONE,
                         filter = {
-                            task: Task, _ -> Date().before(task.waitDate)
+                            task: Task, _ -> task.waitDate?.let { Date().before(it) } ?: false
                         }
                 )
         )
