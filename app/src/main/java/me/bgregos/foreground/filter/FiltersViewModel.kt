@@ -8,6 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import me.bgregos.foreground.data.taskfilter.TaskFilterRepository
 import me.bgregos.foreground.model.TaskFilter
@@ -20,13 +21,12 @@ class FiltersViewModel @Inject constructor(
         private val repository: TaskFilterRepository
 ): ViewModel() {
 
-    val filters: MutableStateFlow<List<TaskFilter>> = MutableStateFlow(listOf())
+    val filters: MutableStateFlow<List<TaskFilter>> = repository.taskFilters
 
     fun addFilter(taskFilter: TaskFilter): Boolean {
         if (filters.value.contains(taskFilter)){
             return false
         }
-        filters.value += taskFilter
         viewModelScope.launch(Dispatchers.IO) {
             repository.insertAll(taskFilter)
         }
@@ -37,12 +37,10 @@ class FiltersViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             repository.delete(taskFilter)
         }
-        filters.value -= taskFilter
     }
 
     fun toggleFilterEnable(taskFilter: TaskFilter) {
         val newFilter = taskFilter.copy(enabled = !taskFilter.enabled)
-        filters.value = filters.value.replace(newFilter) {it == taskFilter}
         viewModelScope.launch(Dispatchers.IO) {
             repository.updateAll(newFilter)
         }
