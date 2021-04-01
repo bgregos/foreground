@@ -24,11 +24,6 @@ class TaskFilterRepository @Inject constructor(private val taskFilterDao: TaskFi
         return filters
     }
 
-    suspend fun updateAll(vararg filters: TaskFilter) {
-        taskFilterDao.updateAll(*filters)
-        getAll()
-    }
-
     suspend fun insertAll(vararg filters: TaskFilter){
         taskFilterDao.insertAll(*filters)
         getAll()

@@ -42,7 +42,8 @@ class FiltersViewModel @Inject constructor(
     fun toggleFilterEnable(taskFilter: TaskFilter) {
         val newFilter = taskFilter.copy(enabled = !taskFilter.enabled)
         viewModelScope.launch(Dispatchers.IO) {
-            repository.updateAll(newFilter)
+            repository.delete(taskFilter)
+            repository.insertAll(newFilter)
         }
     }
 

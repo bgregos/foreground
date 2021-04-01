@@ -26,7 +26,7 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
             filtersRepository.taskFilters.combine(tasks) { filters, tasks ->
                 var out: ArrayList<Task> = arrayListOf<Task>().apply { addAll(tasks) }
                 filters.forEach {
-                    //if (it.enabled) out = out.filter { task -> it.type.filter(task, it.parameter) } as ArrayList<Task>
+                    if (it.enabled) out = out.filter { task -> it.type.filter(task, it.parameter) } as ArrayList<Task>
                 }
                 //visibleTasks = visibleTasks.filter { it.name.isNotBlank() } as ArrayList<Task>
                 out.sortWith(Task.DateCompare())
