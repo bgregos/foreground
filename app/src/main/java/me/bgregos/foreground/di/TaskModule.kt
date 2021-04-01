@@ -3,12 +3,12 @@ package me.bgregos.foreground.di
 import android.app.AlarmManager
 import android.content.Context
 import android.content.SharedPreferences
-import dagger.Binds
 import dagger.Module
 import dagger.Provides
+import me.bgregos.foreground.data.taskfilter.TaskFilterRepository
 import me.bgregos.foreground.network.RemoteTaskSource
 import me.bgregos.foreground.network.RemoteTaskSourceImpl
-import me.bgregos.foreground.tasklist.TaskRepository
+import me.bgregos.foreground.data.tasks.TaskRepository
 import me.bgregos.foreground.util.NotificationRepository
 import javax.inject.Singleton
 

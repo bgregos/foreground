@@ -130,8 +130,6 @@ class TaskDetailFragment : Fragment() {
             val builder = StringBuilder()
             it.tags.forEach { task -> builder.append("$task, ") }
             rootView.detail_tags.setText(builder.toString().trimEnd(',', ' '))
-            it.tags.removeAll { tag -> tag.isBlank() }
-            it.tags = it.tags.map{ tag -> tag.trim() } as ArrayList<String>
 
 
             if(it.dueDate != null){

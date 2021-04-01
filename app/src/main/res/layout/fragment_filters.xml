@@ -1,13 +1,140 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".filter.FiltersFragment">
+    android:fitsSystemWindows="true"
+    tools:context=".tasklist.MainActivity"
+    tools:ignore="MergeRootFrame">
 
-    <TextView
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/app_bar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/app_bar_height"
+        android:fitsSystemWindows="true"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+
+        <com.google.android.material.appbar.CollapsingToolbarLayout
+            android:id="@+id/toolbar_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fitsSystemWindows="true"
+            app:contentScrim="?attr/colorPrimary"
+            app:layout_scrollFlags="scroll|exitUntilCollapsed"
+            app:toolbarId="@+id/toolbar">
+
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/filter_toolbar"
+                app:title="Filters"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                app:layout_collapseMode="pin"
+                app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+
+        </com.google.android.material.appbar.CollapsingToolbarLayout>
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/task_detail_content"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="Hello" />
+        android:layout_margin="8dp"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-</FrameLayout>
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/addFilterTextView"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:paddingEnd="8dp"
+                android:text="@string/add_a_filter"
+                app:layout_constraintBottom_toBottomOf="@id/filter_type_container"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@id/filter_type_container" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/filter_type_container"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/filter_parameter_container"
+                app:layout_constraintTop_toBottomOf="@id/addFilterTextView">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/filter_type"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="none"
+                    android:clickable="true"
+                    android:layout_marginBottom="4dp"
+                    android:hint="@string/select_filter_type"
+                    android:focusable="true" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/filter_parameter_container"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/filter_type_container"
+                app:layout_constraintTop_toBottomOf="@id/addFilterTextView">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/filter_parameter"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <ToggleButton
+                android:id="@+id/filter_inclusion_button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:textOff="Include Matching"
+                android:textOn="Exclude Matching"
+                app:layout_constraintEnd_toEndOf="@+id/filter_type_container"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/filter_type_container" />
+
+            <ImageButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingEnd="8dp"
+                android:id="@+id/add_filter_button"
+                android:src="@drawable/ic_playlist_add_white_24dp"
+                app:layout_constraintBottom_toBottomOf="@+id/filter_inclusion_button"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/filter_parameter_container" />
+
+            <TextView
+                android:id="@+id/current_filters_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:text="Current Filters"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/filter_inclusion_button" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/filters_recyclerview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/current_filters_text" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

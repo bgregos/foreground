@@ -1,24 +1,37 @@
 package me.bgregos.foreground.tasklist
 
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import me.bgregos.foreground.data.taskfilter.TaskFilterRepository
+import me.bgregos.foreground.data.tasks.TaskRepository
 import me.bgregos.foreground.model.SyncResult
 import me.bgregos.foreground.model.Task
 import me.bgregos.foreground.util.NotificationRepository
-import me.bgregos.foreground.util.sendUpdate
+import me.bgregos.foreground.util.replace
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
-import kotlin.NoSuchElementException
 
 /**
  * This is the shared ViewModel for the task list and task detail screens.
  * Because they share information between each other in real time on
  * tablets/expanded foldables, their viewmodels are combined.
  */
-class TaskViewModel @Inject constructor(private val taskRepository: TaskRepository, private val notificationRepository: NotificationRepository): ViewModel() {
-    var tasks: MutableLiveData<List<Task>> = MutableLiveData(taskRepository.tasks)
+class TaskViewModel @Inject constructor(private val taskRepository: TaskRepository, private val notificationRepository: NotificationRepository, filtersRepository: TaskFilterRepository): ViewModel() {
+    var tasks: MutableStateFlow<List<Task>> = MutableStateFlow(taskRepository.tasks)
+    val visibleTasks: Flow<List<Task>> =
+            filtersRepository.taskFilters.combine(tasks) { filters, tasks ->
+                var out: ArrayList<Task> = arrayListOf<Task>().apply { addAll(tasks) }
+                filters.forEach {
+                    if (it.enabled) out = out.filter { task -> it.type.filter(task, it.parameter) } as ArrayList<Task>
+                }
+                //visibleTasks = visibleTasks.filter { it.name.isNotBlank() } as ArrayList<Task>
+                out.sortWith(Task.DateCompare())
+                out.toList()
+            }
 
     //The detail fragment will listen to this and close when it receives an emission
     val closeDetailChannel: Channel<Unit> = Channel(Channel.RENDEZVOUS)
@@ -32,18 +45,12 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
         set(value) {
             field = value
             currentUUID = value?.uuid
-            tasks.sendUpdate()
         }
         get() {
             if (currentUUID == null){
                 return null
             }
             return tasks.value?.firstOrNull() { it.uuid == currentUUID }
-        }
-
-    val visibleTasks: List<Task>
-        get() {
-            return taskRepository.visibleTasks(tasks.value ?: listOf())
         }
 
     init {
@@ -64,6 +71,18 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
         taskRepository.save()
     }
 
+    fun checkForTasksNoLongerWaiting(){
+        tasks.value.map { task ->
+            if(task.waitDate != null) {
+                if (task.waitDate.before(Date()) && task.status=="waiting"){
+                    val newTask = task.copy(status = "pending")
+                    tasks.value = tasks.value.replace(newTask) { it === task}
+                    postUpdatedTask(newTask)
+                }
+            }
+        }
+    }
+
     fun updatePendingNotifications() {
         notificationRepository.scheduleNotificationForTasks(tasks.value ?: ArrayList())
     }
@@ -71,7 +90,7 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
     fun addTask(): Task {
         val newTask = Task("")
         tasks.value = tasks.value?.plus(newTask)
-        taskUpdated(newTask)
+        postUpdatedTask(newTask)
         return newTask
     }
 
@@ -79,11 +98,13 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
         if(toComplete == currentTask){
             closeDetailChannel.offer(Unit)
         }
-        toComplete.status = "completed"
-        toComplete.modifiedDate = Date() //update modified date
-        toComplete.endDate = Date()
+        val completed = toComplete.copy(
+                status = "completed",
+                modifiedDate = Date(),
+                endDate = Date()
+        )
         tasks.value = tasks.value?.minus(toComplete)
-        taskUpdated(toComplete)
+        postUpdatedTask(completed)
     }
 
     fun delete(toDelete: Task) {
@@ -91,30 +112,36 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
             closeDetailChannel.offer(Unit)
             currentTask = null
         }
-        toDelete.status = "deleted"
-        toDelete.modifiedDate = Date()
-        toDelete.endDate = Date()
+        val deleted = toDelete.copy(
+                status = "deleted",
+                modifiedDate = Date(),
+                endDate = Date()
+        )
         tasks.value = tasks.value?.minus(toDelete)
-        taskUpdated(toDelete)
+        postUpdatedTask(deleted)
     }
 
     fun removeUnnamedTasks() {
-        tasks.value?.map {
+        tasks.value.map {
             if (it != currentTask && it.name.isBlank()){
-                tasks.value = tasks.value?.minus(it)
-                tasks.sendUpdate()
+                tasks.value = tasks.value.minus(it)
+            }
+        }
+        taskRepository.localChanges.map {
+            if (it.name.isBlank()){
+                taskRepository.localChanges = taskRepository.localChanges.minus(it)
             }
         }
     }
 
-    private fun taskUpdated(task: Task?){
-        if (task != null){
-            task.modifiedDate = Date()
-            if(!taskRepository.localChanges.contains(task)){
-                taskRepository.localChanges = taskRepository.localChanges.plus(task)
-            }
-            tasks.sendUpdate()
+    private fun postUpdatedTask(task: Task) {
+        val updated = task.copy(modifiedDate = Date())
+        if(!taskRepository.localChanges.contains(updated)){
+            taskRepository.localChanges = taskRepository.localChanges.plus(task)
+        } else {
+            taskRepository.localChanges = taskRepository.localChanges.replace(updated) { it === task }
         }
+        tasks.value = tasks.value.replace(updated) { it.uuid == task.uuid }
     }
 
     suspend fun sync(): SyncResult{
@@ -134,33 +161,42 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
     }
 
     fun setTaskName(name: String) {
-        currentTask?.name = name
-        taskUpdated(currentTask)
+        currentTask?.let {
+            postUpdatedTask(it.copy(name = name))
+        }
     }
 
     fun setTaskTags(enteredTags: String) {
-        currentTask?.tags = enteredTags.split(", ",",") as ArrayList<String>
-        taskUpdated(currentTask)
+        var tags = enteredTags.split(", ",",") as ArrayList<String>
+        tags.removeAll { tag -> tag.isBlank() }
+        tags = tags.map{ tag -> tag.trim() } as ArrayList<String>
+        currentTask?.let {
+            postUpdatedTask(it.copy(tags = tags))
+        }
     }
 
     fun setTaskProject(project: String) {
-        currentTask?.project = project
-        taskUpdated(currentTask)
+        currentTask?.let {
+            postUpdatedTask(it.copy(project = project))
+        }
     }
 
     fun setTaskPriority(priority: String) {
-        currentTask?.priority = priority
-        taskUpdated(currentTask)
+        currentTask?.let {
+            postUpdatedTask(it.copy(priority = priority))
+        }
     }
 
     fun setTaskDueDate(date: String, time: String) {
-        currentTask?.dueDate = writeFormat.parse("$date $time")
-        taskUpdated(currentTask)
+        currentTask?.let {
+            postUpdatedTask(it.copy(dueDate = writeFormat.parse("$date $time")))
+        }
     }
 
     fun setTaskWaitDate(date: String, time: String) {
-        currentTask?.waitDate = writeFormat.parse("$date $time")
-        taskUpdated(currentTask)
+        currentTask?.let {
+            postUpdatedTask(it.copy(waitDate = writeFormat.parse("$date $time")))
+        }
     }
 
     fun detailClosed() {

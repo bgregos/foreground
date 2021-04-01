@@ -4,10 +4,11 @@ import android.content.Context
 import androidx.work.WorkerFactory
 import dagger.BindsInstance
 import dagger.Component
+import me.bgregos.foreground.filter.FiltersFragment
 import me.bgregos.foreground.network.RemoteTaskSource
 import me.bgregos.foreground.receiver.AlarmReceiver
 import me.bgregos.foreground.settings.SettingsActivity
-import me.bgregos.foreground.tasklist.TaskRepository
+import me.bgregos.foreground.data.tasks.TaskRepository
 import me.bgregos.foreground.tasklist.MainActivity
 import me.bgregos.foreground.tasklist.TaskDetailFragment
 import me.bgregos.foreground.tasklist.TaskListFragment
@@ -18,13 +19,11 @@ import javax.inject.Singleton
 @Component(modules= [
     ViewModelBindingModule::class,
     WorkerBindingModule::class,
-    TaskModule::class
+    TaskModule::class,
+    FilterModule::class
 ] )
 interface ApplicationComponent {
 
-    var localTasksRepository: TaskRepository
-    var remoteTaskSource: RemoteTaskSource
-    var notificationRepository: NotificationRepository
     var workerFactory: WorkerFactory
 
     @Component.Builder
@@ -34,16 +33,12 @@ interface ApplicationComponent {
         abstract fun build(): ApplicationComponent
     }
 
-    interface Owner{
-        fun getApplicationComponent(): ApplicationComponent
-    }
-
     fun inject(activity: MainActivity)
     fun inject(activity: SettingsActivity)
 
     fun inject(fragment: TaskDetailFragment)
     fun inject(fragment: TaskListFragment)
+    fun inject(filtersFragment: FiltersFragment)
 
     fun inject(broadcastReceiver: AlarmReceiver)
-
 }

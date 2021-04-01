@@ -1,5 +1,7 @@
 package me.bgregos.foreground.model
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import java.util.*
 
 /**
@@ -12,12 +14,21 @@ import java.util.*
  * @property enabled this filter is enabled. most filters should default to true since they are usually created explicitly by the user
  * @property filterMatching filter out tasks that do match this filter, instead of those that do not.
  */
+@Entity
 data class TaskFilter (
+        @PrimaryKey(autoGenerate = true) val id: Int,
         val type: TaskFilterType,
         var parameter: String?,
         var enabled: Boolean = true,
         var filterMatching: Boolean = false
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        return other is TaskFilter &&
+                this.type == other.type &&
+                this.parameter == other.parameter &&
+                this.filterMatching == other.filterMatching
+    }
+}
 
 /**
  * Represents an available type of filter. These are fixed ahead of time. The user
@@ -33,46 +44,65 @@ data class TaskFilterType (
         val id: String,
         var parameterFormat: ParameterFormat,
         val filter: (Task, String?) -> Boolean
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        return other is TaskFilterType &&
+                this.id == other.id
+    }
+
+    override fun hashCode(): Int {
+        return id.hashCode()
+    }
+}
 
 /**
  * Available filter types for the user to choose from.
  */
-class TaskFilterTypes() {
-    val filters = mutableListOf(
-            TaskFilterType (
-                    name = "Project",
-                    id = "project",
-                    parameterFormat = ParameterFormat.STRING,
-                    filter = {
-                        task: Task, param: String? -> param?.let { task.project?.contains(it) } ?: false
-                    }
-            ),
-            TaskFilterType (
-                    name = "Tag",
-                    id = "tag",
-                    parameterFormat = ParameterFormat.STRING,
-                    filter = {
-                        task: Task, param: String? -> task.tags.any{t -> t.contains(param ?: return@TaskFilterType false) }
-                    }
-            ),
-            TaskFilterType (
-                    name = "Priority",
-                    id = "priority",
-                    parameterFormat = ParameterFormat.STRING,
-                    filter = {
-                        task: Task, param: String? -> task.priority?.contains(param ?: return@TaskFilterType false) ?: false
-                    }
-            ),
-            TaskFilterType (
-                    name = "Waiting",
-                    id = "waiting",
-                    parameterFormat = ParameterFormat.NONE,
-                    filter = {
-                        task: Task, _ -> Date().before(task.waitDate)
-                    }
-            )
-    )
+class TaskFiltersAvailable {
+    companion object{
+        val filters = listOf(
+                TaskFilterType (
+                        name = "Name",
+                        id = "name",
+                        parameterFormat = ParameterFormat.STRING,
+                        filter = {
+                            task: Task, param: String? -> param?.let { task.name.contains(it) } ?: false
+                        }
+                ),
+                TaskFilterType (
+                        name = "Project",
+                        id = "project",
+                        parameterFormat = ParameterFormat.STRING,
+                        filter = {
+                            task: Task, param: String? -> param?.let { task.project?.contains(it) } ?: false
+                        }
+                ),
+                TaskFilterType (
+                        name = "Tag",
+                        id = "tag",
+                        parameterFormat = ParameterFormat.STRING,
+                        filter = {
+                            task: Task, param: String? -> task.tags.any{t -> t.contains(param ?: return@TaskFilterType false) }
+                        }
+                ),
+                TaskFilterType (
+                        name = "Priority",
+                        id = "priority",
+                        parameterFormat = ParameterFormat.STRING,
+                        filter = {
+                            task: Task, param: String? -> task.priority?.contains(param ?: return@TaskFilterType false) ?: false
+                        }
+                ),
+                TaskFilterType (
+                        name = "Waiting",
+                        id = "waiting",
+                        parameterFormat = ParameterFormat.NONE,
+                        filter = {
+                            task: Task, _ -> task.waitDate?.let { Date().before(it) } ?: false
+                        }
+                )
+        )
+    }
 }
 
 /**
