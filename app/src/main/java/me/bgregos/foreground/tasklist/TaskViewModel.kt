@@ -148,6 +148,8 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
             taskRepository.localChanges = taskRepository.localChanges.replace(updated) { it === task }
         }
         tasks.value = tasks.value.replace(updated) { it.uuid == task.uuid }
+        checkForTasksNoLongerWaiting()
+        updatePendingNotifications()
     }
 
     suspend fun sync(): SyncResult{

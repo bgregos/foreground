@@ -8,6 +8,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import me.bgregos.foreground.data.tasks.TaskRepository
+import me.bgregos.foreground.getApplicationComponent
 import me.bgregos.foreground.util.NotificationRepository
 import java.util.*
 import javax.inject.Inject
@@ -21,6 +22,7 @@ class AlarmReceiver : BroadcastReceiver() {
     lateinit var taskRepository: TaskRepository
 
     override fun onReceive(context: Context?, intent: Intent?) {
+        context?.getApplicationComponent()?.inject(this)
         when (intent?.action) {
             notificationRepository.ACTION -> {
                 Log.i("notif", "Received notification intent")

@@ -9,6 +9,7 @@ import me.bgregos.foreground.network.RemoteTaskSource
 import me.bgregos.foreground.receiver.AlarmReceiver
 import me.bgregos.foreground.settings.SettingsActivity
 import me.bgregos.foreground.data.tasks.TaskRepository
+import me.bgregos.foreground.receiver.TaskBroadcastReceiver
 import me.bgregos.foreground.tasklist.MainActivity
 import me.bgregos.foreground.tasklist.TaskDetailFragment
 import me.bgregos.foreground.tasklist.TaskListFragment
@@ -41,4 +42,5 @@ interface ApplicationComponent {
     fun inject(filtersFragment: FiltersFragment)
 
     fun inject(broadcastReceiver: AlarmReceiver)
+    fun inject(broadcastReceiver: TaskBroadcastReceiver)
 }
