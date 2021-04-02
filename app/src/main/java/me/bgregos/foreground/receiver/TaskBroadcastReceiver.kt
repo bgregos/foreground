@@ -10,6 +10,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import me.bgregos.foreground.data.tasks.TaskRepository
+import me.bgregos.foreground.getApplicationComponent
 import me.bgregos.foreground.util.replace
 import java.util.*
 import javax.inject.Inject
@@ -20,6 +21,7 @@ class TaskBroadcastReceiver: BroadcastReceiver() {
     lateinit var tasksRepository: TaskRepository
 
     override fun onReceive(context: Context?, intent: Intent?) {
+        context?.getApplicationComponent()?.inject(this)
         when(intent?.action) {
             "BRIGHTTASK_MARK_TASK_DONE" -> {
                 Log.i("notif", "Received task done")
@@ -41,15 +43,13 @@ class TaskBroadcastReceiver: BroadcastReceiver() {
                             return@launch
                         }
                         val newTask = item.copy(modifiedDate = Date(), status = "completed")
-                        tasksRepository.tasks = tasksRepository.tasks.replace(newTask) { it === item }
-                        if (!tasksRepository.localChanges.contains(item)){
-                            tasksRepository.localChanges.plus(item)
+                        tasksRepository.tasks.value = tasksRepository.tasks.value.replace(newTask) { it === item }
+                        if (!tasksRepository.localChanges.value.contains(item)){
+                            tasksRepository.localChanges.value.plus(item)
 
                         }
-                        tasksRepository.tasks.minus(item)
+                        tasksRepository.tasks.value = tasksRepository.tasks.value.filter{ it.uuid != item.uuid }
                         tasksRepository.save()
-                        val localIntent: Intent = Intent("BRIGHTTASK_REMOTE_TASK_UPDATE") //Send local broadcast
-                        LocalBroadcastManager.getInstance(context).sendBroadcast(localIntent)
                     }
                 } else {
                     Log.e("notif", "Failed to save task marked done- null context")

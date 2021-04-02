@@ -6,6 +6,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import me.bgregos.foreground.data.taskfilter.TaskFilterRepository
@@ -24,7 +25,7 @@ import javax.inject.Inject
  * tablets/expanded foldables, their viewmodels are combined.
  */
 class TaskViewModel @Inject constructor(private val taskRepository: TaskRepository, private val notificationRepository: NotificationRepository, filtersRepository: TaskFilterRepository): ViewModel() {
-    var tasks: MutableStateFlow<List<Task>> = MutableStateFlow(taskRepository.tasks)
+    var tasks: MutableStateFlow<List<Task>> = taskRepository.tasks
     val visibleTasks: Flow<List<Task>> =
             filtersRepository.taskFilters.combine(tasks) { filters, tasks ->
                 var out: ArrayList<Task> = arrayListOf<Task>().apply { addAll(tasks) }
@@ -67,11 +68,10 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
 
     suspend fun load(){
         taskRepository.load()
-        tasks.value = taskRepository.tasks
+        tasks.value = taskRepository.tasks.value
     }
 
     suspend fun save(){
-        taskRepository.tasks = tasks.value ?: listOf()
         removeUnnamedTasks()
         notificationRepository.scheduleNotificationForTasks(tasks.value ?: listOf())
         taskRepository.save()
@@ -111,6 +111,9 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
         )
         tasks.value = tasks.value?.minus(toComplete)
         postUpdatedTask(completed)
+        viewModelScope.launch {
+            save()
+        }
     }
 
     fun delete(toDelete: Task) {
@@ -125,6 +128,9 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
         )
         tasks.value = tasks.value?.minus(toDelete)
         postUpdatedTask(deleted)
+        viewModelScope.launch {
+            save()
+        }
     }
 
     fun removeUnnamedTasks() {
@@ -133,28 +139,30 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
                 tasks.value = tasks.value.minus(it)
             }
         }
-        taskRepository.localChanges.map {
+        taskRepository.localChanges.value.map {
             if (it.name.isBlank()){
-                taskRepository.localChanges = taskRepository.localChanges.minus(it)
+                taskRepository.localChanges.value = taskRepository.localChanges.value.minus(it)
             }
         }
     }
 
     private fun postUpdatedTask(task: Task) {
         val updated = task.copy(modifiedDate = Date())
-        if(!taskRepository.localChanges.contains(updated)){
-            taskRepository.localChanges = taskRepository.localChanges.plus(task)
+        if(!taskRepository.localChanges.value.contains(updated)){
+            taskRepository.localChanges.value = taskRepository.localChanges.value.plus(task)
         } else {
-            taskRepository.localChanges = taskRepository.localChanges.replace(updated) { it === task }
+            taskRepository.localChanges.value = taskRepository.localChanges.value.replace(updated) { it === task }
         }
         tasks.value = tasks.value.replace(updated) { it.uuid == task.uuid }
+        checkForTasksNoLongerWaiting()
+        updatePendingNotifications()
     }
 
     suspend fun sync(): SyncResult{
         save()
         removeUnnamedTasks()
         val syncResult = taskRepository.taskwarriorSync()
-        tasks.value = taskRepository.tasks
+        tasks.value = taskRepository.tasks.value
         if(tasks.value?.contains(currentTask) != true) {
             //close the detail fragment
             closeDetailChannel.offer(Unit)

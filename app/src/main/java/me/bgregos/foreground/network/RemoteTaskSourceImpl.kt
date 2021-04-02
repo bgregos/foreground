@@ -246,7 +246,7 @@ class TaskwarriorSyncWorker(val ctx: Context, workerParams: WorkerParameters, pr
             Log.i("taskwarrior_sync", "Automatic Sync Complete")
             //TODO: Remove this broadcast - it should be handled by livedata
             var localIntent: Intent = Intent("BRIGHTTASK_REMOTE_TASK_UPDATE") //Send local broadcast
-            notificationRepository.scheduleNotificationForTasks(tasksRepository.tasks)
+            notificationRepository.scheduleNotificationForTasks(tasksRepository.tasks.value)
             LocalBroadcastManager.getInstance(ctx).sendBroadcast(localIntent)
         }
         job.await()
