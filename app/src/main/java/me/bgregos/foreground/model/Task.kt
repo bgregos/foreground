@@ -24,6 +24,15 @@ data class Task(
         val others: Map<String, String> = mapOf() //unaccounted-for fields. (User Defined Attributes)
 ) : Serializable {
     //List of all possible Task Statuses at https://taskwarrior.org/docs/design/task.html#attr_status
+//
+//    override fun equals(other: Any?): Boolean {
+//        return other is Task && other.uuid == this.uuid
+//    }
+//
+//    override fun hashCode(): Int {
+//        return uuid.hashCode()
+//    }
+
 
     class DateCompare : Comparator<Task>{
         override fun compare(o1: Task, o2: Task): Int {

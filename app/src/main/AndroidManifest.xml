@@ -40,7 +40,7 @@
         <receiver
             android:name=".receiver.TaskBroadcastReceiver"
             android:enabled="true"
-            android:exported="false">
+            android:exported="true">
         </receiver>
         <!-- disable default provider -->
         <provider
