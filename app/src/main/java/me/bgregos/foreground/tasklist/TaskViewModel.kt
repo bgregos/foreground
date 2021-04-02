@@ -1,10 +1,13 @@
 package me.bgregos.foreground.tasklist
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.launch
 import me.bgregos.foreground.data.taskfilter.TaskFilterRepository
 import me.bgregos.foreground.data.tasks.TaskRepository
 import me.bgregos.foreground.model.SyncResult
@@ -57,6 +60,9 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
         writeFormat.timeZone= TimeZone.getDefault()
         notificationRepository.load()
         notificationRepository.createNotificationChannel()
+        viewModelScope.launch(Dispatchers.IO) {
+            load()
+        }
     }
 
     suspend fun load(){
@@ -89,7 +95,7 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
 
     fun addTask(): Task {
         val newTask = Task("")
-        tasks.value = tasks.value?.plus(newTask)
+        tasks.value = tasks.value.plus(newTask)
         postUpdatedTask(newTask)
         return newTask
     }
