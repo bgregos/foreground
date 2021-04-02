@@ -64,11 +64,6 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
         viewModelScope.launch(Dispatchers.IO) {
             load()
         }
-        viewModelScope.launch {
-            taskRepository.tasks.collect {
-                tasks.value = it
-            }
-        }
     }
 
     suspend fun load(){
@@ -116,6 +111,9 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
         )
         tasks.value = tasks.value?.minus(toComplete)
         postUpdatedTask(completed)
+        viewModelScope.launch {
+            save()
+        }
     }
 
     fun delete(toDelete: Task) {
@@ -130,6 +128,9 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
         )
         tasks.value = tasks.value?.minus(toDelete)
         postUpdatedTask(deleted)
+        viewModelScope.launch {
+            save()
+        }
     }
 
     fun removeUnnamedTasks() {

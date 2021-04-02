@@ -2,10 +2,14 @@ package me.bgregos.foreground.data.tasks
 
 import android.annotation.SuppressLint
 import android.content.SharedPreferences
+import androidx.work.impl.Schedulers
 import com.google.gson.Gson
 import java.util.*
 import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.withContext
 import me.bgregos.foreground.model.SyncResult
 import me.bgregos.foreground.model.Task
 import me.bgregos.foreground.network.RemoteTaskSource
@@ -54,11 +58,13 @@ class TaskRepository @Inject constructor(
      *  makes use of Room.
      */
     suspend fun save() {
-        remoteTaskSource.save()
-        val editor = prefs.edit()
-        editor.putString("LocalTasks", Gson().toJson(tasks.value))
-        editor.putString("LocalTasks.localChanges", Gson().toJson(localChanges.value))
-        editor.apply()
+        withContext(Dispatchers.IO) {
+            remoteTaskSource.save()
+            val editor = prefs.edit()
+            editor.putString("LocalTasks", Gson().toJson(tasks.value))
+            editor.putString("LocalTasks.localChanges", Gson().toJson(localChanges.value))
+            editor.apply()
+        }
     }
 
     /**
@@ -68,12 +74,14 @@ class TaskRepository @Inject constructor(
      * See the refactor note on [save] about planned changes.
      */
     suspend fun load() {
-        remoteTaskSource.load()
-        val taskType = object : TypeToken<ArrayList<Task>>() {}.type
-        tasks.value = Gson().fromJson(prefs.getString("LocalTasks", ""), taskType) ?: tasks.value
-        localChanges.value = Gson().fromJson(prefs.getString("LocalTasks.localChanges", ""), taskType) ?: localChanges.value
-        val lastSeenVersion = prefs.getInt("lastSeenVersion", 1)
-        runMigrationsIfRequired(lastSeenVersion)
+        withContext(Dispatchers.IO) {
+            remoteTaskSource.load()
+            val taskType = object : TypeToken<ArrayList<Task>>() {}.type
+            tasks.value = Gson().fromJson(prefs.getString("LocalTasks", ""), taskType) ?: tasks.value
+            localChanges.value = Gson().fromJson(prefs.getString("LocalTasks.localChanges", ""), taskType) ?: localChanges.value
+            val lastSeenVersion = prefs.getInt("lastSeenVersion", 1)
+            runMigrationsIfRequired(lastSeenVersion)
+        }
     }
 
     @SuppressLint("SimpleDateFormat")
