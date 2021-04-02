@@ -55,7 +55,6 @@ class TaskListFragment : Fragment() {
 
     override fun onAttach(context: Context) {
         context.getApplicationComponent().inject(this)
-        twoPane = context.isSideBySide()
         super.onAttach(context)
     }
 
@@ -66,6 +65,7 @@ class TaskListFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        context?.let { twoPane = it.isSideBySide() }
         syncButton = view.findViewById(R.id.action_sync)
         toolbar.inflateMenu(R.menu.menu_main)
         toolbar.navigationIcon = null
@@ -90,7 +90,6 @@ class TaskListFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         lifecycleScope.launchWhenStarted {
-            viewModel.load()
             viewModel.updatePendingNotifications()
         }
     }
