@@ -16,7 +16,6 @@ import me.bgregos.foreground.util.replace
 import javax.inject.Inject
 import javax.inject.Singleton
 
-@Singleton
 class FiltersViewModel @Inject constructor(
         private val repository: TaskFilterRepository
 ): ViewModel() {
@@ -27,21 +26,21 @@ class FiltersViewModel @Inject constructor(
         if (filters.value.contains(taskFilter)){
             return false
         }
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             repository.insertAll(taskFilter)
         }
         return true
     }
 
     fun removeFilter(taskFilter: TaskFilter) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             repository.delete(taskFilter)
         }
     }
 
     fun toggleFilterEnable(taskFilter: TaskFilter) {
         val newFilter = taskFilter.copy(enabled = !taskFilter.enabled)
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             repository.delete(taskFilter)
             repository.insertAll(newFilter)
         }
@@ -53,8 +52,5 @@ class FiltersViewModel @Inject constructor(
         val parameter = if (filter.parameter.isNullOrBlank()) "" else " \"${filter.parameter}\""
         return "$includeExclude $filterType$parameter"
     }
-
-
-
 
 }
