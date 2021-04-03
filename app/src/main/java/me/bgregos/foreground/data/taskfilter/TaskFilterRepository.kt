@@ -25,13 +25,18 @@ class TaskFilterRepository @Inject constructor(private val taskFilterDao: TaskFi
     }
 
     suspend fun insertAll(vararg filters: TaskFilter){
-        taskFilters.value = taskFilters.value.plus(filters)
         taskFilterDao.insertAll(*filters)
+        getAll()
+    }
+
+    suspend fun replace(new: TaskFilter){
+        taskFilterDao.updateAll(new)
+        getAll()
     }
 
     suspend fun delete(filter: TaskFilter){
-        taskFilters.value = taskFilters.value.minus(filter)
         taskFilterDao.delete(filter)
+        getAll()
     }
 
 }

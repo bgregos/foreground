@@ -47,7 +47,7 @@ class FiltersViewModel @Inject constructor(
     }
 
     fun generateFriendlyString(filter: TaskFilter): String {
-        val includeExclude = if (filter.filterMatching) "Exclude" else "Include"
+        val includeExclude = if (filter.filterMatching) "Exclude" else "Only include"
         val filterType = if (filter.parameter.isNullOrBlank()) "tasks that are ${filter.type.name}" else "tasks containing ${filter.type.name}"
         val parameter = if (filter.parameter.isNullOrBlank()) "" else " \"${filter.parameter}\""
         return "$includeExclude $filterType$parameter"
