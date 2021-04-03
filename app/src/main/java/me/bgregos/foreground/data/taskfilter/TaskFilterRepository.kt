@@ -11,7 +11,7 @@ import javax.inject.Singleton
 class TaskFilterRepository @Inject constructor(private val taskFilterDao: TaskFilterDao){
 
     init{
-        MainScope().launch{
+        MainScope().launch {
             taskFilters.value = getAll()
         }
     }
@@ -26,6 +26,11 @@ class TaskFilterRepository @Inject constructor(private val taskFilterDao: TaskFi
 
     suspend fun insertAll(vararg filters: TaskFilter){
         taskFilterDao.insertAll(*filters)
+        getAll()
+    }
+
+    suspend fun replace(new: TaskFilter){
+        taskFilterDao.updateAll(new)
         getAll()
     }
 

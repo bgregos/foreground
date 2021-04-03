@@ -17,13 +17,11 @@ import kotlin.reflect.KClass
 abstract class ViewModelBindingModule {
     @Binds
     @IntoMap
-    @Singleton
     @ViewModelKey(FiltersViewModel::class)
     abstract fun bindFiltersViewModel(view: FiltersViewModel): ViewModel
 
     @Binds
     @IntoMap
-    @Singleton
     @ViewModelKey(TaskViewModel::class)
     abstract fun bindTaskViewModel(view: TaskViewModel): ViewModel
 
