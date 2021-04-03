@@ -68,12 +68,12 @@ class TaskDetailFragment : Fragment() {
 
     override fun onAttach(context: Context) {
         context.getApplicationComponent().inject(this)
-        twoPane = context.isSideBySide()
 
         super.onAttach(context)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        context?.let { twoPane = it.isSideBySide() }
         super.onCreate(savedInstanceState)
         val bundle = this.arguments
         //load Task from bundle args

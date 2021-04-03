@@ -10,10 +10,6 @@ import javax.inject.Inject
 
 class MainActivity : AppCompatActivity() {
 
-    /**
-     * Whether or not the activity is in two-pane mode, i.e. running on a tablet
-     * device.
-     */
     private lateinit var fragment: TaskListFragment
 
     @Inject lateinit var notificationRepository: NotificationRepository
@@ -25,12 +21,10 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         getApplicationComponent().inject(this)
         setContentView(R.layout.activity_main)
-        if (savedInstanceState == null) {
-            val transaction: FragmentTransaction = supportFragmentManager.beginTransaction()
-            fragment = TaskListFragment.newInstance()
-            transaction.replace(R.id.task_list_container, fragment)
-            transaction.commit()
-        }
+        val transaction: FragmentTransaction = supportFragmentManager.beginTransaction()
+        fragment = TaskListFragment.newInstance()
+        transaction.replace(R.id.task_list_container, fragment)
+        transaction.commit()
     }
 
     override fun onPause() {
