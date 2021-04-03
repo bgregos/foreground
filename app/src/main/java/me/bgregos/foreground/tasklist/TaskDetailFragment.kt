@@ -44,8 +44,6 @@ import javax.inject.Inject
  */
 class TaskDetailFragment : Fragment() {
 
-    private var twoPane: Boolean = false
-
     private var _binding: FragmentTaskDetailBinding? = null
     // This property is only valid between onCreateView and onDestroyView.
     private val binding get() = _binding!!
@@ -73,7 +71,6 @@ class TaskDetailFragment : Fragment() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        context?.let { twoPane = it.isSideBySide() }
         super.onCreate(savedInstanceState)
         val bundle = this.arguments
         //load Task from bundle args
@@ -92,6 +89,8 @@ class TaskDetailFragment : Fragment() {
 
         _binding = FragmentTaskDetailBinding.inflate(inflater, container, false)
         val rootView = binding.root
+        var twoPane = false
+        context?.let { twoPane = it.isSideBySide() }
 
         rootView.detail_toolbar.title = if(viewModel.currentTask?.name?.isBlank() == true) "New Task" else viewModel.currentTask?.name
         setHasOptionsMenu(true)

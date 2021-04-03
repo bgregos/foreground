@@ -9,6 +9,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.ListPopupWindow
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -17,6 +18,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.android.synthetic.main.fragment_filters.view.*
+import kotlinx.android.synthetic.main.fragment_task_detail.view.*
 import kotlinx.android.synthetic.main.fragment_task_list.*
 import kotlinx.coroutines.flow.collect
 import me.bgregos.foreground.R
@@ -27,6 +30,7 @@ import me.bgregos.foreground.model.ParameterFormat
 import me.bgregos.foreground.model.TaskFilter
 import me.bgregos.foreground.model.TaskFiltersAvailable
 import me.bgregos.foreground.util.hideKeyboardFrom
+import me.bgregos.foreground.util.isSideBySide
 import javax.inject.Inject
 
 class FiltersFragment : Fragment() {
@@ -55,6 +59,16 @@ class FiltersFragment : Fragment() {
         super.onCreateView(inflater, container, savedInstanceState)
         _binding = FragmentFiltersBinding.inflate(inflater, container, false)
         binding.filtersRecyclerview.layoutManager = LinearLayoutManager(context)
+        val rootView = binding.root
+        var twoPane = false
+        context?.let { twoPane = it.isSideBySide() }
+
+        if(!twoPane){
+            (activity as AppCompatActivity?)?.setSupportActionBar(rootView.filter_toolbar)
+            (activity as AppCompatActivity?)?.supportActionBar?.setDisplayHomeAsUpEnabled(true)
+            rootView.filter_toolbar.menu.clear()
+            rootView.filter_toolbar.setNavigationOnClickListener(View.OnClickListener { _ -> activity?.supportFragmentManager?.popBackStack() })
+        }
 
         lifecycleScope.launchWhenStarted {
             viewModel.filters.collect {
