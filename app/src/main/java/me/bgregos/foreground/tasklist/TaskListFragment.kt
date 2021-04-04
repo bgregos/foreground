@@ -10,7 +10,6 @@ import android.view.animation.RotateAnimation
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
@@ -26,13 +25,9 @@ import me.bgregos.foreground.filter.FiltersFragment
 import me.bgregos.foreground.getApplicationComponent
 import me.bgregos.foreground.model.SyncResult
 import me.bgregos.foreground.model.Task
-import me.bgregos.foreground.network.RemoteTaskSource
 import me.bgregos.foreground.settings.SettingsActivity
 import me.bgregos.foreground.util.*
-import java.io.File
-import java.net.URL
 import javax.inject.Inject
-
 
 class TaskListFragment : Fragment() {
 
@@ -46,11 +41,13 @@ class TaskListFragment : Fragment() {
     @Inject
     lateinit var viewModelFactory: ViewModelProvider.Factory
 
-    private val viewModel by viewModels<TaskViewModel> { viewModelFactory }
+    lateinit var viewModel: TaskViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setHasOptionsMenu(true)
         super.onCreate(savedInstanceState)
+        //use activity viewmodel store since this viewmodel is shared between fragments
+        viewModel = ViewModelProvider(requireActivity().viewModelStore, viewModelFactory).get(TaskViewModel::class.java)
     }
 
     override fun onAttach(context: Context) {

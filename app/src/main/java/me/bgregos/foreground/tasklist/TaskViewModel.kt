@@ -1,5 +1,6 @@
 package me.bgregos.foreground.tasklist
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
