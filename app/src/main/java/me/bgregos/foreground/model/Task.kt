@@ -115,6 +115,10 @@ data class Task(
                 Log.e(this.javaClass.toString(), "Skipping task import: "+ex.toString())
                 return null
             }
+
+            val timeFormatter = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'")
+            timeFormatter.timeZone = TimeZone.getTimeZone("UTC")
+
             val name = obj.optString("description")?: ""
             val uuid = UUID.fromString(obj.getString("uuid"))
             val project = obj.optString("project") ?: null
@@ -124,12 +128,12 @@ data class Task(
             var dueDate: Date? = null
             convDate = obj.optString("due")?:""
             if (!convDate.isNullOrBlank()) {
-                dueDate = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").parse(convDate)
+                dueDate = timeFormatter.parse(convDate)
             }
             var modifiedDate: Date? = null
             convDate = obj.optString("modified")?:""
             if (!convDate.isNullOrBlank()) {
-                modifiedDate = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").parse(convDate)
+                modifiedDate = timeFormatter.parse(convDate)
             }
             var entryDate = Date()
             // "created" is changed to "entry" since 1.4 for better sync compatibility
@@ -138,17 +142,17 @@ data class Task(
                 convDate = obj.optString("entry")?:""
             }
             if (!convDate.isNullOrBlank()) {
-                entryDate = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").parse(convDate)
+                entryDate = timeFormatter.parse(convDate)
             }
             var waitDate: Date? = null
             convDate = obj.optString("wait")?:""
             if (!convDate.isNullOrBlank()) {
-                waitDate = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").parse(convDate)
+                waitDate = timeFormatter.parse(convDate)
             }
             var endDate: Date? = null
             convDate = obj.optString("end")?:""
             if (!convDate.isNullOrBlank()) {
-                endDate = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'").parse(convDate)
+                endDate = timeFormatter.parse(convDate)
             }
             val tags = arrayListOf<String>()
             val jsontags = obj.optJSONArray("tags")?: JSONArray()
