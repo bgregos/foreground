@@ -44,10 +44,7 @@ class TaskBroadcastReceiver: BroadcastReceiver() {
                         }
                         val newTask = item.copy(modifiedDate = Date(), status = "completed")
                         tasksRepository.tasks.value = tasksRepository.tasks.value.replace(newTask) { it === item }
-                        if (!tasksRepository.localChanges.value.contains(item)){
-                            tasksRepository.localChanges.value.plus(item)
-
-                        }
+                        tasksRepository.addToLocalChanges(newTask)
                         tasksRepository.tasks.value = tasksRepository.tasks.value.filter{ it.uuid != item.uuid }
                         tasksRepository.save()
                     }

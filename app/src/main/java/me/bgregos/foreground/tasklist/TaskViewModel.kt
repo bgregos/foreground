@@ -153,11 +153,7 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
 
     private fun postUpdatedTask(task: Task) {
         val updated = task.copy(modifiedDate = Date())
-        if(!taskRepository.localChanges.value.contains(updated)){
-            taskRepository.localChanges.value = taskRepository.localChanges.value.plus(task)
-        } else {
-            taskRepository.localChanges.value = taskRepository.localChanges.value.replace(updated) { it === task }
-        }
+        taskRepository.addToLocalChanges(updated)
         tasks.value = tasks.value.replace(updated) { it.uuid == task.uuid }
         checkForTasksNoLongerWaiting()
         updatePendingNotifications()

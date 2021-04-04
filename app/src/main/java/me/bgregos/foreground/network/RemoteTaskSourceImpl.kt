@@ -170,6 +170,7 @@ class RemoteTaskSourceImpl @Inject constructor(private val filesDir: File, priva
                         var result = taskwarriorSync()
                         return@launch result
                     } else {
+                        localChanges.clear()
                         Log.i("taskwarriorSync", "Sync successful")
                         return@launch SyncResult(true, "Sync Successful")
                     }
