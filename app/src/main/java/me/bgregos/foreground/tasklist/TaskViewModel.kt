@@ -31,7 +31,11 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
             filtersRepository.taskFilters.combine(tasks) { filters, tasks ->
                 var out: ArrayList<Task> = arrayListOf<Task>().apply { addAll(tasks) }
                 filters.forEach {
-                    if (it.enabled) out = out.filter { task -> it.type.filter(task, it.parameter) } as ArrayList<Task>
+                        if (it.enabled) out = out.filter { task ->
+                            var filterResult = it.type.filter(task, it.parameter)
+                        if (it.filterMatching) filterResult = !filterResult
+                        filterResult
+                    } as ArrayList<Task>
                 }
                 //visibleTasks = visibleTasks.filter { it.name.isNotBlank() } as ArrayList<Task>
                 out.sortWith(Task.DateCompare())
@@ -149,11 +153,7 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
 
     private fun postUpdatedTask(task: Task) {
         val updated = task.copy(modifiedDate = Date())
-        if(!taskRepository.localChanges.value.contains(updated)){
-            taskRepository.localChanges.value = taskRepository.localChanges.value.plus(task)
-        } else {
-            taskRepository.localChanges.value = taskRepository.localChanges.value.replace(updated) { it === task }
-        }
+        taskRepository.addToLocalChanges(updated)
         tasks.value = tasks.value.replace(updated) { it.uuid == task.uuid }
         checkForTasksNoLongerWaiting()
         updatePendingNotifications()

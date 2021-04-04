@@ -36,9 +36,6 @@ class SettingsActivity : AppCompatActivity() {
     @Inject
     lateinit var localTasksRepository: TaskRepository
 
-    @Inject
-    lateinit var remoteTaskSource: RemoteTaskSource
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         getApplicationComponent().inject(this)
@@ -71,11 +68,11 @@ class SettingsActivity : AppCompatActivity() {
                 settings_sync.visibility = View.GONE
                 save()
                 settings_syncprogress.visibility = View.VISIBLE
-                CoroutineScope(Dispatchers.Main).launch {
+                CoroutineScope(Dispatchers.IO).launch {
                     var response: SyncResult
                     var exception: Exception? = null
                     try {
-                        response = remoteTaskSource.taskwarriorInitSync()
+                        response = localTasksRepository.testSync()
                     }catch (e: Exception){
                         exception = e
                         Log.e("test sync error", e.toString())

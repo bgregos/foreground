@@ -25,7 +25,7 @@ class TaskRepository @Inject constructor(
         private val remoteTaskSource: RemoteTaskSource) {
 
     var tasks: MutableStateFlow<List<Task>> = MutableStateFlow(listOf())
-    var localChanges: MutableStateFlow<List<Task>> = MutableStateFlow(listOf())
+    val localChanges: MutableStateFlow<List<Task>> = MutableStateFlow(listOf())
 
     suspend fun taskwarriorSync(): SyncResult {
         remoteTaskSource.tasks = tasks.value.toMutableList()
@@ -42,6 +42,14 @@ class TaskRepository @Inject constructor(
 
     fun resetSync() {
         remoteTaskSource.resetSync()
+    }
+
+    fun addToLocalChanges(updated: Task) {
+        if(localChanges.value.contains(updated)){
+            localChanges.value = localChanges.value.plus(updated)
+        } else {
+            localChanges.value = localChanges.value.replace(updated) { it.uuid == updated.uuid }
+        }
     }
 
     /**
