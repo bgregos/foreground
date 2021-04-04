@@ -162,7 +162,6 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
         save()
         removeUnnamedTasks()
         val syncResult = taskRepository.taskwarriorSync()
-        tasks.value = taskRepository.tasks.value
         if(tasks.value?.contains(currentTask) != true) {
             //close the detail fragment
             closeDetailChannel.offer(Unit)
