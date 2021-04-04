@@ -1,21 +1,16 @@
 package me.bgregos.foreground.tasklist
 
-import android.app.Activity
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Context
-import android.content.Context.INPUT_METHOD_SERVICE
 import android.os.Bundle
 import android.util.Log
 import android.view.*
-import android.view.inputmethod.InputMethodManager
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import kotlinx.android.synthetic.main.date_layout.*
@@ -35,7 +30,6 @@ import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
 
-
 /**
  * A fragment representing a single Task detail screen.
  * This fragment is either contained in a [MainActivity]
@@ -52,7 +46,7 @@ class TaskDetailFragment : Fragment() {
     @Inject
     lateinit var viewModelFactory: ViewModelProvider.Factory
 
-    private val viewModel by viewModels<TaskViewModel> { viewModelFactory }
+    lateinit var viewModel: TaskViewModel
 
     companion object {
         fun newInstance(uuid: UUID): TaskDetailFragment{
@@ -66,12 +60,13 @@ class TaskDetailFragment : Fragment() {
 
     override fun onAttach(context: Context) {
         context.getApplicationComponent().inject(this)
-
         super.onAttach(context)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        //use activity viewmodel store since this viewmodel is shared between fragments
+        viewModel = ViewModelProvider(requireActivity().viewModelStore, viewModelFactory).get(TaskViewModel::class.java)
         val bundle = this.arguments
         //load Task from bundle args
         if (bundle?.getString("uuid") != null) {
