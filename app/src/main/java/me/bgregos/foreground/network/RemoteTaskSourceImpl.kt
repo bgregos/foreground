@@ -237,17 +237,14 @@ class RemoteTaskSourceImpl @Inject constructor(private val filesDir: File, priva
     }
 }
 
-class TaskwarriorSyncWorker(val ctx: Context, workerParams: WorkerParameters, private val notificationRepository: NotificationRepository, private val tasksRepository: TaskRepository, private val remoteTasks: RemoteTaskSource)
+class TaskwarriorSyncWorker(ctx: Context, workerParams: WorkerParameters, private val notificationRepository: NotificationRepository, private val tasksRepository: TaskRepository)
     : CoroutineWorker(ctx, workerParams) {
 
     override suspend fun doWork(): Result = coroutineScope {
         val job = async {
-            remoteTasks.taskwarriorSync()
+            tasksRepository.taskwarriorSync()
             Log.i("taskwarrior_sync", "Automatic Sync Complete")
-            //TODO: Remove this broadcast - it should be handled by livedata
-            var localIntent: Intent = Intent("BRIGHTTASK_REMOTE_TASK_UPDATE") //Send local broadcast
             notificationRepository.scheduleNotificationForTasks(tasksRepository.tasks.value)
-            LocalBroadcastManager.getInstance(ctx).sendBroadcast(localIntent)
         }
         job.await()
         Result.success()
@@ -256,15 +253,13 @@ class TaskwarriorSyncWorker(val ctx: Context, workerParams: WorkerParameters, pr
     class Factory @Inject constructor(
             private val notificationRepository: Provider<NotificationRepository>,
             private val tasksRepository: Provider<TaskRepository>,
-            private val remoteTaskSource: Provider<RemoteTaskSource>
     ) : CustomWorkerFactory {
         override fun create(appContext: Context, params: WorkerParameters): ListenableWorker {
             return TaskwarriorSyncWorker(
                     appContext,
                     params,
                     notificationRepository.get(),
-                    tasksRepository.get(),
-                    remoteTaskSource.get()
+                    tasksRepository.get()
             )
         }
     }
