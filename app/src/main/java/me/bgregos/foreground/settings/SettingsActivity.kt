@@ -2,6 +2,7 @@ package me.bgregos.foreground.settings
 
 import android.app.Activity
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.database.Cursor
 import android.graphics.Color
@@ -12,6 +13,8 @@ import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import android.view.View
+import androidx.appcompat.app.AlertDialog
+import androidx.lifecycle.lifecycleScope
 import androidx.work.*
 import kotlinx.android.synthetic.main.activity_settings.*
 import kotlinx.coroutines.CoroutineScope
@@ -63,38 +66,12 @@ class SettingsActivity : AppCompatActivity() {
         settings_sync.setOnClickListener {
 
             if (settings_sync.isChecked) {
-                settings_enable_sync_text.text = "Testing Sync"
-                settings_sync.isChecked = false
-                settings_sync.visibility = View.GONE
-                save()
-                settings_syncprogress.visibility = View.VISIBLE
-                CoroutineScope(Dispatchers.IO).launch {
-                    var response: SyncResult
-                    var exception: Exception? = null
-                    try {
-                        response = localTasksRepository.testSync()
-                    }catch (e: Exception){
-                        exception = e
-                        Log.e("test sync error", e.toString())
-                        response = SyncResult(false, "Invalid or incomplete configuration.")
-                    }
-                    Log.i(this.javaClass.toString(), response.message)
-                    settings_sync.visibility = View.VISIBLE
-                    settings_enable_sync_text.text = "Enable Sync"
-                    settings_syncprogress.visibility = View.INVISIBLE
-                    if (response.success) {
-                        settings_sync.isChecked = true
-                        val bar = Snackbar.make(settings_parent, "Sync enabled successfully!", Snackbar.LENGTH_SHORT)
-                        bar.view.setBackgroundColor(Color.parseColor("#34309f"))
-                        bar.show()
-                    }else{
-                        val bar = Snackbar.make(settings_parent, response.message, Snackbar.LENGTH_LONG)
-                        bar.view.setBackgroundColor(Color.parseColor("#34309f"))
-                        bar.setAction("Details", ShowErrorDetail(exception?.toString() ?: response.message, this@SettingsActivity))
-                        bar.setActionTextColor(Color.WHITE)
-                        bar.show()
-                    }
-                }
+                val alertDialogBuilder = AlertDialog.Builder(this)
+                        .setTitle(getString(R.string.warning))
+                        .setMessage(getString(R.string.sync_warning))
+                        .setPositiveButton(getString(R.string.accept)) { _, _ -> attemptInitialSync() }
+                        .setNegativeButton(getString(R.string.go_back)) { _, _ -> cancelInitialSync() }
+                alertDialogBuilder.show()
             } else {
                 settings_auto_sync.isChecked = false
             }
@@ -113,6 +90,46 @@ class SettingsActivity : AppCompatActivity() {
         if (interval < 15){
             settings_auto_sync_interval.setText("15")
         }
+    }
+
+    private fun attemptInitialSync(){
+        settings_enable_sync_text.text = "Testing Sync"
+        settings_sync.isChecked = false
+        settings_sync.visibility = View.GONE
+        save()
+        settings_syncprogress.visibility = View.VISIBLE
+        CoroutineScope(Dispatchers.Main).launch {
+            var response: SyncResult
+            var exception: Exception? = null
+            try {
+                response = localTasksRepository.testSync()
+            }catch (e: Exception){
+                exception = e
+                Log.e("test sync error", e.toString())
+                response = SyncResult(false, "Invalid or incomplete configuration.")
+            }
+            Log.i(this.javaClass.toString(), response.message)
+            settings_sync.visibility = View.VISIBLE
+            settings_enable_sync_text.text = "Enable Sync"
+            settings_syncprogress.visibility = View.INVISIBLE
+            if (response.success) {
+                settings_sync.isChecked = true
+                val bar = Snackbar.make(settings_parent, "Sync enabled successfully!", Snackbar.LENGTH_SHORT)
+                bar.view.setBackgroundColor(Color.parseColor("#34309f"))
+                bar.show()
+            }else{
+                val bar = Snackbar.make(settings_parent, response.message, Snackbar.LENGTH_LONG)
+                bar.view.setBackgroundColor(Color.parseColor("#34309f"))
+                bar.setAction("Details", ShowErrorDetail(exception?.toString() ?: response.message, this@SettingsActivity))
+                bar.setActionTextColor(Color.WHITE)
+                bar.show()
+            }
+        }
+    }
+
+    private fun cancelInitialSync(){
+        settings_sync.isChecked = false
+        settings_auto_sync.isChecked = false
     }
 
     fun onAutoSyncClicked(){

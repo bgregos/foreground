@@ -87,4 +87,20 @@
     <string name="filter_warning_already_added">This filter is already present.</string>
     <string name="filter_parameter_hint_enabled">Filter Parameter</string>
     <string name="filter_parameter_hint_disabled">No parameter required</string>
+    <string name="undo_changes">Undo changes since last sync</string>
+    <string name="server_address">Server Address</string>
+    <string name="port">Port</string>
+    <string name="user_credentials_organization_user_key">User Credentials organization/user/key</string>
+    <string name="ca_certificate">CA Certificate</string>
+    <string name="private_key_file">Private Key File</string>
+    <string name="private_certificate">Private Certificate</string>
+    <string name="attribution">The Foreground logo is a modified version of an icon created by monkik from flaticon.\nThanks to aaschmid for their taskwarrior-java-client, which is licensed under the Apache License 2.0.</string>
+    <string name="license">This app is licensed under the Apache License 2.0. Full terms of the license are available at https://www.apache.org/licenses/LICENSE-2.0.html</string>
+    <string name="legal">Legal</string>
+    <string name="credits">Credits</string>
+    <string name="sync_warning">Taskwarrior sync functionality is currently in beta. Despite the authors\' best efforts, your task list could be corrupted or otherwise lost. The authors are not responsible for any losses incurred.</string>
+    <string name="warning">Warning: Beta Feature</string>
+    <string name="accept">Accept</string>
+    <string name="go_back">Go Back</string>
+    <string name="taskwarrior_sync">Taskwarrior Sync (Beta)</string>
 </resources>

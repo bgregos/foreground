@@ -181,12 +181,13 @@ class RemoteTaskSourceImpl @Inject constructor(private val filesDir: File, priva
         }
     }
 
-    override fun resetSync() {
+    override suspend fun resetSync() {
         tasks.clear()
         localChanges.clear()
         syncKey = ""
-        syncEnabled = false
+        syncEnabled = true
         firstSyncRan = false
+        save()
     }
 
     override suspend fun save() {

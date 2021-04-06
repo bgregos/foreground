@@ -5,7 +5,6 @@ import android.graphics.Color
 import android.os.Bundle
 import android.text.InputType
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
@@ -19,8 +18,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_filters.view.*
-import kotlinx.android.synthetic.main.fragment_task_detail.view.*
-import kotlinx.android.synthetic.main.fragment_task_list.*
 import kotlinx.coroutines.flow.collect
 import me.bgregos.foreground.R
 import me.bgregos.foreground.databinding.FilterListContentBinding
@@ -110,7 +107,7 @@ class FiltersFragment : Fragment() {
                         id = 0,
                         type = TaskFiltersAvailable.filters.first { it.name == binding.filterType.text.toString() },
                         parameter = binding.filterParameter.text.toString(),
-                        filterMatching = binding.filterInclusionButton.isChecked
+                        includeMatching = !binding.filterInclusionButton.isChecked
                 )
                 val added = viewModel.addFilter(newFilter)
                 if (!added) {

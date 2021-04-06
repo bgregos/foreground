@@ -40,8 +40,10 @@ class TaskRepository @Inject constructor(
         return remoteTaskSource.taskwarriorInitSync()
     }
 
-    fun resetSync() {
+    suspend fun resetSync(){
+        localChanges.value = listOf()
         remoteTaskSource.resetSync()
+        save()
     }
 
     fun addToLocalChanges(updated: Task) {

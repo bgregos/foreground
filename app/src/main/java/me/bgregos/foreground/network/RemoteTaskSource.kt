@@ -12,7 +12,7 @@ interface RemoteTaskSource {
 
     suspend fun taskwarriorSync(): SyncResult
 
-    fun resetSync()
+    suspend fun resetSync()
 
     suspend fun save()
 
