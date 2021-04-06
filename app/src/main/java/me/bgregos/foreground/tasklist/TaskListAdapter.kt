@@ -71,7 +71,7 @@ class TaskListAdapter(private val parentFragment: TaskListFragment,
         }
         val color = ColorDrawable(when (item.priority) {
             "H" -> Color.parseColor("#550000")
-            "M" -> Color.parseColor("#666600")
+            "M" -> Color.parseColor("#666666")
             "L" -> Color.parseColor("#303066")
             else -> Color.parseColor("#373737")
         })

@@ -43,11 +43,16 @@
                 android:id="@+id/title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:singleLine="false"
                 android:textSize="16sp"
                 android:textStyle="bold"
+                android:layout_marginEnd="8dp"
+                app:layout_constraintHorizontal_bias="0"
+                app:layout_constrainedWidth="true"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                debug:text="title" />
+                app:layout_constraintEnd_toStartOf="@id/complete"
+                debug:text="this text is very long and con expand to as many lines as it needs" />
 
             <ImageView
                 android:id="@+id/ic_date"
@@ -57,8 +62,7 @@
                 android:src="@drawable/ic_date"
                 app:layout_constraintBottom_toBottomOf="@id/due"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="@id/due"
-                debug:layout_editor_absoluteY="30dp" />
+                app:layout_constraintTop_toTopOf="@id/due" />
 
             <TextView
                 android:id="@+id/due"
@@ -94,10 +98,9 @@
                 android:id="@+id/ic_tags"
                 android:layout_width="14sp"
                 android:layout_height="14sp"
-                android:layout_marginStart="12dp"
                 android:src="@drawable/ic_tag"
                 app:layout_constraintBottom_toBottomOf="@+id/tags"
-                app:layout_constraintStart_toEndOf="@id/project"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/tags" />
 
             <TextView
