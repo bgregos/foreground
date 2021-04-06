@@ -80,14 +80,6 @@ class SettingsActivity : AppCompatActivity() {
         settings_cert_ca_button.setOnClickListener { performCertFileSearch(CertType.CERT_CA) }
         settings_private_key_button.setOnClickListener { performCertFileSearch(CertType.CERT_KEY) }
         settings_cert_private_button.setOnClickListener { performCertFileSearch(CertType.CERT_PRIVATE) }
-        settings_reset_sync.setOnClickListener {
-            lifecycleScope.launchWhenStarted {
-                localTasksRepository.resetSync()
-            }
-            val bar = Snackbar.make(settings_parent, "Sync has been reset to its original status.", Snackbar.LENGTH_SHORT)
-            bar.view.setBackgroundColor(Color.parseColor("#34309f"))
-            bar.show()
-        }
         settings_auto_sync.setOnClickListener { onAutoSyncClicked() }
         settings_auto_sync.setOnFocusChangeListener { _, focused -> if(!focused) onAutoSyncIntervalChanged() }
     }
