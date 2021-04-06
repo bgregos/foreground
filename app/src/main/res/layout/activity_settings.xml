@@ -26,16 +26,8 @@
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
         android:textSize="24sp"
-        android:text="Taskwarrior Sync" />
+        android:text="@string/taskwarrior_sync" />
 
-    <TextView
-        android:id="@+id/sync_warning"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
-        android:layout_marginTop="8dp"
-        android:text="Warning: Sync functionality is currently in beta. Your task list could be corrupted or otherwise lost." />
 
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
@@ -163,7 +155,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:ems="10"
-                        android:hint="Server Address"
+                        android:hint="@string/server_address"
                         android:inputType="textUri"
                         android:selectAllOnFocus="false"
                         android:singleLine="true"
@@ -181,7 +173,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:ems="10"
-                        android:hint="Port"
+                        android:hint="@string/port"
                         android:inputType="number"
                         android:singleLine="true" />
                 </com.google.android.material.textfield.TextInputLayout>
@@ -196,7 +188,7 @@
                     android:id="@+id/settings_credentials"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="User Credentials organization/user/key"
+                    android:hint="@string/user_credentials_organization_user_key"
                     android:inputType="text"
                     android:selectAllOnFocus="true"
                     android:singleLine="true"  />
@@ -213,7 +205,7 @@
                     android:orientation="horizontal">
 
                     <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1" >
 
@@ -221,7 +213,7 @@
                             android:id="@+id/settings_cert_ca"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:hint="CA Certificate"
+                            android:hint="@string/ca_certificate"
                             android:focusableInTouchMode="false"
                             android:scrollHorizontally="true"
                             android:singleLine="true"
@@ -243,7 +235,7 @@
                     android:orientation="horizontal">
 
                     <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1" >
 
@@ -251,7 +243,7 @@
                             android:id="@+id/settings_private_key"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:hint="Private Key File"
+                            android:hint="@string/private_key_file"
                             android:focusableInTouchMode="false"
                             android:scrollHorizontally="true"
                             android:singleLine="true"
@@ -273,7 +265,7 @@
                     android:orientation="horizontal">
 
                     <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1" >
 
@@ -281,7 +273,7 @@
                             android:id="@+id/settings_cert_private"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:hint="Private Certificate"
+                            android:hint="@string/private_certificate"
                             android:focusableInTouchMode="false"
                             android:scrollHorizontally="true"
                             android:singleLine="true"
@@ -320,7 +312,7 @@
         android:layout_marginTop="8dp"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
-        android:text="Credits" />
+        android:text="@string/credits" />
 
     <TextView
         android:id="@+id/textView3"
@@ -328,7 +320,7 @@
         android:layout_height="wrap_content"
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
-        android:text="The Foreground logo is a modified version of an icon created by monkik from flaticon.\nThanks to aaschmid for their taskwarrior-java-client, which is licensed under the Apache License 2.0." />
+        android:text="@string/attribution" />
 
     <TextView
         android:id="@+id/textView4"
@@ -336,7 +328,7 @@
         android:layout_height="wrap_content"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
-        android:text="Legal" />
+        android:text="@string/legal" />
 
     <TextView
         android:id="@+id/textView5"
@@ -345,7 +337,8 @@
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
         android:layout_marginBottom="8dp"
-        android:text="This app is licensed under the Apache License 2.0. Full terms of the license are available at https://www.apache.org/licenses/LICENSE-2.0.html" />
+        android:autoLink="web"
+        android:text="@string/license" />
 
 
 </LinearLayout>

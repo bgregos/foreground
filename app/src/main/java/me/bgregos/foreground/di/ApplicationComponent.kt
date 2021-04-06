@@ -21,6 +21,7 @@ import javax.inject.Singleton
     ViewModelBindingModule::class,
     WorkerBindingModule::class,
     TaskModule::class,
+    DatabaseModule::class,
     FilterModule::class
 ] )
 interface ApplicationComponent {

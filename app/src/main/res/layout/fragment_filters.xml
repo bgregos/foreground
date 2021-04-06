@@ -99,7 +99,7 @@
                 android:id="@+id/filter_inclusion_button"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:textOff="Include Matching"
+                android:textOff="Only Include Matching"
                 android:textOn="Exclude Matching"
                 app:layout_constraintEnd_toEndOf="@+id/filter_type_container"
                 app:layout_constraintStart_toStartOf="parent"
