@@ -107,7 +107,7 @@ class FiltersFragment : Fragment() {
                         id = 0,
                         type = TaskFiltersAvailable.filters.first { it.name == binding.filterType.text.toString() },
                         parameter = binding.filterParameter.text.toString(),
-                        includeMatching = !binding.filterInclusionButton.isChecked
+                        includeMatching = binding.filterInclusionButton.isChecked
                 )
                 val added = viewModel.addFilter(newFilter)
                 if (!added) {
