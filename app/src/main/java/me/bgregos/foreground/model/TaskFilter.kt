@@ -12,7 +12,7 @@ import java.util.*
  * @property type type of filter. ex: PROJECT
  * @property parameter optional user-supplied parameter. ex: "renovation"
  * @property enabled this filter is enabled. most filters should default to true since they are usually created explicitly by the user
- * @property filterMatching filter out tasks that do match this filter, instead of those that do not.
+ * @property includeMatching filter out tasks that do match this filter, instead of those that do not.
  */
 @Entity
 data class TaskFilter (
@@ -20,13 +20,13 @@ data class TaskFilter (
         val type: TaskFilterType,
         var parameter: String?,
         var enabled: Boolean = true,
-        var filterMatching: Boolean = false
+        var includeMatching: Boolean = false
 ) {
     override fun equals(other: Any?): Boolean {
         return other is TaskFilter &&
                 this.type == other.type &&
                 this.parameter == other.parameter &&
-                this.filterMatching == other.filterMatching
+                this.includeMatching == other.includeMatching
     }
 }
 

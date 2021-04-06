@@ -1,20 +1,12 @@
 package me.bgregos.foreground.filter
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import me.bgregos.foreground.data.taskfilter.TaskFilterRepository
 import me.bgregos.foreground.model.TaskFilter
-import me.bgregos.foreground.util.replace
 import javax.inject.Inject
-import javax.inject.Singleton
 
 class FiltersViewModel @Inject constructor(
         private val repository: TaskFilterRepository
@@ -47,7 +39,7 @@ class FiltersViewModel @Inject constructor(
     }
 
     fun generateFriendlyString(filter: TaskFilter): String {
-        val includeExclude = if (filter.filterMatching) "Exclude" else "Only include"
+        val includeExclude = if (filter.includeMatching) "Only Include" else "Exclude"
         val filterType = if (filter.parameter.isNullOrBlank()) "tasks that are ${filter.type.name}" else "tasks containing ${filter.type.name}"
         val parameter = if (filter.parameter.isNullOrBlank()) "" else " \"${filter.parameter}\""
         return "$includeExclude $filterType$parameter"

@@ -29,7 +29,7 @@ abstract class ForegroundDatabase : RoomDatabase() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
                             super.onCreate(db)
                             //pre-populate data
-                            db.execSQL("INSERT INTO TaskFilter VALUES (null,'waiting',null,true,true) ")
+                            db.execSQL("INSERT INTO TaskFilter VALUES (null,'waiting',null,true,false) ")
                         }
                     })
                     .build()

@@ -1,13 +1,11 @@
 package me.bgregos.foreground.tasklist
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import me.bgregos.foreground.data.taskfilter.TaskFilterRepository
@@ -33,7 +31,7 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
                 filters.forEach {
                         if (it.enabled) out = out.filter { task ->
                             var filterResult = it.type.filter(task, it.parameter)
-                        if (it.filterMatching) filterResult = !filterResult
+                        if (!it.includeMatching) filterResult = !filterResult
                         filterResult
                     } as ArrayList<Task>
                 }

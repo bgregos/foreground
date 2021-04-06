@@ -1,7 +1,7 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat">
+    <style name="AppTheme" parent="Theme.MaterialComponents.NoActionBar.Bridge">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
@@ -35,5 +35,10 @@
 
     <style name="TextInputLayout" parent="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
 
+    </style>
+
+    <style name="MaterialButtonGroup" parent="@style/Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="backgroundTint">#555555</item>
     </style>
 </resources>
