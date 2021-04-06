@@ -52,7 +52,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/complete"
-                debug:text="this text is very long and con expand to as many lines as it needs" />
+                debug:text="task name here" />
 
             <ImageView
                 android:id="@+id/ic_date"
