@@ -14,9 +14,6 @@ class MainActivity : AppCompatActivity() {
 
     @Inject lateinit var notificationRepository: NotificationRepository
 
-    @Inject lateinit var taskRepository: NotificationRepository
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         getApplicationComponent().inject(this)
@@ -29,7 +26,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
         notificationRepository.save()
-        taskRepository.save()
         super.onPause()
     }
 }

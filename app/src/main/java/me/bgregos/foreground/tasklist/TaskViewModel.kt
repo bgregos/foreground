@@ -76,7 +76,6 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
 
     suspend fun save(){
         removeUnnamedTasks()
-        notificationRepository.scheduleNotificationForTasks(tasks.value ?: listOf())
         taskRepository.save()
     }
 
