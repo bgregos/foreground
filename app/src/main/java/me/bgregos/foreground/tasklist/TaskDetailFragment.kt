@@ -23,6 +23,7 @@ import kotlinx.coroutines.launch
 import me.bgregos.foreground.R
 import me.bgregos.foreground.databinding.FragmentTaskDetailBinding
 import me.bgregos.foreground.getApplicationComponent
+import me.bgregos.foreground.util.hideKeyboardFrom
 import me.bgregos.foreground.util.isSideBySide
 import me.bgregos.foreground.util.tabletDetailAnimations
 import java.text.DateFormatSymbols
@@ -290,6 +291,7 @@ class TaskDetailFragment : Fragment() {
     override fun onPause() {
         //remove this task if it's blank - taskwarrior disallows tasks with no name
         viewModel.removeUnnamedTasks()
+        context?.let { ctx -> hideKeyboardFrom(ctx, binding.root) }
         CoroutineScope(Dispatchers.Main).launch {
             viewModel.save()
         }
