@@ -42,11 +42,11 @@ class TaskDetailFragment : Fragment() {
     private var _binding: FragmentTaskDetailBinding? = null
     // This property is only valid between onCreateView and onDestroyView.
     private val binding get() = _binding!!
+    private var initialPrioritySet = false
 
 
     @Inject
     lateinit var viewModelFactory: ViewModelProvider.Factory
-
     lateinit var viewModel: TaskViewModel
 
     companion object {
@@ -153,8 +153,12 @@ class TaskDetailFragment : Fragment() {
             }
 
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                val selected: String = rootView.detail_priority.getItemAtPosition(position).toString()
-                viewModel.setTaskPriority(selected)
+                if (initialPrioritySet){
+                    val selected: String = rootView.detail_priority.getItemAtPosition(position).toString()
+                    viewModel.setTaskPriority(selected)
+                } else {
+                    initialPrioritySet = true
+                }
             }
         }
 //        rootView.detail_priority.setOnTouchListener { view, _ ->

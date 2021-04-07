@@ -2,12 +2,10 @@ package me.bgregos.foreground.data.tasks
 
 import android.annotation.SuppressLint
 import android.content.SharedPreferences
-import androidx.work.impl.Schedulers
 import com.google.gson.Gson
 import java.util.*
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withContext
 import me.bgregos.foreground.model.SyncResult
@@ -47,7 +45,7 @@ class TaskRepository @Inject constructor(
     }
 
     fun addToLocalChanges(updated: Task) {
-        if(localChanges.value.contains(updated)){
+        if(localChanges.value.firstOrNull{ it.uuid == updated.uuid } == null){
             localChanges.value = localChanges.value.plus(updated)
         } else {
             localChanges.value = localChanges.value.replace(updated) { it.uuid == updated.uuid }

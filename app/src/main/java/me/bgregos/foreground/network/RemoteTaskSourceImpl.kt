@@ -162,20 +162,21 @@ class RemoteTaskSourceImpl @Inject constructor(private val filesDir: File, priva
 
                         }
                     }
-
-                    if (!firstSyncRan) { //immediately after initial sync, start another to upload tasks.
-                        firstSyncRan = true
-                        sharedPreferences.edit().putBoolean("RemoteTaskSource.firstSyncRan", true).apply()
-                        Log.i("taskwarriorSync", "Initial sync finished, uploading tasks...")
-                        var result = taskwarriorSync()
-                        return@launch result
-                    } else {
-                        localChanges.clear()
-                        Log.i("taskwarriorSync", "Sync successful")
-                        return@launch SyncResult(true, "Sync Successful")
-                    }
                 }
             }
+
+            if (!firstSyncRan) { //immediately after initial sync, start another to upload tasks.
+                firstSyncRan = true
+                sharedPreferences.edit().putBoolean("RemoteTaskSource.firstSyncRan", true).apply()
+                Log.i("taskwarriorSync", "Initial sync finished, uploading tasks...")
+                var result = taskwarriorSync()
+                return@launch result
+            } else {
+                localChanges.clear()
+                Log.i("taskwarriorSync", "Sync successful")
+                return@launch SyncResult(true, "Sync Successful")
+            }
+
         } else {
             return@launch SyncResult(false, "Sync not setup - you can do this in settings")
         }
