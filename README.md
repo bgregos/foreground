@@ -27,6 +27,6 @@ Builds are released on Google Play and under the Releases tab of this page. F-Dr
 Want to report a bug, submit a feature request, or contribute code? Read [CONTRIBUTING.md](CONTRIBUTING.md)! It contains information on this project's procedures, standards, and architecture.
 
 ## Current Limitations
-Unlike existing Taskwarrior apps for Android, Foreground does not run the taskwarrior binary inside, but rather implements a taskwarrior sync client.
+Unlike existing Taskwarrior apps for Android, Foreground does not run the `taskwarrior` binary inside, but rather implements a Taskwarrior sync client.
 
 That being said, Foreground currently supports most features of Taskwarrior. Notable exceptions involve handling of recurring events and display/editing of User Defined Attributes. Recurring event instances created by other clients will be shown by Foreground, but Foreground does not create recurring event instances of its own at this time. User Defined Attributes are preserved internally but are not yet exposed for viewing or editing. These limitations will be resolved in future releases.
