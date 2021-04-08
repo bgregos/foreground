@@ -4,7 +4,7 @@ Foreground is an easy to use task manager app. Designed to be beautiful, simple 
 
 In other words, Foreground helps you know what needs to be in your own foreground!
 
-You can find Foreground on the Play Store here: https://play.google.com/store/apps/details?id=me.bgregos.brighttask
+You can find Foreground on the [Google Play Store](https://play.google.com/store/apps/details?id=me.bgregos.brighttask) and in the [Releases](https://github.com/bgregos/foreground/releases) tab.
 
 ## Features
 Foreground includes the following features:
