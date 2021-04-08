@@ -114,7 +114,10 @@ class RemoteTaskSourceImpl @Inject constructor(private val filesDir: File, priva
                     return@launch SyncResult(false, responseString);
 
                 } else { //success
-                    localChanges.clear()
+                    if(firstSyncRan) {
+                        // Don't clear changes on first sync since changes are not uploaded on first sync
+                        localChanges.clear()
+                    }
                     val jsonObjStrArr: ArrayList<String> = rcvdmessage.payload.toString().replaceFirst("Optional[", "").split("\n") as ArrayList<String>
                     jsonObjStrArr.removeAt(jsonObjStrArr.lastIndex)
                     for (str in jsonObjStrArr) {
