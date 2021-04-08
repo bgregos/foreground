@@ -53,3 +53,6 @@ Repositories (and their dependencies) are satisfied by `Dagger`.
 
 #### Taskwarrior Sync
 Taskwarrior sync is accomplished via the `taskwarrior-java-client` library. As a result, Foreground does not embed a `taskwarrior` binary.
+
+### Testing
+Before creating a PR, you should test your changes on both phones and tablets. Emulators are fine for this. A full regression will be performed by the project mantainer before each release.
