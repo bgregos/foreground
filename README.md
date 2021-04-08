@@ -2,7 +2,7 @@
 
 Foreground is an easy to use task manager app. Designed to be beautiful, simple and unintrusive, Foreground helps you know what needs done without getting in your way. Foreground also supports syncing with Taskwarrior servers, so your task list can be always with you, no matter your device.
 
-Foreground helps you know what needs to be in your own foreground.
+In other words, Foreground helps you know what needs to be in your own foreground!
 
 You can find Foreground on the Play Store here: https://play.google.com/store/apps/details?id=me.bgregos.brighttask
 
