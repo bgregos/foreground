@@ -32,7 +32,7 @@ Foreground's main codebase is 100% Kotlin. All code contributed to the main code
 Foreground does currently include a module dependency named `taskwarrior-java-client` that is written in Java and included by source for F-Droid compatibility reasons. This is a slightly modified (and currently outdated) fork of `taskwarrior-java-client` that will be removed in the feature and migrated to the standard upstream release.
 
 #### Architecture
-Foreground uses the Google recommended Android MVVM architecture as explained by this [document](https://developer.android.com/jetpack/guide#recommended-app-arch).
+Foreground uses the Google recommended Android MVVM architecture as explained by this [document](https://developer.android.com/jetpack/guide#recommended-app-arch). Reactive communication app-wide is handled by using Kotlin Flow.
 
 ##### Views
 Most of Foreground exists in a single activity, where different screens are represented by fragments. On phones, one fragment is displayed at a time. On tablet, fragments are arranged into a primary-detail view. The task list fragment is always displayed as a primary, and other options are displayed in the detail pane. New features should be added as new detail fragments where sensible.
@@ -52,7 +52,7 @@ All data access from below the Repository level should go through a Repository. 
 Repositories (and their dependencies) are satisfied by `Dagger`.
 
 #### Taskwarrior Sync
-Taskwarrior sync is accomplished via the `taskwarrior-java-client` library. As a result, Foreground does not embed a `taskwarrior` binary.
+Taskwarrior sync is accomplished via the `taskwarrior-java-client` library. As a result, Foreground does not embed a `taskwarrior` binary, and special care must be taken during development to mantain compatibility with `taskd`.
 
 ### Testing
 Before creating a PR, you should test your changes on both phones and tablets. Emulators are fine for this. A full regression will be performed by the project mantainer before each release.
