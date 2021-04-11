@@ -293,8 +293,6 @@ class TaskDetailFragment : Fragment() {
     }
 
     override fun onPause() {
-        //remove this task if it's blank - taskwarrior disallows tasks with no name
-        viewModel.removeUnnamedTasks()
         context?.let { ctx -> hideKeyboardFrom(ctx, binding.root) }
         CoroutineScope(Dispatchers.Main).launch {
             viewModel.save()

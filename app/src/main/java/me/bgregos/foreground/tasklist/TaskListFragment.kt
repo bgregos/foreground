@@ -78,6 +78,7 @@ class TaskListFragment : Fragment() {
         }
         task_list?.let { setupRecyclerView(it) }
         fab.setOnClickListener { view ->
+            viewModel.removeUnnamedTasks()
             val newTask = viewModel.addTask()
             openTask(newTask, view, newTask.name)
         }

@@ -71,11 +71,11 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
 
     suspend fun load(){
         taskRepository.load()
+        removeUnnamedTasks()
         tasks.value = taskRepository.tasks.value
     }
 
     suspend fun save(){
-        removeUnnamedTasks()
         taskRepository.save()
     }
 
@@ -136,15 +136,11 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
     }
 
     fun removeUnnamedTasks() {
-        tasks.value.map {
-            if (it != currentTask && it.name.isBlank()){
-                tasks.value = tasks.value.minus(it)
-            }
+        tasks.value = tasks.value.filter {
+            it.name.isNotBlank()
         }
-        taskRepository.localChanges.value.map {
-            if (it.name.isBlank()){
-                taskRepository.localChanges.value = taskRepository.localChanges.value.minus(it)
-            }
+        taskRepository.localChanges.value = taskRepository.localChanges.value.filter {
+            it.name.isNotBlank()
         }
     }
 
@@ -157,8 +153,8 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
     }
 
     suspend fun sync(): SyncResult{
-        save()
         removeUnnamedTasks()
+        save()
         val syncResult = taskRepository.taskwarriorSync()
         if(tasks.value?.contains(currentTask) != true) {
             //close the detail fragment
