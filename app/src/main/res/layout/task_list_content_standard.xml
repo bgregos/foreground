@@ -82,7 +82,7 @@
                 app:layout_constraintBottom_toBottomOf="@+id/project"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/project"
-                debug:visibility="gone" />
+                debug:visibility="visible" />
 
             <TextView
                 android:id="@+id/project"
@@ -92,16 +92,17 @@
                 app:layout_constraintStart_toEndOf="@+id/ic_proj"
                 app:layout_constraintTop_toBottomOf="@+id/due"
                 debug:text="project"
-                debug:visibility="gone" />
+                debug:visibility="visible" />
 
             <ImageView
                 android:id="@+id/ic_tags"
                 android:layout_width="14sp"
                 android:layout_height="14sp"
+                android:layout_marginStart="8dp"
                 android:src="@drawable/ic_tag"
-                app:layout_constraintBottom_toBottomOf="@+id/tags"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/tags" />
+                app:layout_constraintBottom_toBottomOf="@+id/project"
+                app:layout_constraintStart_toEndOf="@id/project"
+                app:layout_constraintTop_toTopOf="@+id/project" />
 
             <TextView
                 android:id="@+id/tags"
@@ -110,6 +111,9 @@
                 android:layout_marginStart="4dp"
                 app:layout_constraintStart_toEndOf="@+id/ic_tags"
                 app:layout_constraintTop_toBottomOf="@+id/due"
+                app:layout_constraintEnd_toStartOf="@id/complete"
+                app:layout_constraintHorizontal_bias="0"
+                app:layout_constrainedWidth="true"
                 debug:text="tag1, tag2" />
 
             <ImageView
