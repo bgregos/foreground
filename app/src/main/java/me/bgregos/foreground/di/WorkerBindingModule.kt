@@ -1,6 +1,7 @@
 package me.bgregos.foreground.di
 
 import android.content.Context
+import android.util.Log
 import androidx.work.ListenableWorker
 import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
@@ -40,8 +41,13 @@ class InjectableWorkerFactory @Inject constructor(
             workerParameters: WorkerParameters
     ): ListenableWorker? {
         val tranformedName = transformClassIfRequired(workerClassName)
-        val foundEntry =
-                workerFactories.entries.find { Class.forName(tranformedName).isAssignableFrom(it.key) }
+        val foundEntry: Map.Entry<Class<out ListenableWorker>, Provider<CustomWorkerFactory>>?
+        try {
+            foundEntry = workerFactories.entries.find { Class.forName(tranformedName).isAssignableFrom(it.key) }
+        } catch (ex: ClassNotFoundException) {
+            Log.e("dagger", "Failed to resolve worker class: $tranformedName")
+            return null
+        }
         val factoryProvider = foundEntry?.value
                 ?: throw IllegalArgumentException("unknown worker class name: $workerClassName")
         return factoryProvider.get().create(appContext, workerParameters)
@@ -49,7 +55,7 @@ class InjectableWorkerFactory @Inject constructor(
 
     private fun transformClassIfRequired(className: String): String {
         return when(className){
-            "me.bgregos.foreground.task.TaskwarriorSyncWorker" -> "me.bgregos.foreground.network.TaskwarriorSyncWorker"
+            "me.bgregos.foreground.task.RemoteTaskManager\$TaskwarriorSyncWorker" -> "me.bgregos.foreground.network.TaskwarriorSyncWorker"
             else -> className
         }
     }
