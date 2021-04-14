@@ -27,7 +27,7 @@ interface WorkerBindingModule {
     @Binds
     @IntoMap
     @WorkerKey(TaskwarriorSyncWorker::class)
-    fun bindHelloWorldWorker(factory: TaskwarriorSyncWorker.Factory): CustomWorkerFactory
+    fun bindTaskwarriorSyncWorker(factory: TaskwarriorSyncWorker.Factory): CustomWorkerFactory
 
 }
 
@@ -39,10 +39,18 @@ class InjectableWorkerFactory @Inject constructor(
             workerClassName: String,
             workerParameters: WorkerParameters
     ): ListenableWorker? {
+        val tranformedName = transformClassIfRequired(workerClassName)
         val foundEntry =
-                workerFactories.entries.find { Class.forName(workerClassName).isAssignableFrom(it.key) }
+                workerFactories.entries.find { Class.forName(tranformedName).isAssignableFrom(it.key) }
         val factoryProvider = foundEntry?.value
                 ?: throw IllegalArgumentException("unknown worker class name: $workerClassName")
         return factoryProvider.get().create(appContext, workerParameters)
+    }
+
+    private fun transformClassIfRequired(className: String): String {
+        return when(className){
+            "me.bgregos.foreground.task.TaskwarriorSyncWorker" -> "me.bgregos.foreground.network.TaskwarriorSyncWorker"
+            else -> className
+        }
     }
 }
