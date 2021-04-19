@@ -1,9 +1,12 @@
 package me.bgregos.foreground.di
 
+import android.appwidget.AppWidgetManager
 import android.content.Context
 import androidx.work.WorkerFactory
 import dagger.BindsInstance
 import dagger.Component
+import me.bgregos.foreground.ForegroundListWidgetProvider
+import me.bgregos.foreground.WidgetRemoteViewsService
 import me.bgregos.foreground.filter.FiltersFragment
 import me.bgregos.foreground.network.RemoteTaskSource
 import me.bgregos.foreground.receiver.AlarmReceiver
@@ -44,4 +47,5 @@ interface ApplicationComponent {
 
     fun inject(broadcastReceiver: AlarmReceiver)
     fun inject(broadcastReceiver: TaskBroadcastReceiver)
+    fun inject(widgetRemoteViewsService: WidgetRemoteViewsService)
 }
