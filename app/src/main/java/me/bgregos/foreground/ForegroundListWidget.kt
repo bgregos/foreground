@@ -87,7 +87,7 @@ class WidgetRemoteViewFactory(
         private val appWidgetManager: AppWidgetManager) : RemoteViewsService.RemoteViewsFactory {
 
     private var tasks: List<Task> = emptyList()
-    private val format = SimpleDateFormat("MMM d, yyyy 'at' h:mm aaa", Locale.getDefault())
+    private val format = SimpleDateFormat("EEE, MMM d yyyy, HH:mm ", Locale.getDefault())
     private val taskJob : Job
 
     init {
