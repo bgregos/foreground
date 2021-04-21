@@ -74,6 +74,9 @@ class SettingsActivity : AppCompatActivity() {
                 alertDialogBuilder.show()
             } else {
                 settings_auto_sync.isChecked = false
+                CoroutineScope(Dispatchers.Main).launch {
+                    localTasksRepository.disableSync()
+                }
             }
         }
 

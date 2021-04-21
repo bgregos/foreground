@@ -55,7 +55,9 @@ class RemoteTaskSourceImpl @Inject constructor(private val filesDir: File, priva
         headers.put(TaskwarriorMessage.HEADER_CLIENT, "foreground ${BuildConfig.VERSION_NAME}")
 
         try {
+            Log.d("sync request", TaskwarriorMessage(headers).toString())
             val response:TaskwarriorMessage = client.sendAndReceive(TaskwarriorMessage(headers))
+            Log.d("sync response", response.toString())
             if (response.toString().contains("status=Ok")){
                 syncEnabled = true
                 return@launch SyncResult(true, response.toString())
@@ -83,6 +85,7 @@ class RemoteTaskSourceImpl @Inject constructor(private val filesDir: File, priva
                 headers[TaskwarriorMessage.HEADER_TYPE] = "sync"
                 headers[TaskwarriorMessage.HEADER_PROTOCOL] = "v1"
                 headers[TaskwarriorMessage.HEADER_CLIENT] = "foreground ${BuildConfig.VERSION_NAME}"
+                Log.d("sync", "first sync ran: $firstSyncRan")
 
                 if (firstSyncRan) { //do not upload on first-round initial sync, need to download first
                     val sb = StringBuilder()
@@ -91,7 +94,7 @@ class RemoteTaskSourceImpl @Inject constructor(private val filesDir: File, priva
                         sb.appendLine(Task.toJson(task))
                     }
                     outPayload = sb.toString()
-                    Log.d(this.javaClass.toString(), "outpayload: " + outPayload)
+                    Log.d("sync request",  outPayload)
                 }
                 var response: TaskwarriorMessage? = null
                 var error: String? = null
@@ -108,7 +111,7 @@ class RemoteTaskSourceImpl @Inject constructor(private val filesDir: File, priva
 
                 val responseString = error ?: response.toString()
                 val rcvdmessage = receivedMessage
-                Log.d("sync", "received message: $rcvdmessage")
+                Log.d("sync response", "received message: $rcvdmessage")
 
                 if ((!responseString.contains("status=Ok") && !responseString.contains("status=No change")) || rcvdmessage == null || rcvdmessage.payload == null) {
 
@@ -135,7 +138,7 @@ class RemoteTaskSourceImpl @Inject constructor(private val filesDir: File, priva
                             syncKey = jsonObjStrArr.removeAt(jsonObjStrArr.lastIndex - 1)
                         } catch (e: java.lang.Exception) {
                             //no sync key!
-                            if(firstSyncRan && !responseString.contains("status=No change")){
+                            if(!firstSyncRan && !responseString.contains("status=No change")){
                                 Log.e(this.javaClass.toString(), "Error parsing sync data, no sync key.", e)
                                 return@launch SyncResult(false, "Error parsing sync data, no sync key.")
                             }
@@ -192,9 +195,14 @@ class RemoteTaskSourceImpl @Inject constructor(private val filesDir: File, priva
     override suspend fun resetSync() {
         tasks.clear()
         localChanges.clear()
+        disableSync()
+    }
+
+    override suspend fun disableSync() {
         syncKey = ""
         syncEnabled = true
         firstSyncRan = false
+        sharedPreferences.edit().putBoolean("RemoteTaskSource.firstSyncRan", false).apply()
         save()
     }
 
