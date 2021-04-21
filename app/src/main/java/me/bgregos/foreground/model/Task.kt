@@ -17,7 +17,7 @@ data class Task(
         val project:String? = null,
         val tags:List<String> = listOf(),
         val modifiedDate:Date? = null,
-        val priority: String? = "",
+        val priority: String? = null,
         val status: String = "pending",
         val waitDate:Date? = null,
         val endDate:Date? = null,

@@ -189,8 +189,9 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
     }
 
     fun setTaskPriority(priority: String) {
+        val newPriority = if (priority == "No Priority Assigned") null else priority
         currentTask?.let {
-            postUpdatedTask(it.copy(priority = priority))
+            postUpdatedTask(it.copy(priority = newPriority))
         }
     }
 
