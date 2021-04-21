@@ -14,6 +14,8 @@ interface RemoteTaskSource {
 
     suspend fun resetSync()
 
+    suspend fun disableSync()
+
     suspend fun save()
 
     suspend fun load()

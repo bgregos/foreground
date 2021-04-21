@@ -299,6 +299,7 @@ class TaskDetailFragment : Fragment() {
         }
         super.onPause()
     }
+
     private fun close(){
         activity?.supportFragmentManager?.beginTransaction()?.remove(this)?.commit()
     }

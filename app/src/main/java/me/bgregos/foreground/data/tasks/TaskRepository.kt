@@ -44,6 +44,10 @@ class TaskRepository @Inject constructor(
         save()
     }
 
+    suspend fun disableSync() {
+        remoteTaskSource.disableSync()
+    }
+
     fun addToLocalChanges(updated: Task) {
         if(localChanges.value.firstOrNull{ it.uuid == updated.uuid } == null){
             localChanges.value = localChanges.value.plus(updated)
