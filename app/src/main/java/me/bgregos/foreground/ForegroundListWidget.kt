@@ -100,7 +100,6 @@ class WidgetRemoteViewFactory(
         }
     }
 
-
     override fun getLoadingView(): RemoteViews? {
         return null
 
@@ -108,7 +107,6 @@ class WidgetRemoteViewFactory(
 
     override fun getItemId(position: Int): Long {
         return position.toLong()
-
     }
 
     override fun onDataSetChanged() {
@@ -132,7 +130,6 @@ class WidgetRemoteViewFactory(
         } else {
             rv.setViewVisibility(R.id.due, View.GONE)
         }
-
 
         return rv
     }
