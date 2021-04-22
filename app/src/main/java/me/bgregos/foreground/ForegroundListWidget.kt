@@ -88,22 +88,18 @@ class WidgetRemoteViewFactory(
 
     private var tasks: List<Task> = emptyList()
     private val format = SimpleDateFormat("EEE, MMM d yyyy, HH:mm ", Locale.getDefault())
-    private val taskJob : Job
+    private lateinit var taskJob : Job
 
-    init {
-        val me = this
+
+    override fun onCreate() {
         taskJob = GlobalScope.launch (Dispatchers.Main) {
             getVisibleTasks(taskRepo, filtersRepository).collect {
-                me.tasks = it
+                (this@WidgetRemoteViewFactory).tasks = it
                 appWidgetManager.notifyAppWidgetViewDataChanged(appId, R.id.widgetListView)
             }
         }
     }
 
-    override fun onCreate() {
-
-
-    }
 
     override fun getLoadingView(): RemoteViews? {
         return null
