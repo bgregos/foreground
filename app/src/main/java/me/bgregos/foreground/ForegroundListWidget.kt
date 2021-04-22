@@ -51,7 +51,7 @@ internal fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManage
     )
     val intent = Intent(context, WidgetRemoteViewsService::class.java)
     intent.putExtra("app_id", appWidgetId)
-     views.setOnClickPendingIntent(R.id.logo, PendingIntent.getActivity(context, 0, Intent(context, MainActivity::class.java), 0))
+     views.setOnClickPendingIntent(R.id.logo, PendingIntent.getActivity(context, PendingIntent.FLAG_UPDATE_CURRENT, Intent(context, MainActivity::class.java), 0))
     views.setRemoteAdapter(R.id.widgetListView, intent)
     appWidgetManager.updateAppWidget(appWidgetId, views)
 }
