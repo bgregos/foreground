@@ -200,7 +200,7 @@ class RemoteTaskSourceImpl @Inject constructor(private val filesDir: File, priva
 
     override suspend fun disableSync() {
         syncKey = ""
-        syncEnabled = true
+        syncEnabled = false
         firstSyncRan = false
         sharedPreferences.edit().putBoolean("RemoteTaskSource.firstSyncRan", false).apply()
         save()
