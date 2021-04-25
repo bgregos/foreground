@@ -162,7 +162,6 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     fun save() {
-        onAutoSyncClicked()
         //handle port save
         val port = if (settings_port.text.toString() == "") -1 else settings_port.text.toString().toInt()
         val creds = settings_credentials.text.toString().split("/")
