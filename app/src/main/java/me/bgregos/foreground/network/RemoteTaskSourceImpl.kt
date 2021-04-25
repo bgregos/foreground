@@ -19,6 +19,7 @@ import me.bgregos.foreground.di.CustomWorkerFactory
 import me.bgregos.foreground.model.SyncResult
 import me.bgregos.foreground.model.Task
 import me.bgregos.foreground.data.tasks.TaskRepository
+import me.bgregos.foreground.tasklist.TaskViewModel
 import me.bgregos.foreground.util.NotificationRepository
 import java.io.File
 import java.net.URL
@@ -125,27 +126,27 @@ class RemoteTaskSourceImpl @Inject constructor(private val filesDir: File, priva
                     val jsonObjStrArr: ArrayList<String> = rcvdmessage.payload.toString().replaceFirst("Optional[", "").split("\n") as ArrayList<String>
                     jsonObjStrArr.removeAt(jsonObjStrArr.lastIndex)
                     for (str in jsonObjStrArr) {
-                        Log.d("full message recieved", str)
+                        Log.d("sync full message", str)
                     }
                     try {
                         UUID.fromString(jsonObjStrArr.get(0))
                         //sync key is at top
                         syncKey = jsonObjStrArr.removeAt(0)
-                    } catch (e: java.lang.Exception) {
+                    } catch (e: java.lang.Exception) { //potentially IndexOutOfBoundsException or IllegalArgumentException
                         try {
                             UUID.fromString(jsonObjStrArr.get(jsonObjStrArr.lastIndex - 1))
                             //sync key is at bottom
                             syncKey = jsonObjStrArr.removeAt(jsonObjStrArr.lastIndex - 1)
                         } catch (e: java.lang.Exception) {
                             //no sync key!
-                            if(!firstSyncRan && !responseString.contains("status=No change")){
+                            if(firstSyncRan && !responseString.contains("status=No change")){
                                 Log.e(this.javaClass.toString(), "Error parsing sync data, no sync key.", e)
                                 return@launch SyncResult(false, "Error parsing sync data, no sync key.")
                             }
                             //no sync key returned - this is fine if there's no change in tasks
                         }
                     }
-                    Log.v("sync key", syncKey)
+                    Log.d("sync key", syncKey)
                     for (taskString in jsonObjStrArr) {
                         if (taskString != "") {
                             val task = Task.fromJson(taskString)
@@ -178,12 +179,12 @@ class RemoteTaskSourceImpl @Inject constructor(private val filesDir: File, priva
             if (!firstSyncRan) { //immediately after initial sync, start another to upload tasks.
                 firstSyncRan = true
                 sharedPreferences.edit().putBoolean("RemoteTaskSource.firstSyncRan", true).apply()
-                Log.i("taskwarriorSync", "Initial sync finished, uploading tasks...")
+                Log.i("sync", "Initial sync finished, uploading tasks...")
                 var result = taskwarriorSync()
                 return@launch result
             } else {
                 localChanges.clear()
-                Log.i("taskwarriorSync", "Sync successful")
+                Log.i("sync", "Sync successful")
                 return@launch SyncResult(true, "Sync Successful")
             }
 
@@ -255,14 +256,14 @@ class RemoteTaskSourceImpl @Inject constructor(private val filesDir: File, priva
     }
 }
 
-class TaskwarriorSyncWorker(ctx: Context, workerParams: WorkerParameters, private val notificationRepository: NotificationRepository, private val tasksRepository: TaskRepository)
+class TaskwarriorSyncWorker(ctx: Context, workerParams: WorkerParameters, private val notificationRepository: NotificationRepository, private val taskViewModel: TaskViewModel)
     : CoroutineWorker(ctx, workerParams) {
 
     override suspend fun doWork(): Result = coroutineScope {
         val job = async {
-            tasksRepository.taskwarriorSync()
-            Log.i("taskwarrior_sync", "Automatic Sync Complete")
-            notificationRepository.scheduleNotificationForTasks(tasksRepository.tasks.value)
+            taskViewModel.sync()
+            Log.i("sync", "Automatic Sync Complete")
+            notificationRepository.scheduleNotificationForTasks(taskViewModel.tasks.value)
         }
         job.await()
         Result.success()
@@ -270,14 +271,14 @@ class TaskwarriorSyncWorker(ctx: Context, workerParams: WorkerParameters, privat
 
     class Factory @Inject constructor(
             private val notificationRepository: Provider<NotificationRepository>,
-            private val tasksRepository: Provider<TaskRepository>,
+            private val taskViewModel: Provider<TaskViewModel>,
     ) : CustomWorkerFactory {
         override fun create(appContext: Context, params: WorkerParameters): ListenableWorker {
             return TaskwarriorSyncWorker(
                     appContext,
                     params,
                     notificationRepository.get(),
-                    tasksRepository.get()
+                    taskViewModel.get()
             )
         }
     }

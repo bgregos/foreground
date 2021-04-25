@@ -103,4 +103,6 @@
     <string name="accept">Accept</string>
     <string name="go_back">Go Back</string>
     <string name="taskwarrior_sync">Taskwarrior Sync (Beta)</string>
+    <string name="auto_sync_requirement">You must enable sync first.</string>
+    <string name="sync_enabled_message">Sync enabled successfully!</string>
 </resources>

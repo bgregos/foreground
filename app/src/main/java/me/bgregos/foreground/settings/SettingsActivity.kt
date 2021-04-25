@@ -74,6 +74,8 @@ class SettingsActivity : AppCompatActivity() {
                 alertDialogBuilder.show()
             } else {
                 settings_auto_sync.isChecked = false
+                //TODO: cancel the auto sync work specifically
+                WorkManager.getInstance(this).cancelAllWork()
                 CoroutineScope(Dispatchers.Main).launch {
                     localTasksRepository.disableSync()
                 }
@@ -88,8 +90,7 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     fun onAutoSyncIntervalChanged(){
-        settings_auto_sync.isChecked = false
-        var interval: Long = settings_auto_sync_interval.text.toString().toLong()
+        val interval: Long = settings_auto_sync_interval.text.toString().toLong()
         if (interval < 15){
             settings_auto_sync_interval.setText("15")
         }
@@ -116,10 +117,8 @@ class SettingsActivity : AppCompatActivity() {
             settings_enable_sync_text.text = "Enable Sync"
             settings_syncprogress.visibility = View.INVISIBLE
             if (response.success) {
+                createSnackbar(getString(R.string.sync_enabled_message), Snackbar.LENGTH_SHORT)
                 settings_sync.isChecked = true
-                val bar = Snackbar.make(settings_parent, "Sync enabled successfully!", Snackbar.LENGTH_SHORT)
-                bar.view.setBackgroundColor(Color.parseColor("#34309f"))
-                bar.show()
             }else{
                 val bar = Snackbar.make(settings_parent, response.message, Snackbar.LENGTH_LONG)
                 bar.view.setBackgroundColor(Color.parseColor("#34309f"))
@@ -136,6 +135,11 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     fun onAutoSyncClicked(){
+        if(settings_auto_sync.isChecked && !settings_sync.isChecked) {
+            createSnackbar(getString(R.string.auto_sync_requirement), Snackbar.LENGTH_SHORT)
+            settings_auto_sync.isChecked = false
+            return
+        }
         if(settings_auto_sync.isChecked){
             var interval: Long = settings_auto_sync_interval.text.toString().toLong()
             if (interval < 15){
@@ -158,7 +162,6 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     fun save() {
-        onAutoSyncClicked()
         //handle port save
         val port = if (settings_port.text.toString() == "") -1 else settings_port.text.toString().toInt()
         val creds = settings_credentials.text.toString().split("/")
@@ -295,5 +298,11 @@ class SettingsActivity : AppCompatActivity() {
             Log.e("Foreground Settings", "Failed to write cert file!")
         }
 
+    }
+
+    private fun createSnackbar(text: String, length: Int){
+        val bar = Snackbar.make(settings_parent, text, length)
+        bar.view.setBackgroundColor(Color.parseColor("#34309f"))
+        bar.show()
     }
 }

@@ -111,7 +111,7 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
                 modifiedDate = Date(),
                 endDate = Date()
         )
-        tasks.value = tasks.value?.minus(toComplete)
+        tasks.value = tasks.value.minus(toComplete)
         postUpdatedTask(completed)
         viewModelScope.launch {
             save()
@@ -156,7 +156,8 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
         removeUnnamedTasks()
         save()
         val syncResult = taskRepository.taskwarriorSync()
-        if(tasks.value?.contains(currentTask) != true) {
+        save()
+        if(!tasks.value.contains(currentTask)) {
             //close the detail fragment
             closeDetailChannel.offer(Unit)
         }
