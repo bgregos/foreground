@@ -131,7 +131,7 @@ class RemoteTaskSourceImpl @Inject constructor(private val filesDir: File, priva
                         UUID.fromString(jsonObjStrArr.get(0))
                         //sync key is at top
                         syncKey = jsonObjStrArr.removeAt(0)
-                    } catch (e: java.lang.Exception) {
+                    } catch (e: java.lang.Exception) { //potentially IndexOutOfBoundsException or IllegalArgumentException
                         try {
                             UUID.fromString(jsonObjStrArr.get(jsonObjStrArr.lastIndex - 1))
                             //sync key is at bottom

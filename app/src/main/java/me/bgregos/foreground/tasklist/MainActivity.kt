@@ -3,6 +3,9 @@ package me.bgregos.foreground.tasklist
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentTransaction
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import me.bgregos.foreground.R
 import me.bgregos.foreground.getApplicationComponent
 import me.bgregos.foreground.util.NotificationRepository
@@ -13,6 +16,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var fragment: TaskListFragment
 
     @Inject lateinit var notificationRepository: NotificationRepository
+
+    @Inject lateinit var taskViewModel: TaskViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,6 +31,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
         notificationRepository.save()
+            CoroutineScope(Dispatchers.Main).launch {
+                taskViewModel.save()
+            }
         super.onPause()
     }
 }
