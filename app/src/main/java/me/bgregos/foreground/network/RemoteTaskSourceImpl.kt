@@ -125,7 +125,7 @@ class RemoteTaskSourceImpl @Inject constructor(private val filesDir: File, priva
                     val jsonObjStrArr: ArrayList<String> = rcvdmessage.payload.toString().replaceFirst("Optional[", "").split("\n") as ArrayList<String>
                     jsonObjStrArr.removeAt(jsonObjStrArr.lastIndex)
                     for (str in jsonObjStrArr) {
-                        Log.d("full message recieved", str)
+                        Log.d("sync full message", str)
                     }
                     try {
                         UUID.fromString(jsonObjStrArr.get(0))
@@ -138,14 +138,14 @@ class RemoteTaskSourceImpl @Inject constructor(private val filesDir: File, priva
                             syncKey = jsonObjStrArr.removeAt(jsonObjStrArr.lastIndex - 1)
                         } catch (e: java.lang.Exception) {
                             //no sync key!
-                            if(!firstSyncRan && !responseString.contains("status=No change")){
+                            if(firstSyncRan && !responseString.contains("status=No change")){
                                 Log.e(this.javaClass.toString(), "Error parsing sync data, no sync key.", e)
                                 return@launch SyncResult(false, "Error parsing sync data, no sync key.")
                             }
                             //no sync key returned - this is fine if there's no change in tasks
                         }
                     }
-                    Log.v("sync key", syncKey)
+                    Log.d("sync key", syncKey)
                     for (taskString in jsonObjStrArr) {
                         if (taskString != "") {
                             val task = Task.fromJson(taskString)
