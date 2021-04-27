@@ -26,26 +26,21 @@ import javax.inject.Inject
  * tablets/expanded foldables, their viewmodels are combined.
  */
 
-internal fun getVisibleTasks(taskRepository: TaskRepository, filtersRepository: TaskFilterRepository): Flow<List<Task>> {
-    val tasks = taskRepository.tasks
-    return filtersRepository.taskFilters.combine(tasks) { filters, tasks ->
-        var out: ArrayList<Task> = arrayListOf<Task>().apply { addAll(tasks) }
-        filters.forEach {
-            if (it.enabled) out = out.filter { task ->
-                var filterResult = it.type.filter(task, it.parameter)
-                if (!it.includeMatching) filterResult = !filterResult
-                filterResult
-            } as ArrayList<Task>
-        }
-        //visibleTasks = visibleTasks.filter { it.name.isNotBlank() } as ArrayList<Task>
-        out.sortWith(Task.DateCompare())
-        out.toList()
-    }
-}
-
 class TaskViewModel @Inject constructor(private val taskRepository: TaskRepository, private val notificationRepository: NotificationRepository, filtersRepository: TaskFilterRepository): ViewModel() {
     var tasks: MutableStateFlow<List<Task>> = taskRepository.tasks
-    val visibleTasks: Flow<List<Task>> = getVisibleTasks(taskRepository, filtersRepository)
+    val visibleTasks: Flow<List<Task>> = filtersRepository.taskFilters.combine(tasks) { filters, tasks ->
+            var out: ArrayList<Task> = arrayListOf<Task>().apply { addAll(tasks) }
+            filters.forEach {
+                if (it.enabled) out = out.filter { task ->
+                    var filterResult = it.type.filter(task, it.parameter)
+                    if (!it.includeMatching) filterResult = !filterResult
+                    filterResult
+                } as ArrayList<Task>
+            }
+            //visibleTasks = visibleTasks.filter { it.name.isNotBlank() } as ArrayList<Task>
+            out.sortWith(Task.DateCompare())
+            out.toList()
+        }
 
     //The detail fragment will listen to this and close when it receives an emission
     val closeDetailChannel: Channel<Unit> = Channel(Channel.RENDEZVOUS)
