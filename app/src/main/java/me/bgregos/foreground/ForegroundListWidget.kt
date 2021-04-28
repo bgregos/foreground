@@ -10,15 +10,12 @@ import android.widget.RemoteViews
 import android.widget.RemoteViewsService
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import me.bgregos.foreground.data.taskfilter.TaskFilterRepository
-import me.bgregos.foreground.data.tasks.TaskRepository
 import me.bgregos.foreground.model.Task
 import me.bgregos.foreground.tasklist.MainActivity
-import me.bgregos.foreground.tasklist.getVisibleTasks
+import me.bgregos.foreground.tasklist.TaskViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
-
 
 class ForegroundListWidgetProvider : AppWidgetProvider() {
 
@@ -61,18 +58,15 @@ internal fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManage
 class WidgetRemoteViewsService : RemoteViewsService() {
 
     @Inject
-    lateinit var taskRepository: TaskRepository
-    @Inject
-    lateinit var filterRepository: TaskFilterRepository
+    lateinit var taskViewModel: TaskViewModel
 
     override fun onGetViewFactory(intent: Intent?): RemoteViewsFactory {
         this.applicationContext.getApplicationComponent().inject(this)
         val appId = intent!!.getIntExtra("app_id", -1)
         return WidgetRemoteViewFactory(
-                this.applicationContext,
+                applicationContext,
                 appId,
-                this.taskRepository,
-                this.filterRepository,
+                taskViewModel,
                 ForegroundListWidgetProvider.manager)
     }
 
@@ -82,8 +76,7 @@ class WidgetRemoteViewsService : RemoteViewsService() {
 class WidgetRemoteViewFactory(
         val context: Context,
         private val appId: Int,
-        private val taskRepo: TaskRepository,
-        private val filtersRepository: TaskFilterRepository,
+        private val taskViewModel: TaskViewModel,
         private val appWidgetManager: AppWidgetManager) : RemoteViewsService.RemoteViewsFactory {
 
     private var tasks: List<Task> = emptyList()
@@ -93,7 +86,7 @@ class WidgetRemoteViewFactory(
 
     override fun onCreate() {
         taskJob = GlobalScope.launch (Dispatchers.Main) {
-            getVisibleTasks(taskRepo, filtersRepository).collect {
+            taskViewModel.visibleTasks.collect {
                 (this@WidgetRemoteViewFactory).tasks = it
                 appWidgetManager.notifyAppWidgetViewDataChanged(appId, R.id.widgetListView)
             }
