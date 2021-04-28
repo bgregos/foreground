@@ -1,0 +1,30 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:debug="http://schemas.android.com/tools"
+    android:baselineAligned="false"
+    android:id="@+id/widget_item"
+    android:layout_weight="1"
+    android:orientation="vertical"
+    android:padding="6dp">
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8sp"
+        android:singleLine="false"
+        android:textSize="10sp"
+        android:textStyle="bold"
+        debug:text="task name here" />
+
+    <TextView
+        android:id="@+id/due"
+        android:gravity="center_vertical"
+        android:textSize="8sp"
+        android:height="10dp"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        debug:text="due" />
+
+</LinearLayout>
