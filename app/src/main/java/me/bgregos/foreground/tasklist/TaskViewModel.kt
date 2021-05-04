@@ -79,6 +79,7 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
 
     suspend fun save(){
         taskRepository.save()
+        updatePendingNotifications()
     }
 
     fun checkForTasksNoLongerWaiting(){
@@ -93,7 +94,7 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
         }
     }
 
-    fun updatePendingNotifications() {
+    private fun updatePendingNotifications() {
         notificationRepository.scheduleNotificationForTasks(tasks.value ?: ArrayList())
     }
 
@@ -151,7 +152,6 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
         taskRepository.addToLocalChanges(updated)
         tasks.value = tasks.value.replace(updated) { it.uuid == task.uuid }
         checkForTasksNoLongerWaiting()
-        updatePendingNotifications()
     }
 
     suspend fun sync(): SyncResult{

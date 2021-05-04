@@ -11,6 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import me.bgregos.foreground.data.tasks.TaskRepository
 import me.bgregos.foreground.getApplicationComponent
+import me.bgregos.foreground.util.NotificationRepository
 import me.bgregos.foreground.util.replace
 import java.util.*
 import javax.inject.Inject
@@ -19,6 +20,9 @@ class TaskBroadcastReceiver: BroadcastReceiver() {
 
     @Inject
     lateinit var tasksRepository: TaskRepository
+
+    @Inject
+    lateinit var notificationRepository: NotificationRepository
 
     override fun onReceive(context: Context?, intent: Intent?) {
         context?.getApplicationComponent()?.inject(this)
@@ -47,6 +51,7 @@ class TaskBroadcastReceiver: BroadcastReceiver() {
                         tasksRepository.addToLocalChanges(newTask)
                         tasksRepository.tasks.value = tasksRepository.tasks.value.filter{ it.uuid != item.uuid }
                         tasksRepository.save()
+                        notificationRepository.scheduleNotificationForTasks(tasksRepository.tasks.value)
                     }
                 } else {
                     Log.e("notif", "Failed to save task marked done- null context")

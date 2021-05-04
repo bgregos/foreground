@@ -35,8 +35,6 @@ class NotificationRepository @Inject constructor(private val mgr: AlarmManager, 
             }
         }
         scheduledNotifications.clear()
-
-        Log.d("notif", "cleared scheduled alarms")
     }
 
     fun scheduleNotificationForTasks(tasks: List<Task>) {
