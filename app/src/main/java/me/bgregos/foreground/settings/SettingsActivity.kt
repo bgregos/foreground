@@ -2,7 +2,6 @@ package me.bgregos.foreground.settings
 
 import android.app.Activity
 import android.content.Context
-import android.content.DialogInterface
 import android.content.Intent
 import android.database.Cursor
 import android.graphics.Color
@@ -14,7 +13,6 @@ import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AlertDialog
-import androidx.lifecycle.lifecycleScope
 import androidx.work.*
 import kotlinx.android.synthetic.main.activity_settings.*
 import kotlinx.coroutines.CoroutineScope
@@ -24,7 +22,6 @@ import me.bgregos.foreground.R
 import me.bgregos.foreground.getApplicationComponent
 import me.bgregos.foreground.model.SyncResult
 import me.bgregos.foreground.data.tasks.TaskRepository
-import me.bgregos.foreground.network.RemoteTaskSource
 import me.bgregos.foreground.network.TaskwarriorSyncWorker
 import me.bgregos.foreground.util.ShowErrorDetail
 import java.io.File
