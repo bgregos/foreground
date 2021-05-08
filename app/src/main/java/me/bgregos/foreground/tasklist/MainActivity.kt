@@ -31,9 +31,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
         notificationRepository.save()
-            CoroutineScope(Dispatchers.Main).launch {
-                taskViewModel.save()
-            }
         super.onPause()
     }
 }

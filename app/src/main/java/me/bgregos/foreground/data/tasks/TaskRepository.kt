@@ -2,11 +2,14 @@ package me.bgregos.foreground.data.tasks
 
 import android.annotation.SuppressLint
 import android.content.SharedPreferences
+import android.util.Log
 import com.google.gson.Gson
 import java.util.*
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import me.bgregos.foreground.model.SyncResult
 import me.bgregos.foreground.model.Task
@@ -24,6 +27,7 @@ class TaskRepository @Inject constructor(
 
     var tasks: MutableStateFlow<List<Task>> = MutableStateFlow(listOf())
     val localChanges: MutableStateFlow<List<Task>> = MutableStateFlow(listOf())
+    val diskLock = Mutex(false)
 
     suspend fun taskwarriorSync(): SyncResult {
         remoteTaskSource.tasks = tasks.value.toMutableList()
@@ -71,11 +75,13 @@ class TaskRepository @Inject constructor(
      */
     suspend fun save() {
         withContext(Dispatchers.IO) {
-            remoteTaskSource.save()
-            val editor = prefs.edit()
-            editor.putString("LocalTasks", Gson().toJson(tasks.value))
-            editor.putString("LocalTasks.localChanges", Gson().toJson(localChanges.value))
-            editor.apply()
+            diskLock.withLock {
+                remoteTaskSource.save()
+                val editor = prefs.edit()
+                editor.putString("LocalTasks", Gson().toJson(tasks.value))
+                editor.putString("LocalTasks.localChanges", Gson().toJson(localChanges.value))
+                editor.apply()
+            }
         }
     }
 
@@ -87,12 +93,14 @@ class TaskRepository @Inject constructor(
      */
     suspend fun load() {
         withContext(Dispatchers.IO) {
-            remoteTaskSource.load()
-            val taskType = object : TypeToken<ArrayList<Task>>() {}.type
-            tasks.value = Gson().fromJson(prefs.getString("LocalTasks", ""), taskType) ?: tasks.value
-            localChanges.value = Gson().fromJson(prefs.getString("LocalTasks.localChanges", ""), taskType) ?: localChanges.value
-            val lastSeenVersion = prefs.getInt("lastSeenVersion", 1)
-            runMigrationsIfRequired(lastSeenVersion)
+            diskLock.withLock {
+                remoteTaskSource.load()
+                val taskType = object : TypeToken<ArrayList<Task>>() {}.type
+                tasks.value = Gson().fromJson(prefs.getString("LocalTasks", ""), taskType) ?: tasks.value
+                localChanges.value = Gson().fromJson(prefs.getString("LocalTasks.localChanges", ""), taskType) ?: localChanges.value
+                val lastSeenVersion = prefs.getInt("lastSeenVersion", 1)
+                runMigrationsIfRequired(lastSeenVersion)
+            }
         }
     }
 

@@ -294,7 +294,7 @@ class TaskDetailFragment : Fragment() {
 
     override fun onPause() {
         context?.let { ctx -> hideKeyboardFrom(ctx, binding.root) }
-        CoroutineScope(Dispatchers.Main).launch {
+        CoroutineScope(Dispatchers.IO).launch {
             viewModel.save()
         }
         super.onPause()
