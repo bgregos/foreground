@@ -10,13 +10,13 @@ import javax.inject.Singleton
 @Singleton
 class TaskFilterRepository @Inject constructor(private val taskFilterDao: TaskFilterDao){
 
+    val taskFilters: MutableStateFlow<List<TaskFilter>> = MutableStateFlow(listOf())
+
     init{
         MainScope().launch {
             taskFilters.value = getAll()
         }
     }
-
-    val taskFilters: MutableStateFlow<List<TaskFilter>> = MutableStateFlow(listOf())
 
     suspend fun getAll(): List<TaskFilter> {
         val filters = taskFilterDao.getAll()
