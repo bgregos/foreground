@@ -20,7 +20,7 @@ import javax.inject.Inject
 class ForegroundListWidgetProvider : AppWidgetProvider() {
 
     companion  object {
-        lateinit var manager: AppWidgetManager
+        var manager: AppWidgetManager? = null
     }
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
@@ -77,7 +77,7 @@ class WidgetRemoteViewFactory(
         val context: Context,
         private val appId: Int,
         private val taskViewModel: TaskViewModel,
-        private val appWidgetManager: AppWidgetManager) : RemoteViewsService.RemoteViewsFactory {
+        private val appWidgetManager: AppWidgetManager?) : RemoteViewsService.RemoteViewsFactory {
 
     private var tasks: List<Task> = emptyList()
     private val format = SimpleDateFormat("EEE, MMM d yyyy, HH:mm ", Locale.getDefault())
@@ -88,7 +88,7 @@ class WidgetRemoteViewFactory(
         taskJob = GlobalScope.launch (Dispatchers.Main) {
             taskViewModel.visibleTasks.collect {
                 (this@WidgetRemoteViewFactory).tasks = it
-                appWidgetManager.notifyAppWidgetViewDataChanged(appId, R.id.widgetListView)
+                appWidgetManager?.notifyAppWidgetViewDataChanged(appId, R.id.widgetListView)
             }
         }
     }
