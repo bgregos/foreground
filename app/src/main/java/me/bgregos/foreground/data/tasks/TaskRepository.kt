@@ -3,7 +3,6 @@ package me.bgregos.foreground.data.tasks
 import android.annotation.SuppressLint
 import android.content.SharedPreferences
 import com.google.gson.Gson
-import java.util.*
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,7 +11,9 @@ import me.bgregos.foreground.model.SyncResult
 import me.bgregos.foreground.model.Task
 import me.bgregos.foreground.network.RemoteTaskSource
 import me.bgregos.foreground.util.replace
+import org.json.JSONArray
 import java.text.SimpleDateFormat
+import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.collections.ArrayList
@@ -91,7 +92,7 @@ class TaskRepository @Inject constructor(
             val taskType = object : TypeToken<ArrayList<Task>>() {}.type
             tasks.value = Gson().fromJson(prefs.getString("LocalTasks", ""), taskType) ?: tasks.value
             localChanges.value = Gson().fromJson(prefs.getString("LocalTasks.localChanges", ""), taskType) ?: localChanges.value
-            val lastSeenVersion = prefs.getInt("lastSeenVersion", 1)
+            val lastSeenVersion = prefs.getInt("lastSeenVersion", 6)
             runMigrationsIfRequired(lastSeenVersion)
         }
     }
@@ -175,6 +176,37 @@ class TaskRepository @Inject constructor(
                 val modifiedDate = now
                 val newTask = it.copy(waitDate = waitDate, dueDate = dueDate, modifiedDate = modifiedDate)
                 taskList.value = taskList.value.replace(newTask) {foundTask -> foundTask === it}
+            }
+            editor.putInt("lastSeenVersion", 5)
+            editor.apply()
+        }
+        if(lastSeenVersion<6){
+            val timeFormatter = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'")
+            timeFormatter.timeZone = TimeZone.getTimeZone("UTC")
+            //annotations broken out into different field
+            val editor = prefs.edit()
+            itemsModified = true
+            val now = Date()
+            taskList.value.forEach {
+                if(it.annotations == null){
+                    val newTask = it.copy(annotations = listOf())
+                    taskList.value = taskList.value.replace(newTask) {foundTask -> foundTask === it}
+                }
+            }
+            taskList.value.forEach { task ->
+                val annotations = arrayListOf<me.bgregos.foreground.model.Annotation>()
+
+                val jsonannotations = JSONArray(task.others[annotations] ?: "")
+
+                for (j in 0 until jsonannotations.length()) {
+                    val obj = jsonannotations.getJSONObject(j)
+                    val entry = obj.getString("entry")
+                    val parsedEntry = timeFormatter.parse(entry)
+                    val description = obj.getString("description")
+                    annotations.add(me.bgregos.foreground.model.Annotation(description, parsedEntry))
+                }
+                val newTask = task.copy(annotations = listOf(), others = task.others.filterKeys { it != "annotations" })
+                taskList.value = taskList.value.replace(newTask) {foundTask -> foundTask === task}
             }
             editor.putInt("lastSeenVersion", 5)
             editor.apply()

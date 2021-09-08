@@ -1,6 +1,7 @@
 package me.bgregos.foreground.model
 
 import android.util.Log
+import com.google.gson.Gson
 import com.google.gson.JsonObject
 import org.json.JSONArray
 import org.json.JSONObject
@@ -17,7 +18,7 @@ data class Task(
         val createdDate:Date = Date(),
         val project:String? = null,
         val tags:List<String> = listOf(),
-        val annotations:List<String> = listOf(),
+        val annotations:List<Annotation> = listOf(),
         val modifiedDate:Date? = null,
         val priority: String? = null,
         val status: String = "pending",
@@ -70,6 +71,7 @@ data class Task(
          * Serializes this task to JSON for taskwarrior sync
          */
         fun toJson(task: Task):String{
+            val gson = Gson()
             val timeFormatter = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'")
             timeFormatter.timeZone = TimeZone.getTimeZone("UTC")
             Log.v("brighttask", "tojsoning: "+task.name)
@@ -93,6 +95,7 @@ data class Task(
             }
             out.putOpt("entry", timeFormatter.format(task.createdDate))
             out.putOpt("tags", JSONArray(task.tags))
+            out.putOpt("annotations", gson.toJson(arrayOf(task.annotations), Array<Annotation>::class.java))
             out.putOpt("annotations", JSONArray(task.annotations))
 
             for(extra in task.others){
@@ -164,11 +167,15 @@ data class Task(
                 tags.add(jsontags.getString(j))
             }
 
-            val annotations = arrayListOf<String>()
-            val jsonannotations = obj.optJSONArray("annotation")?: JSONArray()
+            val annotations = arrayListOf<Annotation>()
+            val jsonannotations = obj.optJSONArray("annotations")?: JSONArray()
 
             for (j in 0 until jsonannotations.length()) {
-                annotations.add(jsonannotations.getString(j))
+                val obj = jsonannotations.getJSONObject(j)
+                val entry = obj.getString("entry")
+                val parsedEntry = timeFormatter.parse(entry)
+                val description = obj.getString("description")
+                annotations.add(Annotation(description, parsedEntry))
             }
 
             val others: MutableMap<String, String> = mutableMapOf()
