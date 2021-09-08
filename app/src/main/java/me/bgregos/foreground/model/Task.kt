@@ -1,6 +1,7 @@
 package me.bgregos.foreground.model
 
 import android.util.Log
+import com.google.gson.JsonObject
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.Serializable
@@ -16,6 +17,7 @@ data class Task(
         val createdDate:Date = Date(),
         val project:String? = null,
         val tags:List<String> = listOf(),
+        val annotations:List<String> = listOf(),
         val modifiedDate:Date? = null,
         val priority: String? = null,
         val status: String = "pending",
@@ -91,6 +93,7 @@ data class Task(
             }
             out.putOpt("entry", timeFormatter.format(task.createdDate))
             out.putOpt("tags", JSONArray(task.tags))
+            out.putOpt("annotations", JSONArray(task.annotations))
 
             for(extra in task.others){
                 out.putOpt(extra.key, extra.value)
@@ -160,6 +163,14 @@ data class Task(
             for (j in 0 until jsontags.length()) {
                 tags.add(jsontags.getString(j))
             }
+
+            val annotations = arrayListOf<String>()
+            val jsonannotations = obj.optJSONArray("annotation")?: JSONArray()
+
+            for (j in 0 until jsonannotations.length()) {
+                annotations.add(jsonannotations.getString(j))
+            }
+
             val others: MutableMap<String, String> = mutableMapOf()
             //remove what we have specific fields for
             obj.remove("description")
@@ -171,6 +182,7 @@ data class Task(
             obj.remove("modified")
             obj.remove("created")
             obj.remove("tags")
+            obj.remove("annotations")
             obj.remove("wait")
             obj.remove("end")
             //add all others to the others map
@@ -189,6 +201,7 @@ data class Task(
                     endDate = endDate,
                     modifiedDate = modifiedDate,
                     tags = tags,
+                    annotations = annotations,
                     others = others
             )
         }
