@@ -2,6 +2,7 @@ package me.bgregos.foreground.data.tasks
 
 import android.annotation.SuppressLint
 import android.content.SharedPreferences
+import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
@@ -186,7 +187,6 @@ class TaskRepository @Inject constructor(
             //annotations broken out into different field
             val editor = prefs.edit()
             itemsModified = true
-            val now = Date()
             taskList.value.forEach {
                 if(it.annotations == null){
                     val newTask = it.copy(annotations = listOf())
@@ -195,20 +195,22 @@ class TaskRepository @Inject constructor(
             }
             taskList.value.forEach { task ->
                 val annotations = arrayListOf<me.bgregos.foreground.model.Annotation>()
+                val othersEntry = task.others.get("annotations")
+                if(!othersEntry.isNullOrBlank()){
+                    val jsonannotations = JSONArray(othersEntry)
 
-                val jsonannotations = JSONArray(task.others[annotations] ?: "")
-
-                for (j in 0 until jsonannotations.length()) {
-                    val obj = jsonannotations.getJSONObject(j)
-                    val entry = obj.getString("entry")
-                    val parsedEntry = timeFormatter.parse(entry)
-                    val description = obj.getString("description")
-                    annotations.add(me.bgregos.foreground.model.Annotation(description, parsedEntry))
+                    for (j in 0 until jsonannotations.length()) {
+                        val obj = jsonannotations.getJSONObject(j)
+                        val entry = obj.getString("entry")
+                        val parsedEntry = timeFormatter.parse(entry)
+                        val description = obj.getString("description")
+                        annotations.add(me.bgregos.foreground.model.Annotation(description, parsedEntry))
+                    }
+                    val newTask = task.copy(annotations = listOf(), others = task.others.filterKeys { it != "annotations" })
+                    taskList.value = taskList.value.replace(newTask) {foundTask -> foundTask === task}
                 }
-                val newTask = task.copy(annotations = listOf(), others = task.others.filterKeys { it != "annotations" })
-                taskList.value = taskList.value.replace(newTask) {foundTask -> foundTask === task}
             }
-            editor.putInt("lastSeenVersion", 5)
+            editor.putInt("lastSeenVersion", 6)
             editor.apply()
         }
         if (itemsModified) {
