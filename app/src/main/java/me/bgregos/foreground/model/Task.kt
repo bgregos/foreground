@@ -75,34 +75,45 @@ data class Task(
             val timeFormatter = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'")
             timeFormatter.timeZone = TimeZone.getTimeZone("UTC")
             Log.v("brighttask", "tojsoning: "+task.name)
-            val out = JSONObject()
-            out.putOpt("description", task.name)
-            out.put("uuid", task.uuid)
-            out.putOpt("project", task.project)
-            out.putOpt("status", task.status)
-            out.putOpt("priority", task.priority)
+            val out = JsonObject()
+            out.addProperty("description", task.name)
+            out.addProperty("uuid", task.uuid.toString())
+            out.addPropertyOpt("project", task.project)
+            out.addProperty("status", task.status)
+            out.addPropertyOpt("priority", task.priority)
             if (task.dueDate!=null) {
-                out.putOpt("due", timeFormatter.format(task.dueDate))
+                out.addProperty("due", timeFormatter.format(task.dueDate))
             }
             if (task.waitDate!=null) {
-                out.putOpt("wait", timeFormatter.format(task.waitDate))
+                out.addProperty("wait", timeFormatter.format(task.waitDate))
             }
             if (task.modifiedDate!=null) {
-                out.putOpt("modified", timeFormatter.format(task.modifiedDate))
+                out.addProperty("modified", timeFormatter.format(task.modifiedDate))
             }
             if (task.endDate!=null) {
-                out.putOpt("end", timeFormatter.format(task.endDate))
+                out.addProperty("end", timeFormatter.format(task.endDate))
             }
-            out.putOpt("entry", timeFormatter.format(task.createdDate))
-            out.putOpt("tags", JSONArray(task.tags))
-            out.putOpt("annotations", gson.toJson(arrayOf(task.annotations), Array<Annotation>::class.java))
-            out.putOpt("annotations", JSONArray(task.annotations))
+            out.addProperty("entry", timeFormatter.format(task.createdDate))
+            out.add("tags", gson.toJsonTree(task.tags))
+
+//            out.addProperty("annotations", "[" + task.annotations.joinToString(",") { """{"description":"""" + it.description + """", "entry":"""" + it.entry + """"}""" } + "]")
+//            Log.d("test", "[" + task.annotations.joinToString(",") { """{"description":"""" + it.description + """", "entry":"""" + it.entry + """"}""" } + "]")
+//            Log.d("test out", out.getString("annotations"))
+            out.add("annotations", gson.toJsonTree(task.annotations))
 
             for(extra in task.others){
-                out.putOpt(extra.key, extra.value)
+                out.addProperty(extra.key, extra.value)
             }
+
+            Log.d("test out all", out.toString())
             
             return out.toString()
+        }
+
+        private fun JsonObject.addPropertyOpt(key: String, value: String?){
+            if(value.is){
+                this.addProperty(key, value)
+            }
         }
 
         fun unescape(str:String):String {
