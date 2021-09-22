@@ -1,29 +1,27 @@
 package me.bgregos.foreground.model
 
 import android.util.Log
-import com.google.gson.Gson
-import com.google.gson.JsonObject
+import com.google.gson.*
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.Serializable
-import java.lang.Exception
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.Comparator
+
 
 data class Task(
-        val name:String,
-        val uuid:UUID = UUID.randomUUID(),
-        val dueDate:Date? = null,
-        val createdDate:Date = Date(),
-        val project:String? = null,
-        val tags:List<String> = listOf(),
-        val annotations:List<Annotation> = listOf(),
-        val modifiedDate:Date? = null,
+        val name: String,
+        val uuid: UUID = UUID.randomUUID(),
+        val dueDate: Date? = null,
+        val createdDate: Date = Date(),
+        val project: String? = null,
+        val tags: List<String> = listOf(),
+        val annotations: List<Annotation> = listOf(),
+        val modifiedDate: Date? = null,
         val priority: String? = null,
         val status: String = "pending",
-        val waitDate:Date? = null,
-        val endDate:Date? = null,
+        val waitDate: Date? = null,
+        val endDate: Date? = null,
         val others: Map<String, String> = mapOf() //unaccounted-for fields. (User Defined Attributes)
 ) : Serializable {
     //List of all possible Task Statuses at https://taskwarrior.org/docs/design/task.html#attr_status
@@ -71,10 +69,12 @@ data class Task(
          * Serializes this task to JSON for taskwarrior sync
          */
         fun toJson(task: Task):String{
-            val gson = Gson()
+            val gson = GsonBuilder()
+                    .registerTypeAdapter(Date::class.java, gsonDateSerializer)
+                    .create()
             val timeFormatter = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'")
             timeFormatter.timeZone = TimeZone.getTimeZone("UTC")
-            Log.v("brighttask", "tojsoning: "+task.name)
+            Log.v("brighttask", "tojsoning: " + task.name)
             val out = JsonObject()
             out.addProperty("description", task.name)
             out.addProperty("uuid", task.uuid.toString())
@@ -111,12 +111,12 @@ data class Task(
         }
 
         private fun JsonObject.addPropertyOpt(key: String, value: String?){
-            if(value.is){
+            if(value != null){
                 this.addProperty(key, value)
             }
         }
 
-        fun unescape(str:String):String {
+        fun unescape(str: String):String {
             return str.replace("\\", "")
         }
 
@@ -124,12 +124,12 @@ data class Task(
          * Converts a taskwarrior-formatted task from JSON into a native Foreground task.
          * Used during taskwarrior sync.
          */
-        fun fromJson(json:String): Task?{
+        fun fromJson(json: String): Task?{
             var obj = JSONObject()
             try {
                 obj = JSONObject(json)
-            } catch (ex:Exception){
-                Log.e(this.javaClass.toString(), "Skipping task import: "+ex.toString())
+            } catch (ex: Exception){
+                Log.e(this.javaClass.toString(), "Skipping task import: " + ex.toString())
                 return null
             }
 
@@ -222,6 +222,15 @@ data class Task(
                     annotations = annotations,
                     others = others
             )
+        }
+
+        var gsonDateSerializer: JsonSerializer<Date> = JsonSerializer { src, _, _ ->
+            if (src == null) null else {
+                val timeFormatter = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'")
+                timeFormatter.timeZone = TimeZone.getTimeZone("UTC")
+                val out = timeFormatter.format(src)
+                JsonPrimitive(out)
+            }
         }
     }
 
