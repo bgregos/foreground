@@ -1,0 +1,12 @@
+Foreground Privacy Policy
+
+Foreground is an open-source application that aims to protect user privacy. This privacy policy
+discloses how your data is stored and used, and may be updated from time to time as necessary.
+
+Foreground does not collect any user information other than what you enter into your task list. This
+data is stored locally on your device. Your task data is not viewable singularly or in aggregate by
+the developer nor shared with third parties not described in this privacy policy.
+
+You the user may optionally decide to enable sync. In this case, user data will be sent securely to
+the taskserver you specify. Data located on these servers is subject to the privacy policies of the
+server operator.
