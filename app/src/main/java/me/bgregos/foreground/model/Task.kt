@@ -1,26 +1,27 @@
 package me.bgregos.foreground.model
 
 import android.util.Log
+import com.google.gson.*
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.Serializable
-import java.lang.Exception
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.Comparator
+
 
 data class Task(
-        val name:String,
-        val uuid:UUID = UUID.randomUUID(),
-        val dueDate:Date? = null,
-        val createdDate:Date = Date(),
-        val project:String? = null,
-        val tags:List<String> = listOf(),
-        val modifiedDate:Date? = null,
+        val name: String,
+        val uuid: UUID = UUID.randomUUID(),
+        val dueDate: Date? = null,
+        val createdDate: Date = Date(),
+        val project: String? = null,
+        val tags: List<String> = listOf(),
+        val annotations: List<Annotation> = listOf(),
+        val modifiedDate: Date? = null,
         val priority: String? = null,
         val status: String = "pending",
-        val waitDate:Date? = null,
-        val endDate:Date? = null,
+        val waitDate: Date? = null,
+        val endDate: Date? = null,
         val others: Map<String, String> = mapOf() //unaccounted-for fields. (User Defined Attributes)
 ) : Serializable {
     //List of all possible Task Statuses at https://taskwarrior.org/docs/design/task.html#attr_status
@@ -68,38 +69,54 @@ data class Task(
          * Serializes this task to JSON for taskwarrior sync
          */
         fun toJson(task: Task):String{
+            val gson = GsonBuilder()
+                    .registerTypeAdapter(Date::class.java, gsonDateSerializer)
+                    .create()
             val timeFormatter = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'")
             timeFormatter.timeZone = TimeZone.getTimeZone("UTC")
-            Log.v("brighttask", "tojsoning: "+task.name)
-            val out = JSONObject()
-            out.putOpt("description", task.name)
-            out.put("uuid", task.uuid)
-            out.putOpt("project", task.project)
-            out.putOpt("status", task.status)
-            out.putOpt("priority", task.priority)
+            Log.v("brighttask", "tojsoning: " + task.name)
+            val out = JsonObject()
+            out.addProperty("description", task.name)
+            out.addProperty("uuid", task.uuid.toString())
+            out.addPropertyOpt("project", task.project)
+            out.addProperty("status", task.status)
+            out.addPropertyOpt("priority", task.priority)
             if (task.dueDate!=null) {
-                out.putOpt("due", timeFormatter.format(task.dueDate))
+                out.addProperty("due", timeFormatter.format(task.dueDate))
             }
             if (task.waitDate!=null) {
-                out.putOpt("wait", timeFormatter.format(task.waitDate))
+                out.addProperty("wait", timeFormatter.format(task.waitDate))
             }
             if (task.modifiedDate!=null) {
-                out.putOpt("modified", timeFormatter.format(task.modifiedDate))
+                out.addProperty("modified", timeFormatter.format(task.modifiedDate))
             }
             if (task.endDate!=null) {
-                out.putOpt("end", timeFormatter.format(task.endDate))
+                out.addProperty("end", timeFormatter.format(task.endDate))
             }
-            out.putOpt("entry", timeFormatter.format(task.createdDate))
-            out.putOpt("tags", JSONArray(task.tags))
+            out.addProperty("entry", timeFormatter.format(task.createdDate))
+            out.add("tags", gson.toJsonTree(task.tags))
+
+//            out.addProperty("annotations", "[" + task.annotations.joinToString(",") { """{"description":"""" + it.description + """", "entry":"""" + it.entry + """"}""" } + "]")
+//            Log.d("test", "[" + task.annotations.joinToString(",") { """{"description":"""" + it.description + """", "entry":"""" + it.entry + """"}""" } + "]")
+//            Log.d("test out", out.getString("annotations"))
+            out.add("annotations", gson.toJsonTree(task.annotations))
 
             for(extra in task.others){
-                out.putOpt(extra.key, extra.value)
+                out.addProperty(extra.key, extra.value)
             }
+
+            Log.d("test out all", out.toString())
             
             return out.toString()
         }
 
-        fun unescape(str:String):String {
+        private fun JsonObject.addPropertyOpt(key: String, value: String?){
+            if(value != null){
+                this.addProperty(key, value)
+            }
+        }
+
+        fun unescape(str: String):String {
             return str.replace("\\", "")
         }
 
@@ -107,12 +124,12 @@ data class Task(
          * Converts a taskwarrior-formatted task from JSON into a native Foreground task.
          * Used during taskwarrior sync.
          */
-        fun fromJson(json:String): Task?{
+        fun fromJson(json: String): Task?{
             var obj = JSONObject()
             try {
                 obj = JSONObject(json)
-            } catch (ex:Exception){
-                Log.e(this.javaClass.toString(), "Skipping task import: "+ex.toString())
+            } catch (ex: Exception){
+                Log.e(this.javaClass.toString(), "Skipping task import: " + ex.toString())
                 return null
             }
 
@@ -160,6 +177,18 @@ data class Task(
             for (j in 0 until jsontags.length()) {
                 tags.add(jsontags.getString(j))
             }
+
+            val annotations = arrayListOf<Annotation>()
+            val jsonannotations = obj.optJSONArray("annotations")?: JSONArray()
+
+            for (j in 0 until jsonannotations.length()) {
+                val obj = jsonannotations.getJSONObject(j)
+                val entry = obj.getString("entry")
+                val parsedEntry = timeFormatter.parse(entry)
+                val description = obj.getString("description")
+                annotations.add(Annotation(description, parsedEntry))
+            }
+
             val others: MutableMap<String, String> = mutableMapOf()
             //remove what we have specific fields for
             obj.remove("description")
@@ -171,6 +200,7 @@ data class Task(
             obj.remove("modified")
             obj.remove("created")
             obj.remove("tags")
+            obj.remove("annotations")
             obj.remove("wait")
             obj.remove("end")
             //add all others to the others map
@@ -189,8 +219,18 @@ data class Task(
                     endDate = endDate,
                     modifiedDate = modifiedDate,
                     tags = tags,
+                    annotations = annotations,
                     others = others
             )
+        }
+
+        var gsonDateSerializer: JsonSerializer<Date> = JsonSerializer { src, _, _ ->
+            if (src == null) null else {
+                val timeFormatter = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'")
+                timeFormatter.timeZone = TimeZone.getTimeZone("UTC")
+                val out = timeFormatter.format(src)
+                JsonPrimitive(out)
+            }
         }
     }
 
