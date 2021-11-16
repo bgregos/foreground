@@ -9,16 +9,15 @@ import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import me.bgregos.foreground.data.tasks.TaskRepository
 import me.bgregos.foreground.getApplicationComponent
-import me.bgregos.foreground.util.replace
+import me.bgregos.foreground.tasklist.TaskViewModel
 import java.util.*
 import javax.inject.Inject
 
 class TaskBroadcastReceiver: BroadcastReceiver() {
 
     @Inject
-    lateinit var tasksRepository: TaskRepository
+    lateinit var taskViewModel: TaskViewModel
 
     override fun onReceive(context: Context?, intent: Intent?) {
         context?.getApplicationComponent()?.inject(this)
@@ -36,17 +35,14 @@ class TaskBroadcastReceiver: BroadcastReceiver() {
                 }
                 if(context != null){
                     CoroutineScope(Dispatchers.Main).launch {
-                        tasksRepository.load()
-                        val item = tasksRepository.getTaskByUUID(UUID.fromString(uuid))
+                        taskViewModel.load()
+                        val item = taskViewModel.getTaskByUUID(uuid)
                         if(item == null) {
                             Log.e("LocalTasks", "Failed to find a task with the given UUID")
                             return@launch
                         }
-                        val newTask = item.copy(modifiedDate = Date(), status = "completed")
-                        tasksRepository.tasks.value = tasksRepository.tasks.value.replace(newTask) { it === item }
-                        tasksRepository.addToLocalChanges(newTask)
-                        tasksRepository.tasks.value = tasksRepository.tasks.value.filter{ it.uuid != item.uuid }
-                        tasksRepository.save()
+                        taskViewModel.markTaskComplete(item)
+                        taskViewModel.save()
                     }
                 } else {
                     Log.e("notif", "Failed to save task marked done- null context")

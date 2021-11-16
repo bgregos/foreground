@@ -1,7 +1,5 @@
 package me.bgregos.foreground.tasklist
 
-import android.appwidget.AppWidgetManager
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -19,13 +17,14 @@ import me.bgregos.foreground.util.replace
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * This is the shared ViewModel for the task list and task detail screens.
  * Because they share information between each other in real time on
  * tablets/expanded foldables, their viewmodels are combined.
  */
-
+@Singleton
 class TaskViewModel @Inject constructor(private val taskRepository: TaskRepository, private val notificationRepository: NotificationRepository, filtersRepository: TaskFilterRepository): ViewModel() {
     var tasks: MutableStateFlow<List<Task>> = taskRepository.tasks
     val visibleTasks: Flow<List<Task>> = filtersRepository.taskFilters.combine(tasks) { filters, tasks ->
@@ -41,6 +40,8 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
             out.sortWith(Task.DateCompare())
             out.toList()
         }
+
+    var initialized = false
 
     //The detail fragment will listen to this and close when it receives an emission
     val closeDetailChannel: Channel<Unit> = Channel(Channel.RENDEZVOUS)
@@ -72,13 +73,25 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
     }
 
     suspend fun load(){
+        /*
+            We want to save first before loading as long as we have already loaded once during this
+            session. This procedure helps protect against race conditions where one client changes
+            the data held in this viewmodel and another client calls load() before save() is called
+            by the first caller. We do not call save before load on the first load since we would
+            be saving this ViewModel's default state to disk before loading.
+         */
+        if(initialized) {
+            save()
+        }
         taskRepository.load()
         removeUnnamedTasks()
         tasks.value = taskRepository.tasks.value
+        initialized = true
     }
 
     suspend fun save(){
         taskRepository.save()
+        updatePendingNotifications()
     }
 
     fun checkForTasksNoLongerWaiting(){
@@ -93,7 +106,7 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
         }
     }
 
-    fun updatePendingNotifications() {
+    private fun updatePendingNotifications() {
         notificationRepository.scheduleNotificationForTasks(tasks.value ?: ArrayList())
     }
 
@@ -137,6 +150,8 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
         }
     }
 
+    fun getTaskByUUID(uuid: String): Task? = tasks.value.find { it.uuid == UUID.fromString(uuid) }
+
     fun removeUnnamedTasks() {
         tasks.value = tasks.value.filter {
             it.name.isNotBlank()
@@ -151,7 +166,6 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
         taskRepository.addToLocalChanges(updated)
         tasks.value = tasks.value.replace(updated) { it.uuid == task.uuid }
         checkForTasksNoLongerWaiting()
-        updatePendingNotifications()
     }
 
     suspend fun sync(): SyncResult{

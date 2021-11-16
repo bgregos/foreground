@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import me.bgregos.foreground.data.tasks.TaskRepository
 import me.bgregos.foreground.getApplicationComponent
+import me.bgregos.foreground.tasklist.TaskViewModel
 import me.bgregos.foreground.util.NotificationRepository
 import java.util.*
 import javax.inject.Inject
@@ -19,7 +20,7 @@ class AlarmReceiver : BroadcastReceiver() {
     lateinit var notificationRepository: NotificationRepository
 
     @Inject
-    lateinit var taskRepository: TaskRepository
+    lateinit var taskViewModel: TaskViewModel
 
     override fun onReceive(context: Context?, intent: Intent?) {
         context?.getApplicationComponent()?.inject(this)
@@ -35,8 +36,8 @@ class AlarmReceiver : BroadcastReceiver() {
                     Log.e("notif", "Couldn't show notification - null context")
                 }else{
                     CoroutineScope(Dispatchers.Main).launch {
-                        taskRepository.load()
-                        val task = taskRepository.getTaskByUUID(UUID.fromString(uuid))
+                        taskViewModel.load()
+                        val task = taskViewModel.getTaskByUUID(uuid)
                         if (task != null) {
                             notificationRepository.showDueNotification(task)
                         } else {
