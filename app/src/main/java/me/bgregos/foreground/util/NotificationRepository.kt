@@ -52,9 +52,14 @@ class NotificationRepository @Inject constructor(private val mgr: AlarmManager, 
                 setClass(context, AlarmReceiver::class.java)
                 putExtra("uuid", task.uuid.toString())
             }
-            val pi = getBroadcast(context, task.hashCode(), sendIntent, 0)
+            val flags = if (Build.VERSION.SDK_INT >= 23) {
+                PendingIntent.FLAG_IMMUTABLE
+            } else {
+                0
+            }
+            val pi = getBroadcast(context, task.hashCode(), sendIntent, flags)
             scheduledNotifications.add(Pair(task, pi))
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 mgr.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, due.time, pi)
             } else {
                 mgr.setExact(AlarmManager.RTC_WAKEUP, due.time, pi)
@@ -112,9 +117,16 @@ class NotificationRepository @Inject constructor(private val mgr: AlarmManager, 
             putExtra("notification_id", lastAssignedNotificationId)
             putExtra("uuid", task.uuid.toString())
         }
-        val donePendingIntent = getBroadcast(context, Int.MAX_VALUE- lastAssignedNotificationId, doneIntent, FLAG_CANCEL_CURRENT)
 
-        val pendingIntent: PendingIntent = PendingIntent.getActivity(context, lastAssignedNotificationId, intent, FLAG_CANCEL_CURRENT)
+        val flags = if (Build.VERSION.SDK_INT >= 23) {
+            FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        } else {
+            FLAG_CANCEL_CURRENT
+        }
+
+        val donePendingIntent = getBroadcast(context, Int.MAX_VALUE- lastAssignedNotificationId, doneIntent, flags)
+
+        val pendingIntent: PendingIntent = PendingIntent.getActivity(context, lastAssignedNotificationId, intent, flags)
 
         val builder = NotificationCompat.Builder(context, "me.bgregos.foreground.tasksdue")
                 .setSmallIcon(R.drawable.ic_notif)

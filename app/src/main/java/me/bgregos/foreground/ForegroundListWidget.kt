@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.view.View
 import android.widget.RemoteViews
 import android.widget.RemoteViewsService
@@ -48,7 +49,12 @@ internal fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManage
     )
     val intent = Intent(context, WidgetRemoteViewsService::class.java)
     intent.putExtra("app_id", appWidgetId)
-     views.setOnClickPendingIntent(R.id.logo, PendingIntent.getActivity(context, PendingIntent.FLAG_UPDATE_CURRENT, Intent(context, MainActivity::class.java), 0))
+    val flags = if (Build.VERSION.SDK_INT >= 23) {
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+    } else {
+        PendingIntent.FLAG_UPDATE_CURRENT
+    }
+     views.setOnClickPendingIntent(R.id.logo, PendingIntent.getActivity(context, flags, Intent(context, MainActivity::class.java), flags))
     views.setRemoteAdapter(R.id.widgetListView, intent)
     appWidgetManager.updateAppWidget(appWidgetId, views)
 }
