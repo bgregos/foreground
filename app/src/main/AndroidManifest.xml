@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
     <application
         android:name=".ForegroundApplication"
@@ -14,19 +15,11 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat">
-        <receiver android:name=".ForegroundListWidgetProvider"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/list_widget_info" />
-        </receiver>
         <service
             android:name=".WidgetRemoteViewsService"
             android:permission="android.permission.BIND_REMOTEVIEWS" />
+        <service
+            android:name=".UpdateWidgetService"/>
 
         <activity
             android:name=".tasklist.MainActivity"
@@ -49,6 +42,17 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".tasklist.MainActivity" />
         </activity>
+        <receiver android:name=".ForegroundListWidgetProvider"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/list_widget_info" />
+        </receiver>
         <receiver
             android:name=".receiver.AlarmReceiver"
             android:enabled="true"
