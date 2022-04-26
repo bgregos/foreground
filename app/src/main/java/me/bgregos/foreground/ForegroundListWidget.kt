@@ -96,7 +96,6 @@ class UpdateWidgetService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val appWidgetManager = AppWidgetManager.getInstance(this
                 .applicationContext)
-        val self = this
         if(taskJob == null || taskJob!!.isCompleted) {
             taskJob = taskViewModel.viewModelScope.launch {
                 taskViewModel.load()
@@ -104,8 +103,7 @@ class UpdateWidgetService : Service() {
                         .visibleTasks
                         .collect {
                             tasks = it
-
-                            val appWidgetIds = appWidgetManager.getAppWidgetIds(ComponentName(self.applicationContext, ForegroundListWidgetProvider::class.java))
+                            val appWidgetIds = appWidgetManager.getAppWidgetIds(ComponentName((this@UpdateWidgetService).applicationContext, ForegroundListWidgetProvider::class.java))
                             appWidgetManager?.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.widgetListView)
                         }
             }
