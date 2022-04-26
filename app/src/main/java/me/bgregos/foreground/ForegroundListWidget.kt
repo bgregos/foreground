@@ -41,14 +41,14 @@ class ForegroundListWidgetProvider : AppWidgetProvider() {
 
     override fun onReceive(context: Context?, intent: Intent?) {
         super.onReceive(context, intent)
-        if (context == null) return
-        val appWidgetManager = AppWidgetManager.getInstance(context)
-        val appWidgetIds = appWidgetManager.getAppWidgetIds(ComponentName(context!!, ForegroundListWidgetProvider::class.java))
-        for (appWidgetId in appWidgetIds) {
-            updateAppWidget(known, context, appWidgetManager, appWidgetId)
+        context?.let {
+            val appWidgetManager = AppWidgetManager.getInstance(it)
+            val appWidgetIds = appWidgetManager.getAppWidgetIds(ComponentName(it, ForegroundListWidgetProvider::class.java))
+            for (appWidgetId in appWidgetIds) {
+                updateAppWidget(known, it, appWidgetManager, appWidgetId)
+            }
+            it.startService(Intent(context, UpdateWidgetService::class.java))
         }
-        context!!.startService(Intent(context, UpdateWidgetService::class.java))
-
     }
 
     override fun onDisabled(context: Context) {
