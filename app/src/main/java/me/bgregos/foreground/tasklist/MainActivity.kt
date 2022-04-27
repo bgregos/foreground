@@ -1,11 +1,10 @@
 package me.bgregos.foreground.tasklist
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentTransaction
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import me.bgregos.foreground.ForegroundListWidgetProvider
 import me.bgregos.foreground.R
 import me.bgregos.foreground.getApplicationComponent
 import me.bgregos.foreground.util.NotificationRepository
@@ -27,6 +26,9 @@ class MainActivity : AppCompatActivity() {
         fragment = TaskListFragment.newInstance()
         transaction.replace(R.id.task_list_container, fragment)
         transaction.commit()
+        getApplicationComponent().inject(taskViewModel)
+        val i: Intent = Intent(this.applicationContext, ForegroundListWidgetProvider::class.java)
+        this.applicationContext.sendBroadcast(i)
     }
 
     override fun onPause() {
