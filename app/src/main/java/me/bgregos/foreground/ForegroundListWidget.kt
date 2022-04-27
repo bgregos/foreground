@@ -96,7 +96,8 @@ class UpdateWidgetService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val appWidgetManager = AppWidgetManager.getInstance(this
                 .applicationContext)
-        if(taskJob == null || taskJob!!.isCompleted) {
+        val completedOrNeverStarted = taskJob?.isCompleted ?: true;
+        if(completedOrNeverStarted) {
             taskJob = taskViewModel.viewModelScope.launch {
                 taskViewModel.load()
                 taskViewModel
