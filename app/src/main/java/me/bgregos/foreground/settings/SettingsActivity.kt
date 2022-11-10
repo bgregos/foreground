@@ -225,6 +225,7 @@ class SettingsActivity : AppCompatActivity() {
         startActivityForResult(intent, certType.value)
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, resultData: Intent?) {
 
         // The ACTION_OPEN_DOCUMENT intent was sent with the request code

@@ -119,7 +119,7 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
 
     fun markTaskComplete(toComplete: Task) {
         if(toComplete == currentTask){
-            closeDetailChannel.offer(Unit)
+            closeDetailChannel.trySend(Unit)
         }
         val completed = toComplete.copy(
                 status = "completed",
@@ -135,7 +135,7 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
 
     fun delete(toDelete: Task) {
         if(toDelete == currentTask){
-            closeDetailChannel.offer(Unit)
+            closeDetailChannel.trySend(Unit)
             currentTask = null
         }
         val deleted = toDelete.copy(
@@ -143,7 +143,7 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
                 modifiedDate = Date(),
                 endDate = Date()
         )
-        tasks.value = tasks.value?.minus(toDelete)
+        tasks.value = tasks.value.minus(toDelete)
         postUpdatedTask(deleted)
         viewModelScope.launch {
             save()
@@ -175,7 +175,7 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
         save()
         if(!tasks.value.contains(currentTask)) {
             //close the detail fragment
-            closeDetailChannel.offer(Unit)
+            closeDetailChannel.trySend(Unit)
         }
         return syncResult
     }
