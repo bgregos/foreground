@@ -27,7 +27,7 @@ class TaskListAdapter(private val parentFragment: TaskListFragment,
         this.setHasStableIds(false)
         onClickListener = View.OnClickListener { v ->
             val task = v.tag as Task
-            parentFragment.openTask(task, v, task.name)
+            parentFragment.openTask(task)
         }
     }
 

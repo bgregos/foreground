@@ -10,8 +10,10 @@ import android.view.animation.RotateAnimation
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_task_list.*
@@ -47,7 +49,10 @@ class TaskListFragment : Fragment() {
         setHasOptionsMenu(true)
         super.onCreate(savedInstanceState)
         //use activity viewmodel store since this viewmodel is shared between fragments
-        viewModel = ViewModelProvider(requireActivity().viewModelStore, viewModelFactory).get(TaskViewModel::class.java)
+        viewModel = ViewModelProvider(
+            requireActivity().viewModelStore,
+            viewModelFactory
+        ).get(TaskViewModel::class.java)
     }
 
     override fun onAttach(context: Context) {
@@ -55,8 +60,10 @@ class TaskListFragment : Fragment() {
         super.onAttach(context)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_task_list, container, false)
     }
@@ -80,7 +87,12 @@ class TaskListFragment : Fragment() {
         fab.setOnClickListener { view ->
             viewModel.removeUnnamedTasks()
             val newTask = viewModel.addTask()
-            openTask(newTask, view, newTask.name)
+            openTask(newTask)
+        }
+        launchLifecycleAware {
+            viewModel.taskAwaitingOpen.collect {
+                openTask(it)
+            }
         }
         super.onViewCreated(view, savedInstanceState)
     }
@@ -92,10 +104,17 @@ class TaskListFragment : Fragment() {
     }
 
     fun onSyncClick(item: MenuItem): Boolean {
-        val syncRotateAnimation = RotateAnimation(360f, 0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f)
+        val syncRotateAnimation = RotateAnimation(
+            360f,
+            0f,
+            Animation.RELATIVE_TO_SELF,
+            0.5f,
+            Animation.RELATIVE_TO_SELF,
+            0.5f
+        )
         syncRotateAnimation.duration = 1000
         syncRotateAnimation.repeatCount = Animation.INFINITE
-        val syncButton = view?.findViewById<View>(R.id.action_sync) ?:  return true
+        val syncButton = view?.findViewById<View>(R.id.action_sync) ?: return true
         syncButton.clearAnimation()
         syncButton.startAnimation(syncRotateAnimation)
 
@@ -103,25 +122,38 @@ class TaskListFragment : Fragment() {
         bar1.view.setBackgroundColor(Color.parseColor("#34309f"))
         bar1.show()
 
-        val prefs = activity?.getSharedPreferences("me.bgregos.BrightTask", Context.MODE_PRIVATE) ?: return true
-        if (prefs.getBoolean("settings_sync", false)){
+        val prefs = activity?.getSharedPreferences("me.bgregos.BrightTask", Context.MODE_PRIVATE)
+            ?: return true
+        if (prefs.getBoolean("settings_sync", false)) {
             CoroutineScope(Dispatchers.Main).launch {
                 val syncResult: SyncResult = viewModel.sync()
-                if(syncResult.success){
-                    val bar2 = Snackbar.make(task_list_parent, "Sync Successful", Snackbar.LENGTH_SHORT)
+                if (syncResult.success) {
+                    val bar2 =
+                        Snackbar.make(task_list_parent, "Sync Successful", Snackbar.LENGTH_SHORT)
                     bar2.view.setBackgroundColor(Color.parseColor("#34309f"))
                     bar2.show()
-                }else{
-                    val bar2 = Snackbar.make(task_list_parent, "Sync Failed: ${syncResult.message}", Snackbar.LENGTH_LONG)
+                } else {
+                    val bar2 = Snackbar.make(
+                        task_list_parent,
+                        "Sync Failed: ${syncResult.message}",
+                        Snackbar.LENGTH_LONG
+                    )
                     bar2.view.setBackgroundColor(Color.parseColor("#34309f"))
-                    bar2.setAction("Details", ShowErrorDetail(syncResult.message, requireActivity()))
+                    bar2.setAction(
+                        "Details",
+                        ShowErrorDetail(syncResult.message, requireActivity())
+                    )
                     bar2.show()
                 }
                 task_list.adapter?.notifyDataSetChanged()
                 syncRotateAnimation.repeatCount = 0
             }
         } else {
-            val bar = Snackbar.make(task_list_parent, "Sync is disabled! Enable it in the settings menu.", Snackbar.LENGTH_LONG)
+            val bar = Snackbar.make(
+                task_list_parent,
+                "Sync is disabled! Enable it in the settings menu.",
+                Snackbar.LENGTH_LONG
+            )
             bar.view.setBackgroundColor(Color.parseColor("#34309f"))
             bar.show()
             syncRotateAnimation.repeatCount = 0
@@ -166,7 +198,7 @@ class TaskListFragment : Fragment() {
         fun newInstance() = TaskListFragment()
     }
 
-    fun openTask(task: Task, v: View, name: String){
+    fun openTask(task: Task) {
         val fragment = TaskDetailFragment.newInstance(task.uuid)
         task_list.adapter?.notifyDataSetChanged()
         if (twoPane) {

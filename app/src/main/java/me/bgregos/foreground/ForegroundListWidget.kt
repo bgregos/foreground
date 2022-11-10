@@ -8,7 +8,9 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.Bundle
 import android.os.IBinder
+import android.util.Log
 import android.view.View
 import android.widget.RemoteViews
 import android.widget.RemoteViewsService
@@ -61,21 +63,30 @@ internal fun updateAppWidget(
         appWidgetManager: AppWidgetManager,
         appWidgetId: Int) {
     if (known.contains((appWidgetId))) return;
-    val views = RemoteViews(
+    val widget = RemoteViews(
             context.packageName,
             R.layout.list_widget
     )
     val intent = Intent(context, WidgetRemoteViewsService::class.java)
     intent.putExtra("app_id", appWidgetId)
+
     val flags = if (Build.VERSION.SDK_INT >= 23) {
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     } else {
         PendingIntent.FLAG_UPDATE_CURRENT
     }
 
-    views.setOnClickPendingIntent(R.id.logo, PendingIntent.getActivity(context, flags, Intent(context, MainActivity::class.java), flags))
-    views.setRemoteAdapter(R.id.widgetListView, intent)
-    appWidgetManager.updateAppWidget(appWidgetId, views)
+    val clickIntent = Intent(context, MainActivity::class.java)
+    val clickPI = PendingIntent.getActivity(
+        context, 0,
+        clickIntent, flags
+    )
+
+    widget.setPendingIntentTemplate(R.id.widgetListView, clickPI)
+
+    //widget.setOnClickPendingIntent(R.id.logo, PendingIntent.getActivity(context, flags, Intent(context, MainActivity::class.java), flags))
+    widget.setRemoteAdapter(R.id.widgetListView, intent)
+    appWidgetManager.updateAppWidget(appWidgetId, widget)
     known.add(appWidgetId)
 }
 
@@ -155,19 +166,23 @@ class WidgetRemoteViewFactory(val context: Context) : RemoteViewsService.RemoteV
     override fun getViewAt(position: Int): RemoteViews {
 
         val task = UpdateWidgetService.tasks[position]
-        val rv = RemoteViews(context.packageName, R.layout.task_list_content_widget)
-        rv.setTextViewText(R.id.title, task.name)
-
+        val row = RemoteViews(context.packageName, R.layout.task_list_content_widget)
+        row.setTextViewText(R.id.title, task.name)
 
         if (task.dueDate != null) {
             val dueDate = task.dueDate
-            rv.setTextViewText(R.id.due, format.format(dueDate))
-            rv.setViewVisibility(R.id.due, View.VISIBLE)
+            row.setTextViewText(R.id.due, format.format(dueDate))
+            row.setViewVisibility(R.id.due, View.VISIBLE)
         } else {
-            rv.setViewVisibility(R.id.due, View.GONE)
+            row.setViewVisibility(R.id.due, View.GONE)
         }
 
-        return rv
+        val fillIn = Intent()
+        fillIn.putExtra("me.bgregos.foreground.taskUuidToOpen", task.uuid.toString())
+        Log.d("widget", "fill in intent created for task ${task.uuid}")
+        row.setOnClickFillInIntent(R.id.widget_item, fillIn)
+
+        return row
     }
 
     override fun getCount(): Int {
