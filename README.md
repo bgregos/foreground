@@ -21,9 +21,6 @@ More features are planned!
 ## Syncing
 To set up sync, add your Taskwarrior server credentials (provided by your taskd server or a service like inthe.am or FreeCinc) to the settings menu, and enable sync using the toggle. A test will be run to check if the settings are valid, and the enable will stick if your configuration is correct. You can also configure automatic syncing in this menu, or click the sync button on the main page to start a sync.
 
-## Builds
-Builds are released on Google Play and under the Releases tab of this page. F-Droid releases are planned in the near future.
-
 ## Issues
 Want to report a bug, submit a feature request, or contribute code? Read [CONTRIBUTING.md](CONTRIBUTING.md)! It contains information on this project's procedures, standards, and architecture.
 
