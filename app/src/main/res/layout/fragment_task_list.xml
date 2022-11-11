@@ -45,7 +45,9 @@
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <include layout="@layout/task_list" />
+        <include
+            android:id="@+id/task_list_include"
+            layout="@layout/task_list" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fab"

@@ -14,7 +14,6 @@ import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.work.*
-import kotlinx.android.synthetic.main.activity_settings.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -22,6 +21,7 @@ import me.bgregos.foreground.R
 import me.bgregos.foreground.getApplicationComponent
 import me.bgregos.foreground.model.SyncResult
 import me.bgregos.foreground.data.tasks.TaskRepository
+import me.bgregos.foreground.databinding.ActivitySettingsBinding
 import me.bgregos.foreground.network.TaskwarriorSyncWorker
 import me.bgregos.foreground.util.ShowErrorDetail
 import java.io.File
@@ -35,34 +35,36 @@ class SettingsActivity : AppCompatActivity() {
 
     @Inject
     lateinit var localTasksRepository: TaskRepository
+    private lateinit var binding: ActivitySettingsBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         getApplicationComponent().inject(this)
-        setContentView(R.layout.activity_settings)
-        settings_syncprogress.visibility = View.INVISIBLE
-        settings_sync.visibility = View.VISIBLE
+        binding = ActivitySettingsBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        binding.settingsSyncprogress.visibility = View.INVISIBLE
+        binding.settingsSync.visibility = View.VISIBLE
         actionBar?.setDisplayHomeAsUpEnabled(true)
         actionBar?.setDisplayShowHomeEnabled(true)
         actionBar?.setDisplayShowTitleEnabled(true)
 
         //load preferences
         val prefs = this.getSharedPreferences("me.bgregos.BrightTask", Context.MODE_PRIVATE)
-        settings_sync.isChecked = prefs.getBoolean("settings_sync", false)
-        settings_auto_sync.isChecked = prefs.getBoolean("settings_auto_sync", false)
-        settings_auto_sync_interval.setText(prefs.getString("settings_auto_sync_interval", "60"))
-        settings_address.setText(prefs.getString("settings_address", ""))
+        binding.settingsSync.isChecked = prefs.getBoolean("settings_sync", false)
+        binding.settingsAutoSync.isChecked = prefs.getBoolean("settings_auto_sync", false)
+        binding.settingsAutoSyncInterval.setText(prefs.getString("settings_auto_sync_interval", "60"))
+        binding.settingsAddress.setText(prefs.getString("settings_address", ""))
         var port = prefs.getInt("settings_port", -1).toString()
         port = if (port=="-1") "" else port
-        settings_port.setText(port)
-        settings_credentials.setText(prefs.getString("settings_credentials", ""))
-        settings_cert_ca.setText(prefs.getString("settings_cert_ca", ""))
-        settings_private_key.setText(prefs.getString("settings_cert_key", ""))
-        settings_cert_private.setText(prefs.getString("settings_cert_private", ""))
+        binding.settingsPort.setText(port)
+        binding.settingsCredentials.setText(prefs.getString("settings_credentials", ""))
+        binding.settingsCertCa.setText(prefs.getString("settings_cert_ca", ""))
+        binding.settingsPrivateKey.setText(prefs.getString("settings_cert_key", ""))
+        binding.settingsCertPrivate.setText(prefs.getString("settings_cert_private", ""))
 
-        settings_sync.setOnClickListener {
+        binding.settingsSync.setOnClickListener {
 
-            if (settings_sync.isChecked) {
+            if (binding.settingsSync.isChecked) {
                 val alertDialogBuilder = AlertDialog.Builder(this)
                         .setTitle(getString(R.string.warning))
                         .setMessage(getString(R.string.sync_warning))
@@ -70,7 +72,7 @@ class SettingsActivity : AppCompatActivity() {
                         .setNegativeButton(getString(R.string.go_back)) { _, _ -> cancelInitialSync() }
                 alertDialogBuilder.show()
             } else {
-                settings_auto_sync.isChecked = false
+                binding.settingsAutoSync.isChecked = false
                 //TODO: cancel the auto sync work specifically
                 WorkManager.getInstance(this).cancelAllWork()
                 CoroutineScope(Dispatchers.Main).launch {
@@ -79,26 +81,26 @@ class SettingsActivity : AppCompatActivity() {
             }
         }
 
-        settings_cert_ca_button.setOnClickListener { performCertFileSearch(CertType.CERT_CA) }
-        settings_private_key_button.setOnClickListener { performCertFileSearch(CertType.CERT_KEY) }
-        settings_cert_private_button.setOnClickListener { performCertFileSearch(CertType.CERT_PRIVATE) }
-        settings_auto_sync.setOnClickListener { onAutoSyncClicked() }
-        settings_auto_sync.setOnFocusChangeListener { _, focused -> if(!focused) onAutoSyncIntervalChanged() }
+        binding.settingsCertCaButton.setOnClickListener { performCertFileSearch(CertType.CERT_CA) }
+        binding.settingsPrivateKeyButton.setOnClickListener { performCertFileSearch(CertType.CERT_KEY) }
+        binding.settingsCertPrivateButton.setOnClickListener { performCertFileSearch(CertType.CERT_PRIVATE) }
+        binding.settingsAutoSync.setOnClickListener { onAutoSyncClicked() }
+        binding.settingsAutoSync.setOnFocusChangeListener { _, focused -> if(!focused) onAutoSyncIntervalChanged() }
     }
 
     fun onAutoSyncIntervalChanged(){
-        val interval: Long = settings_auto_sync_interval.text.toString().toLong()
+        val interval: Long = binding.settingsAutoSyncInterval.text.toString().toLong()
         if (interval < 15){
-            settings_auto_sync_interval.setText("15")
+            binding.settingsAutoSyncInterval.setText("15")
         }
     }
 
     private fun attemptInitialSync(){
-        settings_enable_sync_text.text = "Testing Sync"
-        settings_sync.isChecked = false
-        settings_sync.visibility = View.GONE
+        binding.settingsEnableSyncText.text = "Testing Sync"
+        binding.settingsSync.isChecked = false
+        binding.settingsSync.visibility = View.GONE
         save()
-        settings_syncprogress.visibility = View.VISIBLE
+        binding.settingsSyncprogress.visibility = View.VISIBLE
         CoroutineScope(Dispatchers.Main).launch {
             var response: SyncResult
             var exception: Exception? = null
@@ -110,14 +112,14 @@ class SettingsActivity : AppCompatActivity() {
                 response = SyncResult(false, "Invalid or incomplete configuration.")
             }
             Log.i(this.javaClass.toString(), response.message)
-            settings_sync.visibility = View.VISIBLE
-            settings_enable_sync_text.text = "Enable Sync"
-            settings_syncprogress.visibility = View.INVISIBLE
+            binding.settingsSync.visibility = View.VISIBLE
+            binding.settingsEnableSyncText.text = "Enable Sync"
+            binding.settingsSyncprogress.visibility = View.INVISIBLE
             if (response.success) {
                 createSnackbar(getString(R.string.sync_enabled_message), Snackbar.LENGTH_SHORT)
-                settings_sync.isChecked = true
+                binding.settingsSync.isChecked = true
             }else{
-                val bar = Snackbar.make(settings_parent, response.message, Snackbar.LENGTH_LONG)
+                val bar = Snackbar.make(binding.settingsParent, response.message, Snackbar.LENGTH_LONG)
                 bar.view.setBackgroundColor(Color.parseColor("#34309f"))
                 bar.setAction("Details", ShowErrorDetail(exception?.toString() ?: response.message, this@SettingsActivity))
                 bar.setActionTextColor(Color.WHITE)
@@ -127,21 +129,21 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun cancelInitialSync(){
-        settings_sync.isChecked = false
-        settings_auto_sync.isChecked = false
+        binding.settingsSync.isChecked = false
+        binding.settingsAutoSync.isChecked = false
     }
 
     fun onAutoSyncClicked(){
-        if(settings_auto_sync.isChecked && !settings_sync.isChecked) {
+        if(binding.settingsAutoSync.isChecked && !binding.settingsSync.isChecked) {
             createSnackbar(getString(R.string.auto_sync_requirement), Snackbar.LENGTH_SHORT)
-            settings_auto_sync.isChecked = false
+            binding.settingsAutoSync.isChecked = false
             return
         }
-        if(settings_auto_sync.isChecked){
-            var interval: Long = settings_auto_sync_interval.text.toString().toLong()
+        if(binding.settingsAutoSync.isChecked){
+            var interval: Long = binding.settingsAutoSyncInterval.text.toString().toLong()
             if (interval < 15){
                 interval = 15
-                settings_auto_sync_interval.setText("15")
+                binding.settingsAutoSyncInterval.setText("15")
             }
             val syncRequest =
                     PeriodicWorkRequest.Builder(TaskwarriorSyncWorker::class.java, interval, TimeUnit.MINUTES)
@@ -160,8 +162,8 @@ class SettingsActivity : AppCompatActivity() {
 
     fun save() {
         //handle port save
-        val port = if (settings_port.text.toString() == "") -1 else settings_port.text.toString().toInt()
-        val creds = settings_credentials.text.toString().split("/")
+        val port = if (binding.settingsPort.text.toString() == "") -1 else binding.settingsPort.text.toString().toInt()
+        val creds = binding.settingsCredentials.text.toString().split("/")
         /*  Generate settings file used by the taskwarrior sync agent. These settings
             are a subset of the full application settings */
 
@@ -175,7 +177,7 @@ class SettingsActivity : AppCompatActivity() {
         val inputFile = openFileInput("taskwarrior.properties")
         val properties = Properties()
         properties.load(inputFile)
-        properties["taskwarrior.server.host"]=settings_address.text.toString()
+        properties["taskwarrior.server.host"]=binding.settingsAddress.text.toString()
         properties["taskwarrior.server.port"]=port.toString()
         properties["taskwarrior.ssl.cert.ca.file"]=File(filesDir, "cert_ca").absolutePath ?: ""
         properties["taskwarrior.ssl.private.key.file"]=File(filesDir, "cert_key").absolutePath ?: ""
@@ -194,15 +196,15 @@ class SettingsActivity : AppCompatActivity() {
         val sp = this.getSharedPreferences("me.bgregos.BrightTask", Context.MODE_PRIVATE)
         val editor = sp.edit()
 
-        editor.putBoolean("settings_sync", settings_sync.isChecked)
-        editor.putBoolean("settings_auto_sync", settings_auto_sync.isChecked)
-        editor.putString("settings_auto_sync_interval", settings_auto_sync_interval.text.toString())
-        editor.putString("settings_address", settings_address.text.toString())
+        editor.putBoolean("settings_sync", binding.settingsSync.isChecked)
+        editor.putBoolean("settings_auto_sync", binding.settingsAutoSync.isChecked)
+        editor.putString("settings_auto_sync_interval", binding.settingsAutoSyncInterval.text.toString())
+        editor.putString("settings_address", binding.settingsAddress.text.toString())
         editor.putInt("settings_port", port)
-        editor.putString("settings_credentials", settings_credentials.text.toString())
-        editor.putString("settings_cert_ca", settings_cert_ca.text.toString())
-        editor.putString("settings_cert_key", settings_private_key.text.toString())
-        editor.putString("settings_cert_private", settings_cert_private.text.toString())
+        editor.putString("settings_credentials", binding.settingsCredentials.text.toString())
+        editor.putString("settings_cert_ca", binding.settingsCertCa.text.toString())
+        editor.putString("settings_cert_key", binding.settingsPrivateKey.text.toString())
+        editor.putString("settings_cert_private", binding.settingsCertPrivate.text.toString())
         editor.apply()
     }
 
@@ -242,15 +244,15 @@ class SettingsActivity : AppCompatActivity() {
                 Log.e(this.javaClass.toString(), CertType.values().filter{ x -> x.value==requestCode}.first().toString())
                 when(CertType.values().filter{ x -> x.value==requestCode}.first()) {
                     CertType.CERT_CA -> {
-                        settings_cert_ca.setText(uriToName(uri))
+                        binding.settingsCertCa.setText(uriToName(uri))
                         writeCertFile(uri, "cert_ca")
                     }
                     CertType.CERT_KEY -> {
-                        settings_private_key.setText(uriToName(uri))
+                        binding.settingsPrivateKey.setText(uriToName(uri))
                         writeCertFile(uri, "cert_key")
                     }
                     CertType.CERT_PRIVATE -> {
-                        settings_cert_private.setText(uriToName(uri))
+                        binding.settingsCertPrivate.setText(uriToName(uri))
                         writeCertFile(uri, "cert_private")
                     }
                 }
@@ -298,7 +300,7 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun createSnackbar(text: String, length: Int){
-        val bar = Snackbar.make(settings_parent, text, length)
+        val bar = Snackbar.make(binding.settingsParent, text, length)
         bar.view.setBackgroundColor(Color.parseColor("#34309f"))
         bar.show()
     }

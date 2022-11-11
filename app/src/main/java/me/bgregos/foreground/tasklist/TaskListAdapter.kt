@@ -8,12 +8,11 @@ import android.view.View.*
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.task_list_content_standard.view.*
 import me.bgregos.foreground.R
+import me.bgregos.foreground.databinding.TaskListContentStandardBinding
 import me.bgregos.foreground.model.Task
 import java.text.SimpleDateFormat
 import java.util.*
@@ -93,15 +92,16 @@ class TaskListAdapter(private val parentFragment: TaskListFragment,
     }
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val title: TextView = view.title
-        val due: TextView = view.due
-        val dueicon: ImageView = view.ic_date
-        val project: TextView = view.project
-        val projecticon: ImageView = view.ic_proj
-        val tags: TextView = view.tags
-        val tagsicon: ImageView = view.ic_tags
-        val accent: View = view.task_list_card_accentbar
-        val complete: ImageView = view.complete
+        val binding = TaskListContentStandardBinding.bind(view)
+        val title: TextView = binding.title
+        val due: TextView = binding.due
+        val dueicon: ImageView = binding.icDate
+        val project: TextView = binding.project
+        val projecticon: ImageView = binding.icProj
+        val tags: TextView = binding.tags
+        val tagsicon: ImageView = binding.icTags
+        val accent: View = binding.taskListCardAccentbar
+        val complete: ImageView = binding.complete
     }
 
 }

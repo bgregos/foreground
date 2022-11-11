@@ -13,10 +13,6 @@ import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import kotlinx.android.synthetic.main.date_layout.*
-import kotlinx.android.synthetic.main.date_layout.view.*
-import kotlinx.android.synthetic.main.fragment_task_detail.*
-import kotlinx.android.synthetic.main.fragment_task_detail.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -39,9 +35,7 @@ import javax.inject.Inject
  */
 class TaskDetailFragment : Fragment() {
 
-    private var _binding: FragmentTaskDetailBinding? = null
-    // This property is only valid between onCreateView and onDestroyView.
-    private val binding get() = _binding!!
+    private lateinit var binding: FragmentTaskDetailBinding
     private var initialPrioritySet = false
 
 
@@ -89,7 +83,7 @@ class TaskDetailFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
 
-        _binding = FragmentTaskDetailBinding.inflate(inflater, container, false)
+        binding = FragmentTaskDetailBinding.inflate(inflater, container, false)
         var twoPane = false
         context?.let { twoPane = it.isSideBySide() }
 
@@ -184,11 +178,11 @@ class TaskDetailFragment : Fragment() {
             val day = c.get(Calendar.DAY_OF_MONTH)
             val dpd = DatePickerDialog(this.requireContext(), { _, year, monthOfYear, dayOfMonth ->
                 // Display Selected date in textbox
-                detail_waitDate.date.setText(DateFormatSymbols().getMonths()[monthOfYear] + " " + dayOfMonth + ", " + year)
-                if (detail_waitDate.time.text.isNullOrBlank()) {
-                    detail_waitDate.time.setText("12:00 AM")
+                binding.detailWaitDate.date.setText(DateFormatSymbols().getMonths()[monthOfYear] + " " + dayOfMonth + ", " + year)
+                if (binding.detailWaitDate.time.text.isNullOrBlank()) {
+                    binding.detailWaitDate.time.setText("12:00 AM")
                 }
-                viewModel.setTaskWaitDate(detail_waitDate.date.text.toString(), detail_waitDate.time.text.toString())
+                viewModel.setTaskWaitDate(binding.detailWaitDate.date.text.toString(), binding.detailWaitDate.time.text.toString())
             }, year, month, day)
             dpd.show()
         }
@@ -202,14 +196,14 @@ class TaskDetailFragment : Fragment() {
                 val inputFormat = SimpleDateFormat("KK:mm", Locale.getDefault())
                 val outputFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
                 val timeText = outputFormat.format(inputFormat.parse("" + hour + ":" + minute))
-                detail_waitDate.time.setText(timeText)
-                if (detail_waitDate.date.text.isNullOrBlank()) {
+                binding.detailWaitDate.time.setText(timeText)
+                if (binding.detailWaitDate.date.text.isNullOrBlank()) {
                     val year = c.get(Calendar.YEAR)
                     val month = c.get(Calendar.MONTH)
                     val day = c.get(Calendar.DAY_OF_MONTH)
-                    detail_waitDate.date.setText(DateFormatSymbols().shortMonths[month] + " " + day + ", " + year)
+                    binding.detailWaitDate.date.setText(DateFormatSymbols().shortMonths[month] + " " + day + ", " + year)
                 }
-                viewModel.setTaskWaitDate(detail_waitDate.date.text.toString(), detail_waitDate.time.text.toString())
+                viewModel.setTaskWaitDate(binding.detailWaitDate.date.text.toString(), binding.detailWaitDate.time.text.toString())
             }, hour, minute, false)
             dpd.show()
         }
@@ -223,11 +217,11 @@ class TaskDetailFragment : Fragment() {
             val dpd = DatePickerDialog(this.requireContext(), { _, year, monthOfYear, dayOfMonth ->
                 // Display Selected date in textbox
                 val dateText = "${DateFormatSymbols().months[monthOfYear]} $dayOfMonth, $year"
-                detail_dueDate.date.setText(dateText)
-                if (detail_dueDate.time.text.isNullOrBlank()) {
-                    detail_dueDate.time.setText("12:00 AM")
+                binding.detailDueDate.date.setText(dateText)
+                if (binding.detailDueDate.time.text.isNullOrBlank()) {
+                    binding.detailDueDate.time.setText("12:00 AM")
                 }
-                viewModel.setTaskDueDate(detail_dueDate.date.text.toString(), detail_dueDate.time.text.toString())
+                viewModel.setTaskDueDate(binding.detailDueDate.date.text.toString(), binding.detailDueDate.time.text.toString())
             }, year, month, day)
             dpd.show()
         }
@@ -241,14 +235,14 @@ class TaskDetailFragment : Fragment() {
                 val inputFormat = SimpleDateFormat("KK:mm", Locale.getDefault())
                 val outputFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
                 val timeText = outputFormat.format(inputFormat.parse("" + hour + ":" + minute))
-                detail_dueDate.time.setText(timeText)
-                if (detail_dueDate.date.text.isNullOrBlank()) {
+                binding.detailDueDate.time.setText(timeText)
+                if (binding.detailDueDate.date.text.isNullOrBlank()) {
                     val year = c.get(Calendar.YEAR)
                     val month = c.get(Calendar.MONTH)
                     val day = c.get(Calendar.DAY_OF_MONTH)
-                    detail_dueDate.date.setText("${DateFormatSymbols().shortMonths[month]} $day, $year")
+                    binding.detailDueDate.date.setText("${DateFormatSymbols().shortMonths[month]} $day, $year")
                 }
-                viewModel.setTaskDueDate(detail_dueDate.date.text.toString(), detail_dueDate.time.text.toString())
+                viewModel.setTaskDueDate(binding.detailDueDate.date.text.toString(), binding.detailDueDate.time.text.toString())
             }, hour, minute, false)
             dpd.show()
         }
@@ -282,7 +276,7 @@ class TaskDetailFragment : Fragment() {
     }
 
     private fun updateToolbar(name: String?){
-        detail_toolbar.title = if(name.isNullOrEmpty()) "New Task" else name
+        binding.detailToolbar.title = if(name.isNullOrEmpty()) "New Task" else name
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

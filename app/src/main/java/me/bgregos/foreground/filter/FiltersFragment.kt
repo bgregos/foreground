@@ -17,8 +17,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.fragment_filters.view.*
-import kotlinx.coroutines.flow.collect
 import me.bgregos.foreground.R
 import me.bgregos.foreground.databinding.FilterListContentBinding
 import me.bgregos.foreground.databinding.FragmentFiltersBinding
@@ -32,9 +30,7 @@ import javax.inject.Inject
 
 class FiltersFragment : Fragment() {
 
-    private var _binding: FragmentFiltersBinding? = null
-    // This property is only valid between onCreateView and onDestroyView.
-    private val binding get() = _binding!!
+    private lateinit var binding: FragmentFiltersBinding
 
     private val listPopupView by lazy { context?.let { ListPopupWindow(it) } }
 
@@ -54,17 +50,16 @@ class FiltersFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         super.onCreateView(inflater, container, savedInstanceState)
-        _binding = FragmentFiltersBinding.inflate(inflater, container, false)
+        binding = FragmentFiltersBinding.inflate(inflater, container, false)
         binding.filtersRecyclerview.layoutManager = LinearLayoutManager(context)
-        val rootView = binding.root
         var twoPane = false
         context?.let { twoPane = it.isSideBySide() }
 
         if(!twoPane){
-            (activity as AppCompatActivity?)?.setSupportActionBar(rootView.filter_toolbar)
+            (activity as AppCompatActivity?)?.setSupportActionBar(binding.filterToolbar)
             (activity as AppCompatActivity?)?.supportActionBar?.setDisplayHomeAsUpEnabled(true)
-            rootView.filter_toolbar.menu.clear()
-            rootView.filter_toolbar.setNavigationOnClickListener(View.OnClickListener { _ -> activity?.supportFragmentManager?.popBackStack() })
+            binding.filterToolbar.menu.clear()
+            binding.filterToolbar.setNavigationOnClickListener(View.OnClickListener { _ -> activity?.supportFragmentManager?.popBackStack() })
         }
 
         lifecycleScope.launchWhenStarted {
