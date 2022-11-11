@@ -9,6 +9,8 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.lifecycle.LiveData
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.task_list_content_standard.view.*
 import me.bgregos.foreground.R
@@ -17,18 +19,21 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class TaskListAdapter(private val parentFragment: TaskListFragment,
-                      private var tasks: List<Task>,
                         private val viewModel: TaskViewModel) :
-        RecyclerView.Adapter<TaskListAdapter.ViewHolder>() {
+        ListAdapter<Task, TaskListAdapter.ViewHolder>(DiffCallback()) {
 
-    private val onClickListener: View.OnClickListener
+    private val onClickListener: View.OnClickListener = View.OnClickListener { v ->
+        val task = v.tag as Task
+        parentFragment.openTask(task, v, task.name)
+    }
 
-    init {
-        this.setHasStableIds(false)
-        onClickListener = View.OnClickListener { v ->
-            val task = v.tag as Task
-            parentFragment.openTask(task, v, task.name)
-        }
+    private class DiffCallback : DiffUtil.ItemCallback<Task>() {
+
+        override fun areItemsTheSame(oldItem: Task, newItem: Task) =
+            oldItem.uuid == newItem.uuid
+
+        override fun areContentsTheSame(oldItem: Task, newItem: Task) =
+            oldItem == newItem
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -39,7 +44,7 @@ class TaskListAdapter(private val parentFragment: TaskListFragment,
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val format = SimpleDateFormat("MMM d, yyyy 'at' h:mm aaa", Locale.getDefault())
-        val item = tasks.get(position)
+        val item = getItem(position)
         holder.title.text = item.name
         if(item.dueDate != null) {
             holder.due.visibility = VISIBLE
@@ -83,14 +88,9 @@ class TaskListAdapter(private val parentFragment: TaskListFragment,
         }
 
         holder.complete.setOnClickListener {
-            val pos = holder.layoutPosition
-            notifyItemRemoved(pos)
-            //notifyItemRangeChanged(pos, values.size)
             viewModel.markTaskComplete(item)
         }
     }
-
-    override fun getItemCount() = tasks.size
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val title: TextView = view.title

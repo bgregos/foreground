@@ -10,15 +10,16 @@ import android.view.animation.RotateAnimation
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_task_list.*
 import kotlinx.android.synthetic.main.task_list.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import me.bgregos.foreground.R
 import me.bgregos.foreground.filter.FiltersFragment
@@ -117,7 +118,6 @@ class TaskListFragment : Fragment() {
                     bar2.setAction("Details", ShowErrorDetail(syncResult.message, requireActivity()))
                     bar2.show()
                 }
-                task_list.adapter?.notifyDataSetChanged()
                 syncRotateAnimation.repeatCount = 0
             }
         } else {
@@ -154,9 +154,12 @@ class TaskListFragment : Fragment() {
     }
 
     private fun setupRecyclerView(recyclerView: RecyclerView) {
-        lifecycleScope.launchWhenStarted {
-            viewModel.visibleTasks.collect {
-                recyclerView.adapter = TaskListAdapter(this@TaskListFragment, it, viewModel)
+        recyclerView.adapter = TaskListAdapter(this@TaskListFragment, viewModel)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                viewModel.visibleTasks.collect {
+                    (recyclerView.adapter as TaskListAdapter).submitList(it)
+                }
             }
         }
     }
@@ -168,7 +171,6 @@ class TaskListFragment : Fragment() {
 
     fun openTask(task: Task, v: View, name: String){
         val fragment = TaskDetailFragment.newInstance(task.uuid)
-        task_list.adapter?.notifyDataSetChanged()
         if (twoPane) {
             // Tablet layouts get the task detail fragment opened on the side
             activity?.supportFragmentManager?.commit {

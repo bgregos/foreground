@@ -106,9 +106,9 @@ class TaskDetailFragment : Fragment() {
         // Create an ArrayAdapter using the string array and a default spinner layout
         val adapter: ArrayAdapter<CharSequence> = ArrayAdapter.createFromResource(this.context
                 ?: requireActivity().baseContext,
-                R.array.priority_spinner, android.R.layout.simple_spinner_item);
+                R.array.priority_spinner, android.R.layout.simple_spinner_item)
         // Specify the layout to use when the list of choices appears
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         // Apply the adapter to the spinner
         rootView.detail_priority.adapter = adapter
 
@@ -128,15 +128,15 @@ class TaskDetailFragment : Fragment() {
 
 
             if(it.dueDate != null){
-                rootView.detail_dueDate.date.setText(dateFormat.format(it.dueDate as Date))
-                rootView.detail_dueDate.time.setText(timeFormat.format(it.dueDate as Date))
+                rootView.detail_dueDate.date.setText(dateFormat.format(it.dueDate))
+                rootView.detail_dueDate.time.setText(timeFormat.format(it.dueDate))
             }else{
                 rootView.detail_dueDate.date.setText("")
                 rootView.detail_dueDate.time.setText("")
             }
             if(it.waitDate != null){
-                rootView.detail_waitDate.date.setText(dateFormat.format(it.waitDate as Date))
-                rootView.detail_waitDate.time.setText(timeFormat.format(it.waitDate as Date))
+                rootView.detail_waitDate.date.setText(dateFormat.format(it.waitDate))
+                rootView.detail_waitDate.time.setText(timeFormat.format(it.waitDate))
             }else{
                 rootView.detail_waitDate.date.setText("")
                 rootView.detail_waitDate.time.setText("")
