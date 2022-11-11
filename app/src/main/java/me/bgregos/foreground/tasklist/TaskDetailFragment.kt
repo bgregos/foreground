@@ -80,15 +80,20 @@ class TaskDetailFragment : Fragment() {
         setHasOptionsMenu(true)
     }
 
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        inflater.inflate(R.menu.menu_task_detail, menu)
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
 
         _binding = FragmentTaskDetailBinding.inflate(inflater, container, false)
-        val rootView = binding.root
         var twoPane = false
         context?.let { twoPane = it.isSideBySide() }
 
-        rootView.detail_toolbar.title = if(viewModel.currentTask?.name?.isBlank() == true) "New Task" else viewModel.currentTask?.name
+        binding.detailToolbar.title = if(viewModel.currentTask?.name?.isBlank() == true) "New Task" else viewModel.currentTask?.name
         setHasOptionsMenu(true)
 
         val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
@@ -97,10 +102,9 @@ class TaskDetailFragment : Fragment() {
         timeFormat.timeZone= TimeZone.getDefault()
 
         if(!twoPane){
-            (activity as AppCompatActivity?)?.setSupportActionBar(rootView.detail_toolbar)
+            (activity as AppCompatActivity?)?.setSupportActionBar(binding.detailToolbar)
             (activity as AppCompatActivity?)?.supportActionBar?.setDisplayHomeAsUpEnabled(true)
-            rootView.detail_toolbar.menu.clear()
-            rootView.detail_toolbar.setNavigationOnClickListener(View.OnClickListener { _ -> activity?.supportFragmentManager?.popBackStack() })
+            binding.detailToolbar.setNavigationOnClickListener { activity?.supportFragmentManager?.popBackStack() }
         }
 
         // Create an ArrayAdapter using the string array and a default spinner layout
@@ -110,70 +114,70 @@ class TaskDetailFragment : Fragment() {
         // Specify the layout to use when the list of choices appears
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         // Apply the adapter to the spinner
-        rootView.detail_priority.adapter = adapter
+        binding.detailPriority.adapter = adapter
 
         //load from Task into input fields
         viewModel.currentTask?.let {
-            rootView.detail_name.setText(it.name)
+            binding.detailName.setText(it.name)
             if (it.priority != null) {
-                rootView.detail_priority.setSelection(adapter.getPosition(it.priority))
+                binding.detailPriority.setSelection(adapter.getPosition(it.priority))
             } else {
-                rootView.detail_priority.setSelection(1)
+                binding.detailPriority.setSelection(1)
             }
 
-            rootView.detail_project.setText(it.project ?: "")
+            binding.detailProject.setText(it.project ?: "")
             val builder = StringBuilder()
             it.tags.forEach { task -> builder.append("$task, ") }
-            rootView.detail_tags.setText(builder.toString().trimEnd(',', ' '))
+            binding.detailTags.setText(builder.toString().trimEnd(',', ' '))
 
 
             if(it.dueDate != null){
-                rootView.detail_dueDate.date.setText(dateFormat.format(it.dueDate))
-                rootView.detail_dueDate.time.setText(timeFormat.format(it.dueDate))
+                binding.detailDueDate.date.setText(dateFormat.format(it.dueDate))
+                binding.detailDueDate.time.setText(timeFormat.format(it.dueDate))
             }else{
-                rootView.detail_dueDate.date.setText("")
-                rootView.detail_dueDate.time.setText("")
+                binding.detailDueDate.date.setText("")
+                binding.detailDueDate.time.setText("")
             }
             if(it.waitDate != null){
-                rootView.detail_waitDate.date.setText(dateFormat.format(it.waitDate))
-                rootView.detail_waitDate.time.setText(timeFormat.format(it.waitDate))
+                binding.detailWaitDate.date.setText(dateFormat.format(it.waitDate))
+                binding.detailWaitDate.time.setText(timeFormat.format(it.waitDate))
             }else{
-                rootView.detail_waitDate.date.setText("")
-                rootView.detail_waitDate.time.setText("")
+                binding.detailWaitDate.date.setText("")
+                binding.detailWaitDate.time.setText("")
             }
         }
 
         // update viewmodel on all form changes
-        rootView.detail_name.doOnTextChanged { text, _, _, _ -> viewModel.setTaskName(text.toString()) }
-        rootView.detail_tags.doOnTextChanged { text, _, _, _ -> viewModel.setTaskTags(text.toString()) }
-        rootView.detail_project.doOnTextChanged{ text, _, _, _ -> viewModel.setTaskProject(text.toString()) }
-        rootView.detail_priority.onItemSelectedListener  = object : AdapterView.OnItemSelectedListener {
+        binding.detailName.doOnTextChanged { text, _, _, _ -> viewModel.setTaskName(text.toString()) }
+        binding.detailTags.doOnTextChanged { text, _, _, _ -> viewModel.setTaskTags(text.toString()) }
+        binding.detailProject.doOnTextChanged{ text, _, _, _ -> viewModel.setTaskProject(text.toString()) }
+        binding.detailPriority.onItemSelectedListener  = object : AdapterView.OnItemSelectedListener {
             override fun onNothingSelected(parent: AdapterView<*>?) {
                 //no-op
             }
 
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 if (initialPrioritySet){
-                    val selected: String = rootView.detail_priority.getItemAtPosition(position).toString()
+                    val selected: String = binding.detailPriority.getItemAtPosition(position).toString()
                     viewModel.setTaskPriority(selected)
                 } else {
                     initialPrioritySet = true
                 }
             }
         }
-//        rootView.detail_priority.setOnTouchListener { view, _ ->
+//        binding.detail_priority.setOnTouchListener { view, _ ->
 //            view.performClick()
-//            viewModel.setTaskPriority(rootView.detail_priority.selectedItem.toString())
+//            viewModel.setTaskPriority(binding.detail_priority.selectedItem.toString())
 //            true
 //        }
-//        rootView.detail_priority.setOnKeyListener { view, _, _ ->
+//        binding.detail_priority.setOnKeyListener { view, _, _ ->
 //            view.performClick()
-//            viewModel.setTaskPriority(rootView.detail_priority.selectedItem.toString())
+//            viewModel.setTaskPriority(binding.detail_priority.selectedItem.toString())
 //            true
 //        }
 
-        rootView.detail_waitDate.dateInputLayout.hint = "Wait Until Date"
-        rootView.detail_waitDate.date.setOnClickListener {
+        binding.detailWaitDate.dateInputLayout.hint = "Wait Until Date"
+        binding.detailWaitDate.date.setOnClickListener {
             val c = Calendar.getInstance()
             val year = c.get(Calendar.YEAR)
             val month = c.get(Calendar.MONTH)
@@ -189,7 +193,7 @@ class TaskDetailFragment : Fragment() {
             dpd.show()
         }
 
-        rootView.detail_waitDate.time.setOnClickListener {
+        binding.detailWaitDate.time.setOnClickListener {
             val c = Calendar.getInstance()
             val hour:Int = c.get(Calendar.HOUR_OF_DAY)
             val minute:Int = c.get(Calendar.MINUTE)
@@ -210,8 +214,8 @@ class TaskDetailFragment : Fragment() {
             dpd.show()
         }
 
-        rootView.detail_dueDate.dateInputLayout.hint = "Due Date"
-        rootView.detail_dueDate.date.setOnClickListener {
+        binding.detailDueDate.dateInputLayout.hint = "Due Date"
+        binding.detailDueDate.date.setOnClickListener {
             val c = Calendar.getInstance()
             val year = c.get(Calendar.YEAR)
             val month = c.get(Calendar.MONTH)
@@ -228,7 +232,7 @@ class TaskDetailFragment : Fragment() {
             dpd.show()
         }
 
-        rootView.detail_dueDate.time.setOnClickListener {
+        binding.detailDueDate.time.setOnClickListener {
             val c = Calendar.getInstance()
             val hour:Int = c.get(Calendar.HOUR_OF_DAY)
             val minute:Int = c.get(Calendar.MINUTE)
@@ -267,14 +271,14 @@ class TaskDetailFragment : Fragment() {
         //to match the content height
         //TODO: replace this spinner with a different ui element
         if (item?.priority == null || item.priority == "No Priority Assigned"){
-            rootView.detail_priority.setSelection(0)
-            rootView.detail_priority.setSelection(1)
-            rootView.detail_priority.setSelection(0)
-            rootView.detail_priority.setSelection(1)
-            rootView.detail_priority.setSelection(0)
+            binding.detailPriority.setSelection(0)
+            binding.detailPriority.setSelection(1)
+            binding.detailPriority.setSelection(0)
+            binding.detailPriority.setSelection(1)
+            binding.detailPriority.setSelection(0)
         }
 
-        return rootView
+        return binding.root
     }
 
     private fun updateToolbar(name: String?){
