@@ -71,7 +71,7 @@ class TaskListFragment : Fragment() {
         (activity as AppCompatActivity?)?.setSupportActionBar(toolbar)
         toolbar.setOnMenuItemClickListener { item ->
             when (item?.itemId) {
-                R.id.action_sync -> onSyncClick(item)
+                R.id.action_sync -> onSyncClick()
                 R.id.action_filters -> onFiltersClick(item)
                 R.id.action_settings -> onSettingsClick(item)
                 else -> false
@@ -83,6 +83,9 @@ class TaskListFragment : Fragment() {
             val newTask = viewModel.addTask()
             openTask(newTask, view, newTask.name)
         }
+        swipe_refresh_layout.setOnRefreshListener {
+            onSyncClick()
+        }
         super.onViewCreated(view, savedInstanceState)
     }
 
@@ -92,7 +95,7 @@ class TaskListFragment : Fragment() {
         super.onCreateOptionsMenu(menu, inflater);
     }
 
-    fun onSyncClick(item: MenuItem): Boolean {
+    fun onSyncClick(): Boolean {
         val syncRotateAnimation = RotateAnimation(360f, 0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f)
         syncRotateAnimation.duration = 1000
         syncRotateAnimation.repeatCount = Animation.INFINITE
@@ -118,6 +121,7 @@ class TaskListFragment : Fragment() {
                     bar2.setAction("Details", ShowErrorDetail(syncResult.message, requireActivity()))
                     bar2.show()
                 }
+                swipe_refresh_layout.isRefreshing = false
                 syncRotateAnimation.repeatCount = 0
             }
         } else {
