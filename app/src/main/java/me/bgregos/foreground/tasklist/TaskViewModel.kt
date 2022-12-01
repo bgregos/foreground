@@ -25,9 +25,14 @@ import javax.inject.Singleton
  * tablets/expanded foldables, their viewmodels are combined.
  */
 @Singleton
-class TaskViewModel @Inject constructor(private val taskRepository: TaskRepository, private val notificationRepository: NotificationRepository, filtersRepository: TaskFilterRepository): ViewModel() {
+class TaskViewModel @Inject constructor(
+    private val taskRepository: TaskRepository,
+    private val notificationRepository: NotificationRepository,
+    filtersRepository: TaskFilterRepository
+) : ViewModel() {
     var tasks: MutableStateFlow<List<Task>> = taskRepository.tasks
-    val visibleTasks: Flow<List<Task>> = filtersRepository.taskFilters.combine(tasks) { filters, tasks ->
+    val visibleTasks: Flow<List<Task>> =
+        filtersRepository.taskFilters.combine(tasks) { filters, tasks ->
             var out: ArrayList<Task> = arrayListOf<Task>().apply { addAll(tasks) }
             filters.forEach {
                 if (it.enabled) out = out.filter { task ->
@@ -57,14 +62,14 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
             currentUUID = value?.uuid
         }
         get() {
-            if (currentUUID == null){
+            if (currentUUID == null) {
                 return null
             }
             return tasks.value?.firstOrNull() { it.uuid == currentUUID }
         }
 
     init {
-        writeFormat.timeZone= TimeZone.getDefault()
+        writeFormat.timeZone = TimeZone.getDefault()
         notificationRepository.load()
         notificationRepository.createNotificationChannel()
         viewModelScope.launch(Dispatchers.IO) {
@@ -72,7 +77,7 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
         }
     }
 
-    suspend fun load(){
+    suspend fun load() {
         /*
             We want to save first before loading as long as we have already loaded once during this
             session. This procedure helps protect against race conditions where one client changes
@@ -80,7 +85,7 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
             by the first caller. We do not call save before load on the first load since we would
             be saving this ViewModel's default state to disk before loading.
          */
-        if(initialized) {
+        if (initialized) {
             save()
         }
         taskRepository.load()
@@ -89,17 +94,17 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
         initialized = true
     }
 
-    suspend fun save(){
+    suspend fun save() {
         taskRepository.save()
         updatePendingNotifications()
     }
 
-    fun checkForTasksNoLongerWaiting(){
+    fun checkForTasksNoLongerWaiting() {
         tasks.value.map { task ->
-            if(task.waitDate != null) {
-                if (task.waitDate.before(Date()) && task.status=="waiting"){
+            if (task.waitDate != null) {
+                if (task.waitDate.before(Date()) && task.status == "waiting") {
                     val newTask = task.copy(status = "pending")
-                    tasks.value = tasks.value.replace(newTask) { it === task}
+                    tasks.value = tasks.value.replace(newTask) { it === task }
                     postUpdatedTask(newTask)
                 }
             }
@@ -118,13 +123,13 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
     }
 
     fun markTaskComplete(toComplete: Task) {
-        if(toComplete == currentTask){
+        if (toComplete == currentTask) {
             closeDetailChannel.trySend(Unit)
         }
         val completed = toComplete.copy(
-                status = "completed",
-                modifiedDate = Date(),
-                endDate = Date()
+            status = "completed",
+            modifiedDate = Date(),
+            endDate = Date()
         )
         tasks.value = tasks.value.minus(toComplete)
         postUpdatedTask(completed)
@@ -134,14 +139,14 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
     }
 
     fun delete(toDelete: Task) {
-        if(toDelete == currentTask){
+        if (toDelete == currentTask) {
             closeDetailChannel.trySend(Unit)
             currentTask = null
         }
         val deleted = toDelete.copy(
-                status = "deleted",
-                modifiedDate = Date(),
-                endDate = Date()
+            status = "deleted",
+            modifiedDate = Date(),
+            endDate = Date()
         )
         tasks.value = tasks.value.minus(toDelete)
         postUpdatedTask(deleted)
@@ -168,12 +173,12 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
         checkForTasksNoLongerWaiting()
     }
 
-    suspend fun sync(): SyncResult{
+    suspend fun sync(): SyncResult {
         removeUnnamedTasks()
         save()
         val syncResult = taskRepository.taskwarriorSync()
         save()
-        if(!tasks.value.contains(currentTask)) {
+        if (!tasks.value.contains(currentTask)) {
             //close the detail fragment
             closeDetailChannel.trySend(Unit)
         }
@@ -191,9 +196,9 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
     }
 
     fun setTaskTags(enteredTags: String) {
-        var tags = enteredTags.split(", ",",") as ArrayList<String>
+        var tags = enteredTags.split(", ", ",") as ArrayList<String>
         tags.removeAll { tag -> tag.isBlank() }
-        tags = tags.map{ tag -> tag.trim() } as ArrayList<String>
+        tags = tags.map { tag -> tag.trim() } as ArrayList<String>
         currentTask?.let {
             postUpdatedTask(it.copy(tags = tags))
         }
@@ -221,6 +226,16 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
     fun setTaskWaitDate(date: String, time: String) {
         currentTask?.let {
             postUpdatedTask(it.copy(waitDate = writeFormat.parse("$date $time")))
+        }
+    }
+
+    fun setUserAttributes(userAttributes: List<UserAttribute>) {
+        currentTask?.let {
+            postUpdatedTask(
+                it.copy(
+                    others = userAttributes.map { attr -> Pair(attr.first, attr.second) }.toMap()
+                )
+            )
         }
     }
 

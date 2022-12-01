@@ -13,6 +13,7 @@ import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -43,8 +44,10 @@ class TaskDetailFragment : Fragment() {
     lateinit var viewModelFactory: ViewModelProvider.Factory
     lateinit var viewModel: TaskViewModel
 
+    private lateinit var userAttributeAdapter: UserAttributeAdapter
+
     companion object {
-        fun newInstance(uuid: UUID): TaskDetailFragment{
+        fun newInstance(uuid: UUID): TaskDetailFragment {
             return TaskDetailFragment().apply {
                 arguments = Bundle().apply {
                     putString("uuid", uuid.toString())
@@ -61,14 +64,16 @@ class TaskDetailFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //use activity viewmodel store since this viewmodel is shared between fragments
-        viewModel = ViewModelProvider(requireActivity().viewModelStore, viewModelFactory).get(TaskViewModel::class.java)
+        viewModel = ViewModelProvider(
+            requireActivity().viewModelStore,
+            viewModelFactory
+        ).get(TaskViewModel::class.java)
         val bundle = this.arguments
         //load Task from bundle args
         if (bundle?.getString("uuid") != null) {
             viewModel.setTask(UUID.fromString(bundle.getString("uuid"))
-                    ?: run { close(); UUID.randomUUID() })
-        }
-        else {
+                ?: run { close(); UUID.randomUUID() })
+        } else {
             Log.e(this.javaClass.toString(), "No key found.")
         }
         setHasOptionsMenu(true)
@@ -80,31 +85,36 @@ class TaskDetailFragment : Fragment() {
         super.onCreateOptionsMenu(menu, inflater);
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
 
         binding = FragmentTaskDetailBinding.inflate(inflater, container, false)
         var twoPane = false
         context?.let { twoPane = it.isSideBySide() }
 
-        binding.detailToolbar.title = if(viewModel.currentTask?.name?.isBlank() == true) "New Task" else viewModel.currentTask?.name
+        binding.detailToolbar.title =
+            if (viewModel.currentTask?.name?.isBlank() == true) "New Task" else viewModel.currentTask?.name
         setHasOptionsMenu(true)
 
         val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-        dateFormat.timeZone= TimeZone.getDefault()
+        dateFormat.timeZone = TimeZone.getDefault()
         val timeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
-        timeFormat.timeZone= TimeZone.getDefault()
+        timeFormat.timeZone = TimeZone.getDefault()
 
-        if(!twoPane){
+        if (!twoPane) {
             (activity as AppCompatActivity?)?.setSupportActionBar(binding.detailToolbar)
             (activity as AppCompatActivity?)?.supportActionBar?.setDisplayHomeAsUpEnabled(true)
             binding.detailToolbar.setNavigationOnClickListener { activity?.supportFragmentManager?.popBackStack() }
         }
 
         // Create an ArrayAdapter using the string array and a default spinner layout
-        val adapter: ArrayAdapter<CharSequence> = ArrayAdapter.createFromResource(this.context
+        val adapter: ArrayAdapter<CharSequence> = ArrayAdapter.createFromResource(
+            this.context
                 ?: requireActivity().baseContext,
-                R.array.priority_spinner, android.R.layout.simple_spinner_item)
+            R.array.priority_spinner, android.R.layout.simple_spinner_item
+        )
         // Specify the layout to use when the list of choices appears
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         // Apply the adapter to the spinner
@@ -125,17 +135,17 @@ class TaskDetailFragment : Fragment() {
             binding.detailTags.setText(builder.toString().trimEnd(',', ' '))
 
 
-            if(it.dueDate != null){
+            if (it.dueDate != null) {
                 binding.detailDueDate.date.setText(dateFormat.format(it.dueDate))
                 binding.detailDueDate.time.setText(timeFormat.format(it.dueDate))
-            }else{
+            } else {
                 binding.detailDueDate.date.setText("")
                 binding.detailDueDate.time.setText("")
             }
-            if(it.waitDate != null){
+            if (it.waitDate != null) {
                 binding.detailWaitDate.date.setText(dateFormat.format(it.waitDate))
                 binding.detailWaitDate.time.setText(timeFormat.format(it.waitDate))
-            }else{
+            } else {
                 binding.detailWaitDate.date.setText("")
                 binding.detailWaitDate.time.setText("")
             }
@@ -144,21 +154,28 @@ class TaskDetailFragment : Fragment() {
         // update viewmodel on all form changes
         binding.detailName.doOnTextChanged { text, _, _, _ -> viewModel.setTaskName(text.toString()) }
         binding.detailTags.doOnTextChanged { text, _, _, _ -> viewModel.setTaskTags(text.toString()) }
-        binding.detailProject.doOnTextChanged{ text, _, _, _ -> viewModel.setTaskProject(text.toString()) }
-        binding.detailPriority.onItemSelectedListener  = object : AdapterView.OnItemSelectedListener {
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-                //no-op
-            }
+        binding.detailProject.doOnTextChanged { text, _, _, _ -> viewModel.setTaskProject(text.toString()) }
+        binding.detailPriority.onItemSelectedListener =
+            object : AdapterView.OnItemSelectedListener {
+                override fun onNothingSelected(parent: AdapterView<*>?) {
+                    //no-op
+                }
 
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                if (initialPrioritySet){
-                    val selected: String = binding.detailPriority.getItemAtPosition(position).toString()
-                    viewModel.setTaskPriority(selected)
-                } else {
-                    initialPrioritySet = true
+                override fun onItemSelected(
+                    parent: AdapterView<*>?,
+                    view: View?,
+                    position: Int,
+                    id: Long
+                ) {
+                    if (initialPrioritySet) {
+                        val selected: String =
+                            binding.detailPriority.getItemAtPosition(position).toString()
+                        viewModel.setTaskPriority(selected)
+                    } else {
+                        initialPrioritySet = true
+                    }
                 }
             }
-        }
 //        binding.detail_priority.setOnTouchListener { view, _ ->
 //            view.performClick()
 //            viewModel.setTaskPriority(binding.detail_priority.selectedItem.toString())
@@ -182,15 +199,18 @@ class TaskDetailFragment : Fragment() {
                 if (binding.detailWaitDate.time.text.isNullOrBlank()) {
                     binding.detailWaitDate.time.setText("12:00 AM")
                 }
-                viewModel.setTaskWaitDate(binding.detailWaitDate.date.text.toString(), binding.detailWaitDate.time.text.toString())
+                viewModel.setTaskWaitDate(
+                    binding.detailWaitDate.date.text.toString(),
+                    binding.detailWaitDate.time.text.toString()
+                )
             }, year, month, day)
             dpd.show()
         }
 
         binding.detailWaitDate.time.setOnClickListener {
             val c = Calendar.getInstance()
-            val hour:Int = c.get(Calendar.HOUR_OF_DAY)
-            val minute:Int = c.get(Calendar.MINUTE)
+            val hour: Int = c.get(Calendar.HOUR_OF_DAY)
+            val minute: Int = c.get(Calendar.MINUTE)
             val dpd = TimePickerDialog(this.requireContext(), { _, hour, minute ->
                 // Display Selected date in textbox
                 val inputFormat = SimpleDateFormat("KK:mm", Locale.getDefault())
@@ -203,7 +223,10 @@ class TaskDetailFragment : Fragment() {
                     val day = c.get(Calendar.DAY_OF_MONTH)
                     binding.detailWaitDate.date.setText(DateFormatSymbols().shortMonths[month] + " " + day + ", " + year)
                 }
-                viewModel.setTaskWaitDate(binding.detailWaitDate.date.text.toString(), binding.detailWaitDate.time.text.toString())
+                viewModel.setTaskWaitDate(
+                    binding.detailWaitDate.date.text.toString(),
+                    binding.detailWaitDate.time.text.toString()
+                )
             }, hour, minute, false)
             dpd.show()
         }
@@ -221,15 +244,18 @@ class TaskDetailFragment : Fragment() {
                 if (binding.detailDueDate.time.text.isNullOrBlank()) {
                     binding.detailDueDate.time.setText("12:00 AM")
                 }
-                viewModel.setTaskDueDate(binding.detailDueDate.date.text.toString(), binding.detailDueDate.time.text.toString())
+                viewModel.setTaskDueDate(
+                    binding.detailDueDate.date.text.toString(),
+                    binding.detailDueDate.time.text.toString()
+                )
             }, year, month, day)
             dpd.show()
         }
 
         binding.detailDueDate.time.setOnClickListener {
             val c = Calendar.getInstance()
-            val hour:Int = c.get(Calendar.HOUR_OF_DAY)
-            val minute:Int = c.get(Calendar.MINUTE)
+            val hour: Int = c.get(Calendar.HOUR_OF_DAY)
+            val minute: Int = c.get(Calendar.MINUTE)
             val dpd = TimePickerDialog(this.requireContext(), { _, hour, minute ->
                 // Display Selected date in textbox
                 val inputFormat = SimpleDateFormat("KK:mm", Locale.getDefault())
@@ -242,7 +268,10 @@ class TaskDetailFragment : Fragment() {
                     val day = c.get(Calendar.DAY_OF_MONTH)
                     binding.detailDueDate.date.setText("${DateFormatSymbols().shortMonths[month]} $day, $year")
                 }
-                viewModel.setTaskDueDate(binding.detailDueDate.date.text.toString(), binding.detailDueDate.time.text.toString())
+                viewModel.setTaskDueDate(
+                    binding.detailDueDate.date.text.toString(),
+                    binding.detailDueDate.time.text.toString()
+                )
             }, hour, minute, false)
             dpd.show()
         }
@@ -253,18 +282,18 @@ class TaskDetailFragment : Fragment() {
         lifecycleScope.launchWhenStarted {
             viewModel.closeDetailChannel.receive()
             Log.d("test", "closing detail view")
-            if(twoPane){
-                activity?.supportFragmentManager?.beginTransaction()?.tabletDetailAnimations()?.remove(this@TaskDetailFragment)?.commit()
+            if (twoPane) {
+                activity?.supportFragmentManager?.beginTransaction()?.tabletDetailAnimations()
+                    ?.remove(this@TaskDetailFragment)?.commit()
             } else {
                 activity?.supportFragmentManager?.popBackStack()
             }
-
         }
 
         //some strange issue requires this to be done or the view doesn't adjust
         //to match the content height
         //TODO: replace this spinner with a different ui element
-        if (item?.priority == null || item.priority == "No Priority Assigned"){
+        if (item?.priority == null || item.priority == "No Priority Assigned") {
             binding.detailPriority.setSelection(0)
             binding.detailPriority.setSelection(1)
             binding.detailPriority.setSelection(0)
@@ -272,11 +301,24 @@ class TaskDetailFragment : Fragment() {
             binding.detailPriority.setSelection(0)
         }
 
+        binding.userAttributeRv.layoutManager = LinearLayoutManager(requireContext())
+        binding.userAttributeRv.adapter = UserAttributeAdapter(
+            item?.others?.toList()?.mapIndexed { idx, it ->
+                UserAttribute(it.first, it.second, idx)
+            } ?: listOf(),
+            binding.addUserAttribute
+        )
+        userAttributeAdapter = (binding.userAttributeRv.adapter as UserAttributeAdapter)
+
+        binding.addUserAttribute.setOnClickListener {
+            userAttributeAdapter.add()
+        }
+
         return binding.root
     }
 
-    private fun updateToolbar(name: String?){
-        binding.detailToolbar.title = if(name.isNullOrEmpty()) "New Task" else name
+    private fun updateToolbar(name: String?) {
+        binding.detailToolbar.title = if (name.isNullOrEmpty()) "New Task" else name
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -292,13 +334,16 @@ class TaskDetailFragment : Fragment() {
 
     override fun onPause() {
         context?.let { ctx -> hideKeyboardFrom(ctx, binding.root) }
+
+        viewModel.setUserAttributes(userAttributeAdapter.list)
+
         CoroutineScope(Dispatchers.IO).launch {
             viewModel.save()
         }
         super.onPause()
     }
 
-    private fun close(){
+    private fun close() {
         activity?.supportFragmentManager?.beginTransaction()?.remove(this)?.commit()
     }
 }

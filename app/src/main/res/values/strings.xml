@@ -86,7 +86,7 @@
     <string name="filter_add_warning">Please fill out all fields before adding.</string>
     <string name="filter_warning_already_added">This filter is already present.</string>
     <string name="filter_parameter_hint_enabled">Filter Parameter</string>
-    <string name="filter_parameter_hint_disabled">No parameter required</string>
+    <string name="filter_parameter_hint_disabled">N/At</string>
     <string name="undo_changes">Undo changes since last sync</string>
     <string name="server_address">Server Address</string>
     <string name="port">Port</string>

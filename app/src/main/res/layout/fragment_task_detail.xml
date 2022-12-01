@@ -58,7 +58,7 @@
                     android:id="@+id/detail_name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Name (Required)"
+                    android:hint="Description (Required)"
                     android:layout_marginBottom="4dp"/>
 
             </com.google.android.material.textfield.TextInputLayout>
@@ -105,11 +105,54 @@
                 android:layout_height="42sp"
                 style="@style/Base.Widget.AppCompat.Spinner.Underlined" />
 
-            <TextView
-                android:layout_margin="10dp"
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/detail_json"/>
+                android:layout_marginVertical="16dp" >
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="8dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:text="Extra Attributes"
+                            android:textSize="18sp"
+                            android:layout_marginEnd="16dp"
+                            android:id="@+id/user_attributes_text" />
+                        <ImageButton
+                            android:focusableInTouchMode="true"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:src="@drawable/ic_playlist_add_white_24dp"
+                            android:contentDescription="Add Extra Attribute"
+                            android:id="@+id/add_user_attribute"/>
+                    </LinearLayout>
+
+                    <<androidx.recyclerview.widget.RecyclerView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                        tools:listitem="@layout/task_detail_user_attribute_content"
+                        android:id="@+id/user_attribute_rv" />>
+
+                </LinearLayout>
+
+
+
+            </androidx.cardview.widget.CardView>
+
+
+
+
 
         </LinearLayout>
 
