@@ -229,11 +229,11 @@ class TaskViewModel @Inject constructor(
         }
     }
 
-    fun setUserAttributes(userAttributes: List<UserAttribute>) {
+    fun setUserAttributes(userAttributes: List<Pair<String, String>>) {
         currentTask?.let {
             postUpdatedTask(
                 it.copy(
-                    others = userAttributes.map { attr -> Pair(attr.first, attr.second) }.toMap()
+                    others = userAttributes.toMap()
                 )
             )
         }

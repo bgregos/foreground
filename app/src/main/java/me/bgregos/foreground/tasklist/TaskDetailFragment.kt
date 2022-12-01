@@ -9,16 +9,17 @@ import android.view.*
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.forEach
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import me.bgregos.foreground.R
 import me.bgregos.foreground.databinding.FragmentTaskDetailBinding
+import me.bgregos.foreground.databinding.TaskDetailUserAttributeContentBinding
 import me.bgregos.foreground.getApplicationComponent
 import me.bgregos.foreground.util.hideKeyboardFrom
 import me.bgregos.foreground.util.isSideBySide
@@ -43,8 +44,6 @@ class TaskDetailFragment : Fragment() {
     @Inject
     lateinit var viewModelFactory: ViewModelProvider.Factory
     lateinit var viewModel: TaskViewModel
-
-    private lateinit var userAttributeAdapter: UserAttributeAdapter
 
     companion object {
         fun newInstance(uuid: UUID): TaskDetailFragment {
@@ -301,20 +300,30 @@ class TaskDetailFragment : Fragment() {
             binding.detailPriority.setSelection(0)
         }
 
-        binding.userAttributeRv.layoutManager = LinearLayoutManager(requireContext())
-        binding.userAttributeRv.adapter = UserAttributeAdapter(
-            item?.others?.toList()?.mapIndexed { idx, it ->
-                UserAttribute(it.first, it.second, idx)
-            } ?: listOf(),
-            binding.addUserAttribute
-        )
-        userAttributeAdapter = (binding.userAttributeRv.adapter as UserAttributeAdapter)
+        viewModel.currentTask?.others?.forEach {
+            addUserAttribute(it.key, it.value)
+        }
 
         binding.addUserAttribute.setOnClickListener {
-            userAttributeAdapter.add()
+            addUserAttribute().apply {
+                root.requestFocus()
+            }
         }
 
         return binding.root
+    }
+
+    private fun addUserAttribute(key: String = "", value: String = ""): TaskDetailUserAttributeContentBinding {
+        val newViewBinding = TaskDetailUserAttributeContentBinding.inflate(layoutInflater)
+        newViewBinding.apply {
+            deleteIcon.setOnClickListener {
+                binding.userAttributeList.removeView(newViewBinding.root)
+            }
+            this.key.setText(key)
+            this.value.setText(value)
+        }
+        binding.userAttributeList.addView(newViewBinding.root)
+        return newViewBinding
     }
 
     private fun updateToolbar(name: String?) {
@@ -335,7 +344,13 @@ class TaskDetailFragment : Fragment() {
     override fun onPause() {
         context?.let { ctx -> hideKeyboardFrom(ctx, binding.root) }
 
-        viewModel.setUserAttributes(userAttributeAdapter.list)
+        val udas = mutableListOf<Pair<String, String>>()
+        binding.userAttributeList.forEach {
+            val attribute = TaskDetailUserAttributeContentBinding.bind(it)
+            udas.add(Pair(attribute.key.text.toString(), attribute.value.text.toString()))
+        }
+        viewModel.setUserAttributes(udas)
+        Log.d("udas", "saved list: $udas")
 
         CoroutineScope(Dispatchers.IO).launch {
             viewModel.save()

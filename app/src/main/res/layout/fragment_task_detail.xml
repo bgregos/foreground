@@ -129,7 +129,6 @@
                             android:layout_marginEnd="16dp"
                             android:id="@+id/user_attributes_text" />
                         <ImageButton
-                            android:focusableInTouchMode="true"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:src="@drawable/ic_playlist_add_white_24dp"
@@ -137,12 +136,13 @@
                             android:id="@+id/add_user_attribute"/>
                     </LinearLayout>
 
-                    <<androidx.recyclerview.widget.RecyclerView
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                        tools:listitem="@layout/task_detail_user_attribute_content"
-                        android:id="@+id/user_attribute_rv" />>
+                        android:animateLayoutChanges="true"
+                        android:orientation="vertical"
+                        android:id="@+id/user_attribute_list" >
+                    </LinearLayout>
 
                 </LinearLayout>
 
