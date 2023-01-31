@@ -4,14 +4,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import me.bgregos.foreground.data.taskfilter.TaskFilterRepository
 import me.bgregos.foreground.data.tasks.TaskRepository
 import me.bgregos.foreground.model.SyncResult
 import me.bgregos.foreground.model.Task
+import me.bgregos.foreground.model.TaskFilterType
 import me.bgregos.foreground.util.NotificationRepository
 import me.bgregos.foreground.util.replace
 import java.text.SimpleDateFormat
@@ -236,6 +240,19 @@ class TaskViewModel @Inject constructor(
                     others = userAttributes.toMap()
                 )
             )
+        }
+    }
+
+    suspend fun getAutocompletes(
+        filterType: TaskFilterType?,
+        filterParameter: String
+    ): List<String> {
+        if (filterType == null) {
+            return listOf()
+        }
+        return withContext(Dispatchers.Default) {
+            return@withContext tasks.value.flatMap { filterType.autocomplete(it) }
+                .filter { it.lowercase().contains(filterParameter.lowercase()) }
         }
     }
 

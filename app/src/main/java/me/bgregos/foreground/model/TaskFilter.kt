@@ -36,14 +36,18 @@ data class TaskFilter(
  * @property name user-friendly name
  * @property id name used for persistence
  * @property parameterFormat type of parameter, used for user display. ex: "ParameterFormat.STRING" would give the user a text field.
- *      ParameterFormat.NONE indicates that this filter does not need a parameter. ex: a simple on/off filter
+ * ParameterFormat.NONE indicates that this filter does not need a parameter. ex: a simple on/off filter
  * @property filter how to apply this to a collection. ex { task: Task, param: String? -> task.project == param }
+ * @property autocomplete return 0 or more autocomplete suggestions for this type of filter for a given task.
+ * This function will be called on each task when the user selects a filter type and the results from
+ * all function calls will be combined.
  */
 data class TaskFilterType(
     val name: String,
     val id: String,
     var parameterFormat: ParameterFormat,
-    val filter: (Task, String?) -> Boolean
+    val filter: (Task, String?) -> Boolean,
+    val autocomplete: (Task) -> List<String>
 ) {
     override fun equals(other: Any?): Boolean {
         return other is TaskFilterType &&
@@ -67,7 +71,8 @@ class TaskFiltersAvailable {
                 parameterFormat = ParameterFormat.STRING,
                 filter = { task: Task, param: String? ->
                     param?.let { task.name.contains(it) } ?: false
-                }
+                },
+                autocomplete = { task -> listOf(task.name) }
             ),
             TaskFilterType(
                 name = "Project",
@@ -75,7 +80,8 @@ class TaskFiltersAvailable {
                 parameterFormat = ParameterFormat.STRING,
                 filter = { task: Task, param: String? ->
                     param?.let { task.project?.contains(it) } ?: false
-                }
+                },
+                autocomplete = { task -> listOfNotNull(task.project) }
             ),
             TaskFilterType(
                 name = "Tag",
@@ -83,7 +89,8 @@ class TaskFiltersAvailable {
                 parameterFormat = ParameterFormat.STRING,
                 filter = { task: Task, param: String? ->
                     task.tags.any { t -> t.contains(param ?: return@TaskFilterType false) }
-                }
+                },
+                autocomplete = { task -> task.tags }
             ),
             TaskFilterType(
                 name = "Priority",
@@ -91,7 +98,8 @@ class TaskFiltersAvailable {
                 parameterFormat = ParameterFormat.STRING,
                 filter = { task: Task, param: String? ->
                     task.priority?.contains(param ?: return@TaskFilterType false) ?: false
-                }
+                },
+                autocomplete = { listOf("H", "M", "L", "") }
             ),
             TaskFilterType(
                 name = "Waiting",
@@ -99,7 +107,8 @@ class TaskFiltersAvailable {
                 parameterFormat = ParameterFormat.NONE,
                 filter = { task: Task, _ ->
                     task.waitDate?.let { Date().before(it) } ?: false
-                }
+                },
+                autocomplete = { listOf() }
             ),
             TaskFilterType(
                 name = "Custom Attribute Key",
@@ -107,7 +116,8 @@ class TaskFiltersAvailable {
                 parameterFormat = ParameterFormat.STRING,
                 filter = { task: Task, param: String? ->
                     param?.let { task.others.containsKey(it) } ?: false
-                }
+                },
+                autocomplete = { it.others.keys.toList() }
             ),
             TaskFilterType(
                 name = "Custom Attribute Value",
@@ -115,7 +125,8 @@ class TaskFiltersAvailable {
                 parameterFormat = ParameterFormat.STRING,
                 filter = { task: Task, param: String? ->
                     param?.let { task.others.containsValue(it) } ?: false
-                }
+                },
+                autocomplete = { it.others.values.toList() }
             )
         )
     }

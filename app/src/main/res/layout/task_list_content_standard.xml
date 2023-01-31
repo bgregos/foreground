@@ -56,8 +56,8 @@
 
             <ImageView
                 android:id="@+id/ic_date"
-                android:layout_width="14sp"
-                android:layout_height="14sp"
+                android:layout_width="18sp"
+                android:layout_height="18sp"
                 android:contentDescription="due date icon"
                 android:src="@drawable/ic_date"
                 app:layout_constraintBottom_toBottomOf="@id/due"
@@ -76,16 +76,17 @@
 
             <ImageView
                 android:id="@+id/ic_proj"
-                android:layout_width="14sp"
-                android:layout_height="14sp"
+                android:layout_width="18sp"
+                android:layout_height="18sp"
                 android:src="@drawable/ic_project"
-                app:layout_constraintBottom_toBottomOf="@+id/project"
+
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/project"
                 debug:visibility="visible" />
 
             <TextView
                 android:id="@+id/project"
+                android:layout_marginTop="2dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
@@ -96,24 +97,24 @@
 
             <ImageView
                 android:id="@+id/ic_tags"
-                android:layout_width="14sp"
-                android:layout_height="14sp"
+                android:layout_width="18sp"
+                android:layout_height="18sp"
                 android:layout_marginStart="8dp"
                 android:src="@drawable/ic_tag"
-                app:layout_constraintBottom_toBottomOf="@+id/project"
                 app:layout_constraintStart_toEndOf="@id/project"
-                app:layout_constraintTop_toTopOf="@+id/project" />
+                app:layout_constraintTop_toTopOf="@+id/tags" />
 
             <TextView
                 android:id="@+id/tags"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
-                app:layout_constraintStart_toEndOf="@+id/ic_tags"
-                app:layout_constraintTop_toBottomOf="@+id/due"
+                android:layout_marginTop="2dp"
+                app:layout_constrainedWidth="true"
                 app:layout_constraintEnd_toStartOf="@id/complete"
                 app:layout_constraintHorizontal_bias="0"
-                app:layout_constrainedWidth="true"
+                app:layout_constraintStart_toEndOf="@+id/ic_tags"
+                app:layout_constraintTop_toBottomOf="@+id/due"
                 debug:text="tag1, tag2" />
 
             <ImageView
