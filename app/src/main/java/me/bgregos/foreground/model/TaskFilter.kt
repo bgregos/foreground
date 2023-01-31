@@ -15,12 +15,12 @@ import java.util.*
  * @property includeMatching filter out tasks that do match this filter, instead of those that do not.
  */
 @Entity
-data class TaskFilter (
-        @PrimaryKey(autoGenerate = true) val id: Int,
-        val type: TaskFilterType,
-        var parameter: String?,
-        var enabled: Boolean = true,
-        var includeMatching: Boolean = false
+data class TaskFilter(
+    @PrimaryKey(autoGenerate = true) val id: Int,
+    val type: TaskFilterType,
+    var parameter: String?,
+    var enabled: Boolean = true,
+    var includeMatching: Boolean = false
 ) {
     override fun equals(other: Any?): Boolean {
         return other is TaskFilter &&
@@ -39,11 +39,11 @@ data class TaskFilter (
  *      ParameterFormat.NONE indicates that this filter does not need a parameter. ex: a simple on/off filter
  * @property filter how to apply this to a collection. ex { task: Task, param: String? -> task.project == param }
  */
-data class TaskFilterType (
-        val name: String,
-        val id: String,
-        var parameterFormat: ParameterFormat,
-        val filter: (Task, String?) -> Boolean
+data class TaskFilterType(
+    val name: String,
+    val id: String,
+    var parameterFormat: ParameterFormat,
+    val filter: (Task, String?) -> Boolean
 ) {
     override fun equals(other: Any?): Boolean {
         return other is TaskFilterType &&
@@ -59,48 +59,64 @@ data class TaskFilterType (
  * Available filter types for the user to choose from.
  */
 class TaskFiltersAvailable {
-    companion object{
+    companion object {
         val filters = listOf(
-                TaskFilterType (
-                        name = "Name",
-                        id = "name",
-                        parameterFormat = ParameterFormat.STRING,
-                        filter = {
-                            task: Task, param: String? -> param?.let { task.name.contains(it) } ?: false
-                        }
-                ),
-                TaskFilterType (
-                        name = "Project",
-                        id = "project",
-                        parameterFormat = ParameterFormat.STRING,
-                        filter = {
-                            task: Task, param: String? -> param?.let { task.project?.contains(it) } ?: false
-                        }
-                ),
-                TaskFilterType (
-                        name = "Tag",
-                        id = "tag",
-                        parameterFormat = ParameterFormat.STRING,
-                        filter = {
-                            task: Task, param: String? -> task.tags.any{t -> t.contains(param ?: return@TaskFilterType false) }
-                        }
-                ),
-                TaskFilterType (
-                        name = "Priority",
-                        id = "priority",
-                        parameterFormat = ParameterFormat.STRING,
-                        filter = {
-                            task: Task, param: String? -> task.priority?.contains(param ?: return@TaskFilterType false) ?: false
-                        }
-                ),
-                TaskFilterType (
-                        name = "Waiting",
-                        id = "waiting",
-                        parameterFormat = ParameterFormat.NONE,
-                        filter = {
-                            task: Task, _ -> task.waitDate?.let { Date().before(it) } ?: false
-                        }
-                )
+            TaskFilterType(
+                name = "Name",
+                id = "name",
+                parameterFormat = ParameterFormat.STRING,
+                filter = { task: Task, param: String? ->
+                    param?.let { task.name.contains(it) } ?: false
+                }
+            ),
+            TaskFilterType(
+                name = "Project",
+                id = "project",
+                parameterFormat = ParameterFormat.STRING,
+                filter = { task: Task, param: String? ->
+                    param?.let { task.project?.contains(it) } ?: false
+                }
+            ),
+            TaskFilterType(
+                name = "Tag",
+                id = "tag",
+                parameterFormat = ParameterFormat.STRING,
+                filter = { task: Task, param: String? ->
+                    task.tags.any { t -> t.contains(param ?: return@TaskFilterType false) }
+                }
+            ),
+            TaskFilterType(
+                name = "Priority",
+                id = "priority",
+                parameterFormat = ParameterFormat.STRING,
+                filter = { task: Task, param: String? ->
+                    task.priority?.contains(param ?: return@TaskFilterType false) ?: false
+                }
+            ),
+            TaskFilterType(
+                name = "Waiting",
+                id = "waiting",
+                parameterFormat = ParameterFormat.NONE,
+                filter = { task: Task, _ ->
+                    task.waitDate?.let { Date().before(it) } ?: false
+                }
+            ),
+            TaskFilterType(
+                name = "Custom Attribute Key",
+                id = "customAttributeKey",
+                parameterFormat = ParameterFormat.STRING,
+                filter = { task: Task, param: String? ->
+                    param?.let { task.others.containsKey(it) } ?: false
+                }
+            ),
+            TaskFilterType(
+                name = "Custom Attribute Value",
+                id = "customAttributeValue",
+                parameterFormat = ParameterFormat.STRING,
+                filter = { task: Task, param: String? ->
+                    param?.let { task.others.containsValue(it) } ?: false
+                }
+            )
         )
     }
 }

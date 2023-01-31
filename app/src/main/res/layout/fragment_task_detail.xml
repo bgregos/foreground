@@ -124,7 +124,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="center"
-                            android:text="Extra Attributes"
+                            android:text="Custom Attributes"
                             android:textSize="18sp"
                             android:layout_marginEnd="16dp"
                             android:id="@+id/user_attributes_text" />
@@ -132,7 +132,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:src="@drawable/ic_playlist_add_white_24dp"
-                            android:contentDescription="Add Extra Attribute"
+                            android:contentDescription="Add Custom Attribute"
                             android:id="@+id/add_user_attribute"/>
                     </LinearLayout>
 
