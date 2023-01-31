@@ -37,6 +37,7 @@ class AlarmReceiver : BroadcastReceiver() {
                 }else{
                     CoroutineScope(Dispatchers.Main).launch {
                         taskViewModel.load()
+                        notificationRepository.load()
                         val task = taskViewModel.getTaskByUUID(uuid)
                         if (task != null) {
                             notificationRepository.showDueNotification(task)

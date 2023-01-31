@@ -40,6 +40,7 @@ class NotificationRepository @Inject constructor(private val mgr: AlarmManager, 
     fun scheduleNotificationForTasks(tasks: List<Task>) {
         clearNotifications()
         tasks.forEach { scheduleNotificationForTask(it) }
+        save()
     }
 
     private fun scheduleNotificationForTask(task: Task) {
