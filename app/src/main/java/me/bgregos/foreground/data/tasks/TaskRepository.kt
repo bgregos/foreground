@@ -23,8 +23,10 @@ import kotlin.collections.ArrayList
 
 @Singleton
 class TaskRepository @Inject constructor(
-        private val prefs: SharedPreferences,
-        private val remoteTaskSource: RemoteTaskSource) {
+    private val prefs: SharedPreferences,
+    private val remoteTaskSource: RemoteTaskSource,
+    private val taskFileStorage: TaskFileStorage
+) {
 
     var tasks: MutableStateFlow<List<Task>> = MutableStateFlow(listOf())
     val localChanges: MutableStateFlow<List<Task>> = MutableStateFlow(listOf())
