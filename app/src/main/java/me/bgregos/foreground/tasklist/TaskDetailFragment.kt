@@ -133,7 +133,7 @@ class TaskDetailFragment : Fragment() {
 
             if (isNewTask) {
                 val prefs = this.getActivity()?.getSharedPreferences("me.bgregos.BrightTask", Context.MODE_PRIVATE)
-                val default_tags = prefs?.getString("default_tags", "")
+                val default_tags = prefs?.getString("settings_default_tags", "")
                 binding.detailTags.setText(default_tags)
                 viewModel.setTaskTags(default_tags ?: "")
             }
