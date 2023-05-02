@@ -92,9 +92,10 @@ class TaskDetailFragment : Fragment() {
         binding = FragmentTaskDetailBinding.inflate(inflater, container, false)
         var twoPane = false
         context?.let { twoPane = it.isSideBySide() }
+        val isNewTask = viewModel.currentTask?.name?.isBlank() == true
 
         binding.detailToolbar.title =
-            if (viewModel.currentTask?.name?.isBlank() == true) "New Task" else viewModel.currentTask?.name
+            if (isNewTask) "New Task" else viewModel.currentTask?.name
         setHasOptionsMenu(true)
 
         val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
@@ -129,9 +130,19 @@ class TaskDetailFragment : Fragment() {
             }
 
             binding.detailProject.setText(it.project ?: "")
-            val builder = StringBuilder()
-            it.tags.forEach { task -> builder.append("$task, ") }
-            binding.detailTags.setText(builder.toString().trimEnd(',', ' '))
+
+            if (isNewTask) {
+                val prefs = this.getActivity()?.getSharedPreferences("me.bgregos.BrightTask", Context.MODE_PRIVATE)
+                val default_tags = prefs?.getString("default_tags", "")
+                binding.detailTags.setText(default_tags)
+                viewModel.setTaskTags(default_tags ?: "")
+            }
+            else
+            {
+                val builder = StringBuilder()
+                it.tags.forEach { task -> builder.append("$task, ") }
+                binding.detailTags.setText(builder.toString().trimEnd(',', ' '))
+            }
 
 
             if (it.dueDate != null) {
