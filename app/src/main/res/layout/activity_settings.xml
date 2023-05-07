@@ -296,6 +296,41 @@
 
     </androidx.cardview.widget.CardView>
 
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="8dp"
+        app:cardCornerRadius="4dp"
+        app:cardElevation="4dp"
+        app:contentPadding="6dp" >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+
+            <TextView
+                android:id="@+id/settings_default_tags_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Default tags for new tasks"
+                android:padding="8dp" />
+
+            <EditText
+                android:id="@+id/settings_default_tags"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="tagA, tagB"
+                android:text=""
+                android:padding="8dp"
+                android:inputType="text"
+                android:selectAllOnFocus="true"
+                android:singleLine="true" />
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="match_parent"

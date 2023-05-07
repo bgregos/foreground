@@ -86,6 +86,7 @@ class SettingsActivity : AppCompatActivity() {
         binding.settingsCertPrivateButton.setOnClickListener { performCertFileSearch(CertType.CERT_PRIVATE) }
         binding.settingsAutoSync.setOnClickListener { onAutoSyncClicked() }
         binding.settingsAutoSync.setOnFocusChangeListener { _, focused -> if(!focused) onAutoSyncIntervalChanged() }
+        binding.settingsDefaultTags.setText(prefs.getString("settings_default_tags", ""))
     }
 
     fun onAutoSyncIntervalChanged(){
@@ -205,6 +206,7 @@ class SettingsActivity : AppCompatActivity() {
         editor.putString("settings_cert_ca", binding.settingsCertCa.text.toString())
         editor.putString("settings_cert_key", binding.settingsPrivateKey.text.toString())
         editor.putString("settings_cert_private", binding.settingsCertPrivate.text.toString())
+        editor.putString("settings_default_tags", binding.settingsDefaultTags.text.toString())
         editor.apply()
     }
 
