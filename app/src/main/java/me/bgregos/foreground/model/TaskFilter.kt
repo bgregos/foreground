@@ -88,7 +88,7 @@ class TaskFiltersAvailable {
                 id = "tag",
                 parameterFormat = ParameterFormat.STRING,
                 filter = { task: Task, param: String? ->
-                    task.tags.any { t -> t.contains(param ?: return@TaskFilterType false) }
+                    task.tags.any { t -> t == param}
                 },
                 autocomplete = { task -> task.tags }
             ),
