@@ -6,10 +6,13 @@ import android.content.SharedPreferences
 import dagger.Module
 import dagger.Provides
 import me.bgregos.foreground.data.taskfilter.TaskFilterRepository
+import me.bgregos.foreground.data.tasks.TaskFileStorage
 import me.bgregos.foreground.network.RemoteTaskSource
 import me.bgregos.foreground.network.RemoteTaskSourceImpl
 import me.bgregos.foreground.data.tasks.TaskRepository
 import me.bgregos.foreground.util.NotificationRepository
+import java.io.File
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -24,8 +27,12 @@ abstract class TaskModule {
 
         @Singleton
         @Provides
-        fun provideTaskRepository(sharedPreferences: SharedPreferences, remoteTaskSource: RemoteTaskSource): TaskRepository {
-            return TaskRepository(sharedPreferences, remoteTaskSource)
+        fun provideTaskRepository(
+            sharedPreferences: SharedPreferences,
+            remoteTaskSource: RemoteTaskSource,
+            taskFileStorage: TaskFileStorage
+        ): TaskRepository {
+            return TaskRepository(sharedPreferences, remoteTaskSource, taskFileStorage)
         }
 
         @Singleton
@@ -39,5 +46,26 @@ abstract class TaskModule {
         fun provideRemoteTaskSource(context: Context, sharedPreferences: SharedPreferences): RemoteTaskSource {
             return RemoteTaskSourceImpl(context.filesDir, sharedPreferences)
         }
+
+        @Singleton
+        @Provides
+        fun provideTaskFileStorage(
+            @Named("InternalFiles") internalFiles: File,
+            @Named("ExternalFiles") externalFiles: File?
+        ): TaskFileStorage {
+            return TaskFileStorage(internalFiles, externalFiles)
+        }
+
+        @Singleton
+        @Provides
+        @Named("InternalFiles")
+        fun provideInternalFileDir(context: Context): File =
+            context.filesDir
+
+        @Singleton
+        @Provides
+        @Named("ExternalFiles")
+        fun provideExternalFilesDir(context: Context): File? =
+            context.getExternalFilesDir(null)
     }
 }
