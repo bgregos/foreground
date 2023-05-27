@@ -8,5 +8,5 @@
     android:targetCellWidth="2"
     android:previewImage="@drawable/foreground_widget_img"
     android:resizeMode="horizontal|vertical"
-    android:updatePeriodMillis="0"
-    android:widgetCategory="home_screen"></appwidget-provider>
+    android:updatePeriodMillis="1800000"
+    android:widgetCategory="home_screen" />

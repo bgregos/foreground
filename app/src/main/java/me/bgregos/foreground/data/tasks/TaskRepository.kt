@@ -1,6 +1,7 @@
 package me.bgregos.foreground.data.tasks
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import com.google.gson.Gson
@@ -10,6 +11,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import me.bgregos.foreground.ForegroundApplication
+import me.bgregos.foreground.ForegroundListWidgetProvider
+import me.bgregos.foreground.ForegroundListWidgetUpdater
 import me.bgregos.foreground.model.SyncResult
 import me.bgregos.foreground.model.Task
 import me.bgregos.foreground.network.RemoteTaskSource

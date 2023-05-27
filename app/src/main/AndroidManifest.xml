@@ -17,8 +17,6 @@
         <service
             android:name=".WidgetRemoteViewsService"
             android:permission="android.permission.BIND_REMOTEVIEWS" />
-        <service
-            android:name=".UpdateWidgetService"/>
 
         <activity
             android:name=".tasklist.MainActivity"
@@ -42,7 +40,8 @@
                 android:value=".tasklist.MainActivity" />
         </activity>
         <receiver android:name=".ForegroundListWidgetProvider"
-            android:exported="false">
+            android:enabled="true"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

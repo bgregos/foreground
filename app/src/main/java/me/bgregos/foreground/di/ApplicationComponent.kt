@@ -1,24 +1,19 @@
 package me.bgregos.foreground.di
 
-import android.appwidget.AppWidgetManager
 import android.content.Context
 import androidx.work.WorkerFactory
 import dagger.BindsInstance
 import dagger.Component
-import me.bgregos.foreground.UpdateWidgetService
-import me.bgregos.foreground.ForegroundListWidgetProvider
+import me.bgregos.foreground.WidgetRemoteViewFactory
 import me.bgregos.foreground.WidgetRemoteViewsService
 import me.bgregos.foreground.filter.FiltersFragment
-import me.bgregos.foreground.network.RemoteTaskSource
 import me.bgregos.foreground.receiver.AlarmReceiver
-import me.bgregos.foreground.settings.SettingsActivity
-import me.bgregos.foreground.data.tasks.TaskRepository
 import me.bgregos.foreground.receiver.TaskBroadcastReceiver
+import me.bgregos.foreground.settings.SettingsActivity
 import me.bgregos.foreground.tasklist.MainActivity
 import me.bgregos.foreground.tasklist.TaskDetailFragment
 import me.bgregos.foreground.tasklist.TaskListFragment
 import me.bgregos.foreground.tasklist.TaskViewModel
-import me.bgregos.foreground.util.NotificationRepository
 import javax.inject.Singleton
 
 @Singleton
@@ -51,5 +46,4 @@ interface ApplicationComponent {
     fun inject(broadcastReceiver: TaskBroadcastReceiver)
     fun inject(widgetRemoteViewsService: WidgetRemoteViewsService)
     fun inject(taskViewModel: TaskViewModel)
-    fun inject(updateWidgetService: UpdateWidgetService)
 }

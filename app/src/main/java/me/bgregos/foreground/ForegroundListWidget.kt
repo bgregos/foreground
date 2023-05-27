@@ -1,144 +1,176 @@
 package me.bgregos.foreground
 
 import android.app.PendingIntent
-import android.app.Service
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
-import android.os.IBinder
+import android.util.Log
 import android.view.View
 import android.widget.RemoteViews
 import android.widget.RemoteViewsService
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import me.bgregos.foreground.model.Task
 import me.bgregos.foreground.tasklist.MainActivity
 import me.bgregos.foreground.tasklist.TaskViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
-import kotlin.collections.HashSet
+
+
+class ForegroundListWidgetUpdater @Inject constructor(
+    val context: Context
+) {
+    /**
+     * Allows other parts of the application to refresh the widget on demand.
+     */
+    fun updateWidget(){
+        Log.d("foreground widget", "update widget called")
+        val manager = AppWidgetManager.getInstance(context)
+        val ids = manager.getAppWidgetIds(ComponentName(context.applicationContext, ForegroundListWidgetProvider::class.java))
+        manager.notifyAppWidgetViewDataChanged(ids, R.id.widgetListView)
+    }
+}
 
 class ForegroundListWidgetProvider : AppWidgetProvider() {
 
-    companion  object {
-        var manager: AppWidgetManager? = null
-    }
-    private val known: HashSet<Int> = HashSet()
+//    override fun onReceive(context: Context?, intent: Intent?) {
+//        Log.d("foreground widget", "received broadcast action ${intent?.action}")
+//        context?.let {
+//            if(intent?.action == Intent.ACTION_BOOT_COMPLETED) {
+//                val appWidgetManager = AppWidgetManager.getInstance(context)
+//                val ids = AppWidgetManager.getInstance(context).getAppWidgetIds(ComponentName(context.applicationContext, ForegroundListWidgetProvider::class.java))
+//                Log.d("foreground widget", "got ids ${ids.toList()}")
+//                onUpdate(context, appWidgetManager, ids)
+//            }
+//        }
+//        super.onReceive(context, intent)
+//    }
 
-    override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
-        manager = appWidgetManager
-        super.onUpdate(context, appWidgetManager, appWidgetIds)
-    }
-
-    override fun onEnabled(context: Context) {
-    }
-
-    override fun onReceive(context: Context?, intent: Intent?) {
-        super.onReceive(context, intent)
-        context?.let {
-            val appWidgetManager = AppWidgetManager.getInstance(it)
-            val appWidgetIds = appWidgetManager.getAppWidgetIds(ComponentName(it, ForegroundListWidgetProvider::class.java))
-            for (appWidgetId in appWidgetIds) {
-                updateAppWidget(known, it, appWidgetManager, appWidgetId)
-            }
-            it.startService(Intent(context, UpdateWidgetService::class.java))
-        }
-    }
-
-    override fun onDisabled(context: Context) {
-    }
-}
-
-internal fun updateAppWidget(
-        known: HashSet<Int>,
+    override fun onUpdate(
         context: Context,
         appWidgetManager: AppWidgetManager,
-        appWidgetId: Int) {
-    if (known.contains((appWidgetId))) return;
-    val views = RemoteViews(
-            context.packageName,
-            R.layout.list_widget
-    )
-    val intent = Intent(context, WidgetRemoteViewsService::class.java)
-    intent.putExtra("app_id", appWidgetId)
-    val flags = if (Build.VERSION.SDK_INT >= 23) {
-        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-    } else {
-        PendingIntent.FLAG_UPDATE_CURRENT
-    }
-
-    views.setOnClickPendingIntent(R.id.logo, PendingIntent.getActivity(context, flags, Intent(context, MainActivity::class.java), flags))
-    views.setRemoteAdapter(R.id.widgetListView, intent)
-    appWidgetManager.updateAppWidget(appWidgetId, views)
-    known.add(appWidgetId)
-}
-
-class UpdateWidgetService : Service() {
-    companion object {
-        var tasks: List<Task> = emptyList()
-    }
-
-    @Inject lateinit var taskViewModel: TaskViewModel
-
-    private var taskJob : Job? = null
-
-    override fun onCreate() {
-        getApplicationComponent().inject(this)
-        super.onCreate()
-    }
-
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val appWidgetManager = AppWidgetManager.getInstance(this
-                .applicationContext)
-        val completedOrNeverStarted = taskJob?.isCompleted ?: true;
-        if(completedOrNeverStarted) {
-            taskJob = taskViewModel.viewModelScope.launch {
-                taskViewModel.load()
-                taskViewModel
-                        .visibleTasks
-                        .collect {
-                            tasks = it
-                            val appWidgetIds = appWidgetManager.getAppWidgetIds(ComponentName((this@UpdateWidgetService).applicationContext, ForegroundListWidgetProvider::class.java))
-                            appWidgetManager?.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.widgetListView)
-                        }
+        appWidgetIds: IntArray
+    ) {
+        Log.d("foreground widget", "onUpdated called with ids ${appWidgetIds.toList()}")
+        appWidgetIds.forEach { appWidgetId ->
+            val views = RemoteViews(
+                context.packageName,
+                R.layout.list_widget
+            )
+            val intent = Intent(context, WidgetRemoteViewsService::class.java).apply {
+                // Add the widget ID to the intent extras.
+                putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+                data = Uri.parse(toUri(Intent.URI_INTENT_SCHEME))
             }
+
+            val flags = if (Build.VERSION.SDK_INT >= 23) {
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            } else {
+                PendingIntent.FLAG_UPDATE_CURRENT
+            }
+
+            views.setOnClickPendingIntent(
+                R.id.logo,
+                PendingIntent.getActivity(
+                    context, flags, Intent(context, MainActivity::class.java), flags
+                )
+            )
+            views.setRemoteAdapter(R.id.widgetListView, intent)
+            appWidgetManager.updateAppWidget(appWidgetId, views)
         }
-
-
-        return START_STICKY
+        super.onUpdate(context, appWidgetManager, appWidgetIds)
     }
-
-    override fun onBind(p0: Intent?): IBinder? {
-        return null
-    }
-
 }
+
+//class UpdateWidgetService : Service() {
+//    companion object {
+//        var tasks: List<Task> = emptyList()
+//    }
+//
+//    @Inject
+//    lateinit var taskViewModel: TaskViewModel
+//
+//    private var taskJob: Job? = null
+//
+//    override fun onCreate() {
+//        getApplicationComponent().inject(this)
+//        super.onCreate()
+//    }
+//
+//    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+//        val appWidgetManager = AppWidgetManager.getInstance(
+//            this.applicationContext
+//        )
+//        val completedOrNeverStarted = taskJob?.isCompleted ?: true;
+//        if (completedOrNeverStarted) {
+//            taskJob = taskViewModel.viewModelScope.launch {
+//                taskViewModel.load()
+//                taskViewModel
+//                    .visibleTasks
+//                    .collect {
+//                        tasks = it
+//                        val appWidgetIds = appWidgetManager.getAppWidgetIds(
+//                            ComponentName(
+//                                (this@UpdateWidgetService).applicationContext,
+//                                ForegroundListWidgetProvider::class.java
+//                            )
+//                        )
+//                        appWidgetManager?.notifyAppWidgetViewDataChanged(
+//                            appWidgetIds,
+//                            R.id.widgetListView
+//                        )
+//                    }
+//            }
+//        }
+//
+//
+//        return START_STICKY
+//    }
+//
+//    override fun onBind(p0: Intent?): IBinder? {
+//        return null
+//    }
+//
+//}
 
 class WidgetRemoteViewsService : RemoteViewsService() {
 
+    @Inject
+    lateinit var taskViewModel: TaskViewModel
+
+    override fun onCreate() {
+        super.onCreate()
+        applicationContext.getApplicationComponent().inject(this)
+    }
+
     override fun onGetViewFactory(intent: Intent?): RemoteViewsFactory {
-        return WidgetRemoteViewFactory(applicationContext)
+        return WidgetRemoteViewFactory(applicationContext, taskViewModel)
     }
 
 }
 
-class WidgetRemoteViewFactory(val context: Context) : RemoteViewsService.RemoteViewsFactory {
+class WidgetRemoteViewFactory(val context: Context, val taskViewModel: TaskViewModel) : RemoteViewsService.RemoteViewsFactory {
 
     private val format = SimpleDateFormat("EEE, MMM d yyyy, HH:mm ", Locale.getDefault())
 
+    var tasks: List<Task> = emptyList()
+
     override fun getLoadingView(): RemoteViews? {
         return null
-
     }
 
     override fun getItemId(position: Int): Long {
-        return position.toLong()
+        //not perfect but probability of collision between tasks is very low
+        return tasks[position].uuid.leastSignificantBits
     }
 
     override fun onCreate() {
@@ -146,15 +178,28 @@ class WidgetRemoteViewFactory(val context: Context) : RemoteViewsService.RemoteV
     }
 
     override fun onDataSetChanged() {
+        runBlocking {
+            taskViewModel.load()
+            taskViewModel
+                .visibleTasks
+                .take(1)
+                .collect {
+                    tasks = it
+                    Log.d("foreground widget", "collected ${tasks.map { it.name }} tasks")
+                }
+        }
+    }
+
+    override fun onDestroy() {
+
     }
 
     override fun hasStableIds(): Boolean {
-        return false
+        return true
     }
 
     override fun getViewAt(position: Int): RemoteViews {
-
-        val task = UpdateWidgetService.tasks[position]
+        val task = tasks[position]
         val rv = RemoteViews(context.packageName, R.layout.task_list_content_widget)
         rv.setTextViewText(R.id.title, task.name)
 
@@ -171,15 +216,12 @@ class WidgetRemoteViewFactory(val context: Context) : RemoteViewsService.RemoteV
     }
 
     override fun getCount(): Int {
-        return UpdateWidgetService.tasks.count()
+        return tasks.size
     }
 
     override fun getViewTypeCount(): Int {
         return 1
 
-    }
-
-    override fun onDestroy() {
     }
 
 }

@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentTransaction
 import me.bgregos.foreground.ForegroundListWidgetProvider
+import me.bgregos.foreground.ForegroundListWidgetUpdater
 import me.bgregos.foreground.R
 import me.bgregos.foreground.getApplicationComponent
 import me.bgregos.foreground.util.NotificationRepository
@@ -17,6 +18,8 @@ class MainActivity : AppCompatActivity() {
     @Inject lateinit var notificationRepository: NotificationRepository
 
     @Inject lateinit var taskViewModel: TaskViewModel
+
+    @Inject lateinit var widgetUpdater: ForegroundListWidgetUpdater
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,8 +34,14 @@ class MainActivity : AppCompatActivity() {
         this.applicationContext.sendBroadcast(i)
     }
 
+    override fun onResume() {
+        super.onResume()
+        widgetUpdater.updateWidget()
+    }
+
     override fun onPause() {
         notificationRepository.save()
+        widgetUpdater.updateWidget()
         super.onPause()
     }
 }
