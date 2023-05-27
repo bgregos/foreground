@@ -286,6 +286,18 @@ class TaskDetailFragment : Fragment() {
             dpd.show()
         }
 
+        binding.detailDueDate.clearTimeDate.setOnClickListener {
+            binding.detailDueDate.date.text = null
+            binding.detailDueDate.time.text = null
+            viewModel.clearDueDate()
+        }
+
+        binding.detailWaitDate.clearTimeDate.setOnClickListener {
+            binding.detailWaitDate.date.text = null
+            binding.detailWaitDate.time.text = null
+            viewModel.clearWaitDate()
+        }
+
         val item = viewModel.currentTask
 
         // Subscribe to the task detail close channel

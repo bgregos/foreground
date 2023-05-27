@@ -256,6 +256,18 @@ class TaskViewModel @Inject constructor(
         }
     }
 
+    fun clearDueDate() {
+        currentTask?.let {
+            postUpdatedTask(it.copy(dueDate = null))
+        }
+    }
+
+    fun clearWaitDate(){
+        currentTask?.let {
+            postUpdatedTask(it.copy(waitDate = null))
+        }
+    }
+
     fun detailClosed() {
         currentUUID = null
     }

@@ -5,13 +5,9 @@ import android.content.Context
 import android.content.SharedPreferences
 import dagger.Module
 import dagger.Provides
-<<<<<<< Updated upstream
 import me.bgregos.foreground.data.taskfilter.TaskFilterRepository
-=======
 import me.bgregos.foreground.ForegroundListWidgetUpdater
-import me.bgregos.foreground.data.tasks.TaskFileStorage
 import me.bgregos.foreground.data.tasks.TaskRepository
->>>>>>> Stashed changes
 import me.bgregos.foreground.network.RemoteTaskSource
 import me.bgregos.foreground.network.RemoteTaskSourceImpl
 import me.bgregos.foreground.util.NotificationRepository
