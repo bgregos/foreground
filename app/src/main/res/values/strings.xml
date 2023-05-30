@@ -81,6 +81,7 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="add_task">Add Task</string>
     <string name="delete">Delete</string>
+    <string name="complete">Completed</string>
     <string name="select_filter_type">Select Filter Type</string>
     <string name="add_a_filter">Add a filter</string>
     <string name="filter_add_warning">Please fill out all fields before adding.</string>

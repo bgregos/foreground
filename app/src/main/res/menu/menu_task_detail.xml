@@ -5,4 +5,7 @@
         android:title="@string/delete"
         android:icon="@drawable/ic_delete_black_24dp"
         app:showAsAction="always"/>
+    <item android:id="@+id/action_complete"
+        android:title="@string/complete"
+        app:showAsAction="ifRoom"/>
 </menu>

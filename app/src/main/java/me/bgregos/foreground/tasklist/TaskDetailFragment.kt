@@ -360,6 +360,10 @@ class TaskDetailFragment : Fragment() {
                 viewModel.currentTask?.let { viewModel.delete(it) }
                 true
             }
+            R.id.action_complete -> {
+                viewModel.currentTask?.let { viewModel.markTaskComplete(it) }
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }
