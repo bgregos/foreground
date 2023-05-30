@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import android.view.animation.Animation
 import android.view.animation.RotateAnimation
@@ -28,6 +29,7 @@ import me.bgregos.foreground.model.SyncResult
 import me.bgregos.foreground.model.Task
 import me.bgregos.foreground.settings.SettingsActivity
 import me.bgregos.foreground.util.*
+import java.util.UUID
 import javax.inject.Inject
 
 class TaskListFragment : Fragment() {
@@ -52,6 +54,11 @@ class TaskListFragment : Fragment() {
         super.onCreate(savedInstanceState)
         //use activity viewmodel store since this viewmodel is shared between fragments
         viewModel = ViewModelProvider(requireActivity().viewModelStore, viewModelFactory).get(TaskViewModel::class.java)
+        arguments?.getString("uuid")?.let {
+            viewModel.getTaskByUUID(it)?.let { task ->
+                openTask(task)
+            }
+        }
     }
 
     override fun onAttach(context: Context) {
@@ -82,10 +89,10 @@ class TaskListFragment : Fragment() {
             }
         }
         setupRecyclerView(taskListBinding.taskList)
-        binding.fab.setOnClickListener { view ->
+        binding.fab.setOnClickListener {
             viewModel.removeUnnamedTasks()
             val newTask = viewModel.addTask()
-            openTask(newTask, view, newTask.name)
+            openTask(newTask)
         }
         taskListBinding.swipeRefreshLayout.setOnRefreshListener {
             onSyncClick()
@@ -174,10 +181,14 @@ class TaskListFragment : Fragment() {
 
     companion object {
         @JvmStatic
-        fun newInstance() = TaskListFragment()
+        fun newInstance(taskUUIDToOpen: String? = null) = TaskListFragment().apply {
+            arguments = Bundle().apply {
+                putString("uuid", taskUUIDToOpen)
+            }
+        }
     }
 
-    fun openTask(task: Task, v: View, name: String){
+    fun openTask(task: Task){
         val fragment = TaskDetailFragment.newInstance(task.uuid)
         if (twoPane) {
             // Tablet layouts get the task detail fragment opened on the side

@@ -21,9 +21,9 @@ class TaskListAdapter(private val parentFragment: TaskListFragment,
                         private val viewModel: TaskViewModel) :
         ListAdapter<Task, TaskListAdapter.ViewHolder>(DiffCallback()) {
 
-    private val onClickListener: View.OnClickListener = View.OnClickListener { v ->
+    private val onClickListener: OnClickListener = OnClickListener { v ->
         val task = v.tag as Task
-        parentFragment.openTask(task, v, task.name)
+        parentFragment.openTask(task)
     }
 
     private class DiffCallback : DiffUtil.ItemCallback<Task>() {

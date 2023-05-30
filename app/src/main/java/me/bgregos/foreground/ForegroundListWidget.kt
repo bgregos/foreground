@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.RemoteViews
@@ -19,7 +20,10 @@ import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import me.bgregos.foreground.model.Task
+import me.bgregos.foreground.receiver.TaskBroadcastReceiver
 import me.bgregos.foreground.tasklist.MainActivity
+import me.bgregos.foreground.tasklist.MainActivity.Companion.BRIGHTTASK_OPEN_TASK
+import me.bgregos.foreground.tasklist.MainActivity.Companion.BRIGHTTASK_OPEN_TASK_PARAM_UUID
 import me.bgregos.foreground.tasklist.TaskViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -84,63 +88,32 @@ class ForegroundListWidgetProvider : AppWidgetProvider() {
                     context, flags, Intent(context, MainActivity::class.java), flags
                 )
             )
+
+            val taskPendingIntent: PendingIntent = Intent(
+                context,
+                MainActivity::class.java
+            ).run {
+                setClass(context, TaskBroadcastReceiver::class.java)
+                action = BRIGHTTASK_OPEN_TASK
+                putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+                data = Uri.parse(toUri(Intent.URI_INTENT_SCHEME))
+
+                val immutableFlag = if (Build.VERSION.SDK_INT >= 31) {
+                    PendingIntent.FLAG_MUTABLE
+                } else {
+                    0
+                }
+
+                PendingIntent.getBroadcast(context, 0, this, PendingIntent.FLAG_UPDATE_CURRENT or immutableFlag)
+            }
+            views.setPendingIntentTemplate(R.id.widgetListView, taskPendingIntent)
+
             views.setRemoteAdapter(R.id.widgetListView, intent)
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }
         super.onUpdate(context, appWidgetManager, appWidgetIds)
     }
 }
-
-//class UpdateWidgetService : Service() {
-//    companion object {
-//        var tasks: List<Task> = emptyList()
-//    }
-//
-//    @Inject
-//    lateinit var taskViewModel: TaskViewModel
-//
-//    private var taskJob: Job? = null
-//
-//    override fun onCreate() {
-//        getApplicationComponent().inject(this)
-//        super.onCreate()
-//    }
-//
-//    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-//        val appWidgetManager = AppWidgetManager.getInstance(
-//            this.applicationContext
-//        )
-//        val completedOrNeverStarted = taskJob?.isCompleted ?: true;
-//        if (completedOrNeverStarted) {
-//            taskJob = taskViewModel.viewModelScope.launch {
-//                taskViewModel.load()
-//                taskViewModel
-//                    .visibleTasks
-//                    .collect {
-//                        tasks = it
-//                        val appWidgetIds = appWidgetManager.getAppWidgetIds(
-//                            ComponentName(
-//                                (this@UpdateWidgetService).applicationContext,
-//                                ForegroundListWidgetProvider::class.java
-//                            )
-//                        )
-//                        appWidgetManager?.notifyAppWidgetViewDataChanged(
-//                            appWidgetIds,
-//                            R.id.widgetListView
-//                        )
-//                    }
-//            }
-//        }
-//
-//
-//        return START_STICKY
-//    }
-//
-//    override fun onBind(p0: Intent?): IBinder? {
-//        return null
-//    }
-//
-//}
 
 class WidgetRemoteViewsService : RemoteViewsService() {
 
@@ -211,6 +184,14 @@ class WidgetRemoteViewFactory(val context: Context, val taskViewModel: TaskViewM
         } else {
             rv.setViewVisibility(R.id.due, View.GONE)
         }
+
+        val fillInIntent = Intent().apply {
+            Bundle().also { extras ->
+                extras.putString(BRIGHTTASK_OPEN_TASK_PARAM_UUID, task.uuid.toString())
+                putExtras(extras)
+            }
+        }
+        rv.setOnClickFillInIntent(R.id.widget_item, fillInIntent)
 
         return rv
     }

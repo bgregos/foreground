@@ -4,14 +4,16 @@ import android.app.NotificationManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import android.content.Intent.ACTION_MAIN
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import me.bgregos.foreground.getApplicationComponent
+import me.bgregos.foreground.tasklist.MainActivity
+import me.bgregos.foreground.tasklist.MainActivity.Companion.BRIGHTTASK_OPEN_TASK
+import me.bgregos.foreground.tasklist.MainActivity.Companion.BRIGHTTASK_OPEN_TASK_PARAM_UUID
 import me.bgregos.foreground.tasklist.TaskViewModel
-import java.util.*
 import javax.inject.Inject
 
 class TaskBroadcastReceiver: BroadcastReceiver() {
@@ -48,6 +50,15 @@ class TaskBroadcastReceiver: BroadcastReceiver() {
                     Log.e("notif", "Failed to save task marked done- null context")
                 }
 
+            }
+            BRIGHTTASK_OPEN_TASK -> {
+                val requestedUUID = intent.extras?.getString(BRIGHTTASK_OPEN_TASK_PARAM_UUID)
+                val i = Intent(context, MainActivity::class.java).apply {
+                    action = ACTION_MAIN
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    putExtra(BRIGHTTASK_OPEN_TASK_PARAM_UUID, requestedUUID)
+                }
+                context!!.startActivity(i)
             }
         }
     }

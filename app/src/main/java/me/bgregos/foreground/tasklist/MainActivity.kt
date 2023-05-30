@@ -2,6 +2,7 @@ package me.bgregos.foreground.tasklist
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentTransaction
 import me.bgregos.foreground.ForegroundListWidgetProvider
@@ -21,16 +22,25 @@ class MainActivity : AppCompatActivity() {
 
     @Inject lateinit var widgetUpdater: ForegroundListWidgetUpdater
 
+    companion object {
+        //intent action for opening a task
+        const val BRIGHTTASK_OPEN_TASK = "me.bgregos.brighttask.OPEN_TASK"
+
+        //intent extra property for opening a task
+        const val BRIGHTTASK_OPEN_TASK_PARAM_UUID = "OPEN_TASK_PARAM_UUID"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         getApplicationComponent().inject(this)
         setContentView(R.layout.activity_main)
         val transaction: FragmentTransaction = supportFragmentManager.beginTransaction()
-        fragment = TaskListFragment.newInstance()
+        val taskUUIDToOpen = intent.getStringExtra(BRIGHTTASK_OPEN_TASK_PARAM_UUID)
+        fragment = TaskListFragment.newInstance(taskUUIDToOpen)
         transaction.replace(R.id.task_list_container, fragment)
         transaction.commit()
         getApplicationComponent().inject(taskViewModel)
-        val i: Intent = Intent(this.applicationContext, ForegroundListWidgetProvider::class.java)
+        val i = Intent(this.applicationContext, ForegroundListWidgetProvider::class.java)
         this.applicationContext.sendBroadcast(i)
     }
 
