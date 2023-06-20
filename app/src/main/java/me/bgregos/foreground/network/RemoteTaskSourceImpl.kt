@@ -261,6 +261,7 @@ class TaskwarriorSyncWorker(ctx: Context, workerParams: WorkerParameters, privat
 
     override suspend fun doWork(): Result = coroutineScope {
         val job = async {
+            taskViewModel.load()
             taskViewModel.sync()
             Log.i("sync", "Automatic Sync Complete")
             notificationRepository.scheduleNotificationForTasks(taskViewModel.tasks.value)
