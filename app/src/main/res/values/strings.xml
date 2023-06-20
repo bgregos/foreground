@@ -106,4 +106,9 @@
     <string name="taskwarrior_sync">Taskwarrior Sync (Beta)</string>
     <string name="auto_sync_requirement">You must enable sync first.</string>
     <string name="sync_enabled_message">Sync enabled successfully!</string>
+    <string name="ok">Ok</string>
+    <string name="cancel">Cancel</string>
+    <string name="notification_permission_dialog_title">Allow task due reminders?</string>
+    <string name="notification_permission_dialog_body">Foreground uses the Notification and Reminder permissions to send timely task due reminders.\n\n
+        Denying notifications will prevent notifications, while denying reminders may cause late notifications.</string>
 </resources>
