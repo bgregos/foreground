@@ -1,14 +1,20 @@
 package me.bgregos.foreground.tasklist
 
+import android.Manifest
 import android.app.AlarmManager
 import android.app.AlertDialog
+import android.app.Dialog
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.SharedPreferences
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM
 import android.util.Log
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import androidx.fragment.app.FragmentTransaction
 import me.bgregos.foreground.ForegroundListWidgetProvider
@@ -40,6 +46,11 @@ class MainActivity : AppCompatActivity() {
         const val USER_DENIED_ALARMS_KEY = "deniedAlarms"
     }
 
+    var permissionDialog: Dialog? = null
+
+    lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         getApplicationComponent().inject(this)
@@ -52,6 +63,18 @@ class MainActivity : AppCompatActivity() {
         getApplicationComponent().inject(taskViewModel)
         val i = Intent(this.applicationContext, ForegroundListWidgetProvider::class.java)
         this.applicationContext.sendBroadcast(i)
+
+        requestPermissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted: Boolean ->
+            if (isGranted) {
+                notificationRepository.createNotificationChannel()
+                startActivity(Intent(ACTION_REQUEST_SCHEDULE_EXACT_ALARM))
+            } else {
+                sharedPrefs.edit().putBoolean(USER_DENIED_ALARMS_KEY, true).apply()
+            }
+            permissionDialog?.dismiss()
+        }
         requestAlarmPermission()
     }
 
@@ -59,26 +82,32 @@ class MainActivity : AppCompatActivity() {
         val alarmManager: AlarmManager = getSystemService()!!
         Log.d("alarms", "checking alarm permission")
         val userDenied = sharedPrefs.getBoolean(USER_DENIED_ALARMS_KEY, false)
-        if (!alarmManager.canScheduleExactAlarms() && !userDenied) {
-            Log.d("alarms", "requesting alarm permission")
-            AlertDialog.Builder(this).apply {
-                setPositiveButton(R.string.ok) { dialog, id ->
-                    notificationRepository.createNotificationChannel()
-                    startActivity(Intent(ACTION_REQUEST_SCHEDULE_EXACT_ALARM))
-                    dialog.dismiss()
-                }
-                setNegativeButton(R.string.cancel) { dialog, id ->
-                    sharedPrefs.edit().putBoolean(USER_DENIED_ALARMS_KEY, true).apply()
-                    dialog.dismiss()
-                }
-                setCancelable(false)
-                setTitle(getString(R.string.notification_permission_dialog_title))
-                setMessage("Foreground uses Notification and Reminder permissions to send timely task due reminders.\n\nDenying notifications will prevent notifications, while denying reminders may cause late notifications.")
-                show()
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
 
+            if (!alarmManager.canScheduleExactAlarms() && !userDenied) {
+                Log.d("alarms", "requesting alarm permission")
+                permissionDialog = AlertDialog.Builder(this).run {
+                    setPositiveButton(R.string.ok) { dialog, id ->
+                        requestPermissionLauncher.launch(
+                            Manifest.permission.POST_NOTIFICATIONS
+                        )
+                    }
+                    setNegativeButton(R.string.cancel) { dialog, id ->
+                        sharedPrefs.edit().putBoolean(USER_DENIED_ALARMS_KEY, true).apply()
+                        dialog.dismiss()
+                    }
+                    setCancelable(false)
+                    setTitle(getString(R.string.notification_permission_dialog_title))
+                    setMessage("Foreground uses Notification and Reminder permissions to send timely task due reminders.\n\nDenying notifications will prevent notifications, while denying reminders may cause late notifications.")
+                    create()
+                }
+                permissionDialog?.show()
+
+            } else {
+                Log.d("alarms", "alarm permission already granted")
+                notificationRepository.createNotificationChannel()
+            }
         } else {
-            Log.d("alarms", "alarm permission already granted")
             notificationRepository.createNotificationChannel()
         }
     }
