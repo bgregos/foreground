@@ -3,13 +3,13 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 
 android {
-    compileSdkVersion 32
+    compileSdkVersion 34
     defaultConfig {
         applicationId "me.bgregos.brighttask"
         minSdkVersion 21
-        targetSdkVersion 32
-        versionCode 18
-        versionName "1.5.5"
+        targetSdkVersion 34
+        versionCode 19
+        versionName "1.6.0"
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
     buildTypes {
