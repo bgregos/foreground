@@ -75,7 +75,6 @@ class TaskViewModel @Inject constructor(
     init {
         writeFormat.timeZone = TimeZone.getDefault()
         notificationRepository.load()
-        notificationRepository.createNotificationChannel()
         viewModelScope.launch(Dispatchers.IO) {
             load()
         }

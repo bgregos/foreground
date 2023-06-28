@@ -136,6 +136,7 @@ class TaskListFragment : Fragment() {
                 syncRotateAnimation.repeatCount = 0
             }
         } else {
+            taskListBinding.swipeRefreshLayout.isRefreshing = false
             val bar = Snackbar.make(binding.taskListParent, "Sync is disabled! Enable it in the settings menu.", Snackbar.LENGTH_LONG)
             bar.view.setBackgroundColor(Color.parseColor("#34309f"))
             bar.show()

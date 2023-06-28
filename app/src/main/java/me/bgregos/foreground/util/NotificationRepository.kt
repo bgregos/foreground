@@ -23,6 +23,8 @@ import javax.inject.Inject
 class NotificationRepository @Inject constructor(private val mgr: AlarmManager, private val context: Context) {
 
     val ACTION = "me.bgregos.brighttask.SEND_NOTIFICATION"
+    val TEN_MINUTES_IN_MS = 600000L
+
 
     var lastAssignedNotificationId: Int = 0
     var scheduledNotifications = ArrayList<Pair<Task, PendingIntent>>()
@@ -60,10 +62,18 @@ class NotificationRepository @Inject constructor(private val mgr: AlarmManager, 
             }
             val pi = getBroadcast(context, task.hashCode(), sendIntent, flags)
             scheduledNotifications.add(Pair(task, pi))
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                mgr.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, due.time, pi)
-            } else {
-                mgr.setExact(AlarmManager.RTC_WAKEUP, due.time, pi)
+            if (mgr.canScheduleExactAlarms()) {
+                // Set exact alarms.
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    mgr.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, due.time, pi)
+                } else {
+                    mgr.setExact(AlarmManager.RTC_WAKEUP, due.time, pi)
+                }
+            }
+            else {
+                // Permission not yet approved. Display user notice and revert to a fallback
+                // approach.
+                mgr.setWindow(AlarmManager.RTC_WAKEUP, due.time, TEN_MINUTES_IN_MS, pi)
             }
             Log.d("notif", "scheduled notification for ${task.name}: ${due.time} (current time is ${System.currentTimeMillis()})")
         }

@@ -2,7 +2,9 @@
 
 Foreground is an easy to use task manager app. Designed to be beautiful, simple and unintrusive, Foreground helps you know what needs done without getting in your way. Foreground also supports syncing with Taskwarrior servers, so your task list can be always with you, no matter your device.
 
-In other words, Foreground tells you what to put in your own foreground!
+In other words, Foreground tells you what needs to be in your own foreground!
+
+### Download
 
 You can find Foreground on the [Google Play Store](https://play.google.com/store/apps/details?id=me.bgregos.brighttask), on [F-Droid](https://f-droid.org/en/packages/me.bgregos.brighttask/) and in the [Releases](https://github.com/bgregos/foreground/releases) tab.
 
@@ -27,4 +29,4 @@ Want to report a bug, submit a feature request, or contribute code? Read [CONTRI
 ## Current Limitations
 Unlike existing Taskwarrior apps for Android, Foreground does not run the `taskwarrior` binary inside, but rather implements a Taskwarrior sync client.
 
-That being said, Foreground currently supports most features of Taskwarrior. Notable exceptions involve handling of recurring events and display/editing of User Defined Attributes. Recurring event instances created by other clients will be shown by Foreground, but Foreground does not create recurring event instances of its own at this time. User Defined Attributes are preserved internally but are not yet exposed for viewing or editing. These limitations will be resolved in future releases.
+That being said, Foreground currently supports most features of Taskwarrior. The primary exception involves handling of recurring events. Recurring event instances created by other clients will be shown by Foreground, but Foreground does not create recurring event instances of its own at this time. These limitations will be resolved in future releases.
