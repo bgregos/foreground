@@ -45,7 +45,7 @@
         android:layout_height="wrap_content"
         android:src="@drawable/baseline_clear_24"
         android:layout_gravity="center"
-        app:tint="@color/material_dynamic_neutral100"
+        app:tint="#FFFFFF"
         android:contentDescription="Clear" />
 
 </LinearLayout>
