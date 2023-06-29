@@ -252,6 +252,7 @@ class TaskViewModel @Inject constructor(
         return withContext(Dispatchers.Default) {
             return@withContext tasks.value.flatMap { filterType.autocomplete(it) }
                 .filter { it.lowercase().contains(filterParameter.lowercase()) }
+                .distinct()
         }
     }
 
