@@ -78,12 +78,6 @@ class TaskDetailFragment : Fragment() {
         setHasOptionsMenu(true)
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        inflater.inflate(R.menu.menu_task_detail, menu)
-        super.onCreateOptionsMenu(menu, inflater);
-    }
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -333,6 +327,14 @@ class TaskDetailFragment : Fragment() {
             }
         }
 
+        binding.actionComplete.setOnClickListener {
+            viewModel.currentTask?.let { viewModel.markTaskComplete(it) }
+        }
+
+        binding.actionDelete.setOnClickListener {
+            viewModel.currentTask?.let { viewModel.delete(it) }
+        }
+
         return binding.root
     }
 
@@ -351,21 +353,6 @@ class TaskDetailFragment : Fragment() {
 
     private fun updateToolbar(name: String?) {
         binding.detailToolbar.title = if (name.isNullOrEmpty()) "New Task" else name
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle item selection
-        return when (item.itemId) {
-            R.id.action_delete -> {
-                viewModel.currentTask?.let { viewModel.delete(it) }
-                true
-            }
-            R.id.action_complete -> {
-                viewModel.currentTask?.let { viewModel.markTaskComplete(it) }
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
     }
 
     override fun onPause() {
