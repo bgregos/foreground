@@ -62,7 +62,7 @@ class NotificationRepository @Inject constructor(private val mgr: AlarmManager, 
             }
             val pi = getBroadcast(context, task.hashCode(), sendIntent, flags)
             scheduledNotifications.add(Pair(task, pi))
-            if (mgr.canScheduleExactAlarms()) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S || mgr.canScheduleExactAlarms()) {
                 // Set exact alarms.
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     mgr.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, due.time, pi)
@@ -93,7 +93,6 @@ class NotificationRepository @Inject constructor(private val mgr: AlarmManager, 
     fun load() {
         //TODO: replace json serialization/sharedprefs with Room
         val prefs = context.getSharedPreferences("me.bgregos.BrightTask", Context.MODE_PRIVATE)
-        val taskType = object : TypeToken<ArrayList<Task>>() {}.type
         val notificationDataVersion: Int = prefs.getInt("TaskNotification.version", 1)
         if(notificationDataVersion == 1) {
             val notificationService: NotificationRepository? = Gson().fromJson(prefs.getString("NotificationService", ""), NotificationRepository::class.java)
