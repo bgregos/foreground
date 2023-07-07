@@ -22,7 +22,7 @@
             android:name=".tasklist.MainActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar"
-            android:windowSoftInputMode="adjustPan"
+            android:windowSoftInputMode="adjustResize"
             android:isScrollContainer="true"
             android:exported="true">
             <intent-filter>
