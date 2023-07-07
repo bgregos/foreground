@@ -92,11 +92,11 @@ class FiltersFragment : Fragment() {
             if (TaskFiltersAvailable.filters.first { it.name == dataList[position] }.parameterFormat == ParameterFormat.NONE) {
                 binding.filterParameter.setText("")
                 binding.filterParameterContainer.hint =
-                    getString(R.string.filter_parameter_hint_disabled)
+                    requireActivity().getString(R.string.filter_parameter_hint_disabled)
                 binding.filterParameter.isEnabled = false
             } else {
                 binding.filterParameterContainer.hint =
-                    getString(R.string.filter_parameter_hint_enabled)
+                    requireActivity().getString(R.string.filter_parameter_hint_enabled)
                 binding.filterParameter.isEnabled = true
             }
             listPopupView?.dismiss()
