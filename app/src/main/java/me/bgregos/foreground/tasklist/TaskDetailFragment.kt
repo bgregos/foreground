@@ -335,6 +335,15 @@ class TaskDetailFragment : Fragment() {
             viewModel.currentTask?.let { viewModel.delete(it) }
         }
 
+        binding.actionSave.setOnClickListener {
+            if (twoPane) {
+                activity?.supportFragmentManager?.beginTransaction()?.tabletDetailAnimations()
+                        ?.remove(this@TaskDetailFragment)?.commit()
+            } else {
+                activity?.supportFragmentManager?.popBackStack()
+            }
+        }
+
         return binding.root
     }
 
