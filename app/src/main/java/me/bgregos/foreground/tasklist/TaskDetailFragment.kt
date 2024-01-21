@@ -14,6 +14,7 @@ import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.chip.Chip
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -114,6 +115,11 @@ class TaskDetailFragment : Fragment() {
         // Apply the adapter to the spinner
         binding.detailPriority.adapter = adapter
 
+        // tags
+        for (tag in viewModel.allTags()) {
+            addChipForTag(tag)
+        }
+
         //load from Task into input fields
         viewModel.currentTask?.let {
             binding.detailName.setText(it.name)
@@ -128,16 +134,17 @@ class TaskDetailFragment : Fragment() {
             if (isNewTask) {
                 val prefs = this.getActivity()?.getSharedPreferences("me.bgregos.BrightTask", Context.MODE_PRIVATE)
                 val default_tags = prefs?.getString("settings_default_tags", "")
-                binding.detailTags.setText(default_tags)
                 viewModel.setTaskTags(default_tags ?: "")
+                binding.actionDelete.setText("Discard")
+                binding.actionComplete.setText("Log")
             }
             else
             {
                 val builder = StringBuilder()
                 it.tags.forEach { task -> builder.append("$task, ") }
-                binding.detailTags.setText(builder.toString().trimEnd(',', ' '))
+                binding.actionDelete.setText("Delete")
+                binding.actionComplete.setText("Complete")
             }
-
 
             if (it.dueDate != null) {
                 binding.detailDueDate.date.setText(dateFormat.format(it.dueDate))
@@ -157,7 +164,7 @@ class TaskDetailFragment : Fragment() {
 
         // update viewmodel on all form changes
         binding.detailName.doOnTextChanged { text, _, _, _ -> viewModel.setTaskName(text.toString()) }
-        binding.detailTags.doOnTextChanged { text, _, _, _ -> viewModel.setTaskTags(text.toString()) }
+        binding.detailNewTag.setOnFocusChangeListener() { _, hasFocus ->  if(!hasFocus) { combineTags() } }
         binding.detailProject.doOnTextChanged { text, _, _, _ -> viewModel.setTaskProject(text.toString()) }
         binding.detailPriority.onItemSelectedListener =
             object : AdapterView.OnItemSelectedListener {
@@ -345,6 +352,42 @@ class TaskDetailFragment : Fragment() {
         }
 
         return binding.root
+    }
+
+    private fun combineTags() : String {
+        /*
+        when changed, iterate over the chipgroup members to collect current tags
+        supplement with a custom tag value if provided
+        */
+        val chipGroup = binding.tagsChipgroup
+        val selectedChipTexts = mutableListOf<String>()
+        chipGroup.forEach { chip ->
+            if ((chip is Chip) && chip.isChecked) {
+                selectedChipTexts.add(chip.text.toString())
+            }
+        }
+        val newTag = binding.detailNewTag.text.toString()
+        if (newTag.isNotEmpty()) {
+            if(!viewModel.allTags().contains(newTag)) {
+                addChipForTag(newTag, true)
+            }
+            selectedChipTexts.add(newTag)
+        }
+        val selectedTags: String = selectedChipTexts.joinToString(", ")
+        viewModel.setTaskTags(selectedTags)
+        return selectedTags
+    }
+
+    private fun addChipForTag(tag: String, selected: Boolean = false) {
+        val chip = Chip(this.context ?: requireActivity().baseContext)
+        chip.text = tag
+        chip.isClickable = true
+        chip.isCheckable = true
+        if(viewModel.currentTask?.tags?.contains(tag) == true || selected == true) {
+            chip.isChecked = true
+        }
+        chip.setOnCheckedChangeListener { _, _ -> combineTags() }
+        binding.tagsChipgroup.addView(chip)
     }
 
     private fun addUserAttribute(key: String = "", value: String = ""): TaskDetailUserAttributeContentBinding {

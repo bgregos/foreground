@@ -114,6 +114,16 @@ class TaskViewModel @Inject constructor(
         }
     }
 
+    fun allTags(): Set<String> {
+        val tags = mutableSetOf<String>()
+
+        tasks.value?.forEach { task ->
+            task.tags.forEach { tag -> tags.add(tag) }
+        }
+
+        return tags
+    }
+
     private fun updatePendingNotifications() {
         notificationRepository.scheduleNotificationForTasks(tasks.value ?: ArrayList())
     }
