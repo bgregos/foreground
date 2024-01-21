@@ -167,6 +167,18 @@
             android:layout_margin="2dp"
             android:layout_gravity="end" />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/action_save"
+            style="@style/Widget.MaterialComponents.Button.TextButton.Icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_margin="2dp"
+            android:text="@string/save"
+            android:textColor="#FFFFFF"
+            app:icon="@drawable/ic_baseline_description_24"
+            app:iconTint="#FFFFFF" />
+
     </LinearLayout>
     
 </LinearLayout>
