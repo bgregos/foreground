@@ -77,7 +77,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ems="5"
-                android:hint="new tag"
+                android:hint="New tag(s)"
                 android:inputType="text" />
 
             <TextView
