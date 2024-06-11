@@ -1,3 +1,6 @@
+### Notice: Foreground is no longer maintained.
+Development on Foreground has stopped and it will not be updated to support Taskwarrior 3.x. Read the full announcement here: https://github.com/bgregos/foreground/discussions/186
+
 ![Foreground Logo](docs/img/foreground.png)
 
 Foreground is an easy to use task manager app. Designed to be beautiful, simple and unintrusive, Foreground helps you know what needs done without getting in your way. Foreground also supports syncing with Taskwarrior servers, so your task list can be always with you, no matter your device.
