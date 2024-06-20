@@ -59,18 +59,26 @@
 
             </com.google.android.material.textfield.TextInputLayout>
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_marginBottom = "10dp"
+            <TextView
+                android:id="@+id/label_tags"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Tags" />
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/tags_chipgroup"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/detail_tags"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Tags"/>
+            </com.google.android.material.chip.ChipGroup>
 
-            </com.google.android.material.textfield.TextInputLayout>
+            <EditText
+                android:id="@+id/detail_newTag"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ems="5"
+                android:hint="New tag(s)"
+                android:inputType="text" />
 
             <TextView
                 android:layout_width="match_parent"
@@ -180,7 +188,7 @@
             app:iconTint="#FFFFFF" />
 
     </LinearLayout>
-    
+
 </LinearLayout>
 
 
